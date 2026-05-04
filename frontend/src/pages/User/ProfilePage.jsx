@@ -69,10 +69,9 @@ export const ProfilePage = () => {
     {
       icon: <CalendarDays />,
       label: "Date Of Birth",
-      value: new Date(dateOfBirth?.slice(0, 10)).toLocaleDateString(
-        "en",
-        options,
-      ),
+      value: dateOfBirth
+        ? new Date(dateOfBirth.slice(0, 10)).toLocaleDateString("en", options)
+        : "_",
     },
   ];
 

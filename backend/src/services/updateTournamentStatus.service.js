@@ -1,11 +1,13 @@
 import { Tournament } from "../models/tournamentSchema.js";
+import { Match } from "../models/matchSchema.js";
+
 export const updateTournamentService = async () => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    //update status from upcoming -> ongoing
-    let tournamentDate = await Tournament.updateMany(
+    //  Upcoming -> Ongoing
+    await Tournament.updateMany(
       {
         startDate: { $lte: today },
         endDate: { $gte: today },
@@ -14,15 +16,29 @@ export const updateTournamentService = async () => {
       { $set: { status: "Ongoing" } },
     );
 
-    //update status ongoing -> completed
+    //  Get tournaments where at least one match is played
+    const playedTournamentIds = await Match.distinct("tournamentId", {
+      status: { $in: ["live", "completed", "abandoned"] },
+    });
+
+    //  Expired + NO matches → Inactive
     await Tournament.updateMany(
       {
-        status: "ongoing",
-        endDate: { $gt: today },
+        endDate: { $lt: today },
+        _id: { $nin: playedTournamentIds },
       },
-      { $set: { status: "Completed" } },
+      { $set: { status: "Inactive" } },
+    );
+
+    //  Expired + HAS matches → Ongoing
+    await Tournament.updateMany(
+      {
+        endDate: { $lt: today },
+        _id: { $in: playedTournamentIds },
+      },
+      { $set: { status: "Ongoing" } },
     );
   } catch (error) {
-    console.log(error);
+    console.log("updateTournamentService error:", error);
   }
 };

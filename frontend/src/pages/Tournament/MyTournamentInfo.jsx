@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import { NavLink, useParams } from "react-router-dom";
+import { NavLink, useParams, Link } from "react-router-dom";
 import { useGetTournamentInfoQuery } from "../../store/tournamentApi";
 import {
   UserRoundPen,
@@ -13,6 +13,7 @@ import {
   CircleDot,
   LayoutGrid,
   Info,
+  Settings,
 } from "lucide-react";
 import { defaultAvatar } from "../../utils/noprofilePicHelper";
 
@@ -34,48 +35,49 @@ export const MyTournamentInfo = () => {
               Organiser
             </span>
           </div>
+          <Link to={`/profile/${data?.myTournament?.createdBy?._id}`}>
+            <div className="flex items-center gap-5 px-5 py-6">
+              {/* Profile Picture */}
+              <div className="shrink-0">
+                {data?.myTournament?.createdBy?.profilePicture === "" ? (
+                  <div className="rounded-full h-16 w-16 flex items-center justify-center bg-primary/10 ring-2 ring-primary/20">
+                    <span className="text-lg font-bold text-primary">
+                      {defaultAvatar(data?.myTournament?.createdBy?.playerName)}
+                    </span>
+                  </div>
+                ) : (
+                  <img
+                    className="rounded-full h-16 w-16 object-cover ring-2 ring-base-content/10"
+                    src={data?.myTournament?.createdBy?.profilePicture}
+                    alt=""
+                  />
+                )}
+              </div>
 
-          <div className="flex items-center gap-5 px-5 py-6">
-            {/* Profile Picture */}
-            <div className="shrink-0">
-              {data?.myTournament?.createdBy?.profilePicture === "" ? (
-                <div className="rounded-full h-16 w-16 flex items-center justify-center bg-primary/10 ring-2 ring-primary/20">
-                  <span className="text-lg font-bold text-primary">
-                    {defaultAvatar(data?.myTournament?.createdBy?.playerName)}
-                  </span>
-                </div>
-              ) : (
-                <img
-                  className="rounded-full h-16 w-16 object-cover ring-2 ring-base-content/10"
-                  src={data?.myTournament?.createdBy?.profilePicture}
-                  alt=""
-                />
-              )}
-            </div>
-
-            {/* Organiser Details */}
-            <div className="flex flex-col gap-3 flex-1">
-              <span className="font-bold text-base-content text-base">
-                {data?.myTournament?.createdBy?.playerName}
-              </span>
-              <div className="flex flex-wrap gap-4">
-                <div className="flex items-center gap-1.5 text-sm text-base-content/55">
-                  <Trophy size={13} />
-                  <span>Tournaments Organised:</span>
-                  <span className="font-semibold text-base-content/80">
-                    {data?.totalTournaments}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 text-sm text-base-content/55">
-                  <Phone size={13} />
-                  <span>Contact:</span>
-                  <span className="font-semibold text-base-content/80">
-                    {data?.myTournament?.createdBy?.number}
-                  </span>
+              {/* Organiser Details */}
+              <div className="flex flex-col gap-3 flex-1">
+                <span className="font-bold text-base-content text-base">
+                  {data?.myTournament?.createdBy?.playerName}
+                </span>
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex items-center gap-1.5 text-sm text-base-content/55">
+                    <Trophy size={13} />
+                    <span>Tournaments Organised:</span>
+                    <span className="font-semibold text-base-content/80">
+                      {data?.totalTournaments}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-sm text-base-content/55">
+                    <Phone size={13} />
+                    <span>Contact:</span>
+                    <span className="font-semibold text-base-content/80">
+                      {data?.myTournament?.createdBy?.number}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Tournament Detail */}
@@ -185,6 +187,17 @@ export const MyTournamentInfo = () => {
                 </div>
                 <span className="capitalize text-base-content font-medium">
                   {data?.myTournament?.tournamentCategory}
+                </span>
+              </div>
+
+              {/* Max Changes Allowed */}
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-base-content/40">
+                  <Settings size={11} />
+                  <span>Max Changes Allowed</span>
+                </div>
+                <span className="capitalize text-base-content font-medium">
+                  {data?.myTournament?.maxChangesAllowed || "Not Mentioned"}
                 </span>
               </div>
             </div>

@@ -10,7 +10,6 @@ export const MatchList = ({ tournamentId }) => {
     return <DummyCardLoadingSkelton />;
   }
   const matches = data?.matches ?? [];
-  console.log(matches);
 
   const noMatches = !matches || matches.length === 0;
   const getStatusStyle = (status) => {

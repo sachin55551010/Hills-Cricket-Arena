@@ -38,7 +38,6 @@ app.get("/", async (_, res) => {
     console.log(error);
   }
 });
-console.log(process.env.CRICKET_NEWS_URI);
 
 //? routes
 

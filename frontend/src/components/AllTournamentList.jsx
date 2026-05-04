@@ -12,6 +12,7 @@ import { Phone, User } from "lucide-react";
 
 export const AllTournamentList = () => {
   const { searchData } = useOutletContext();
+
   const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
@@ -103,6 +104,9 @@ export const AllTournamentList = () => {
     Ongoing: "badge-warning",
     Completed: "badge-success",
     Cancelled: "badge-warning",
+    Abandoned: "badge-error",
+    Postponed: "badge-neutral",
+    Inactive: "badge-error",
   };
 
   const handleGetTournamentInfoBtn = (tournamentId) => {

@@ -18,7 +18,15 @@ const tournamentSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Upcoming", "Ongoing", "Completed", "Cancelled"],
+      enum: [
+        "Upcoming",
+        "Ongoing",
+        "Completed",
+        "Cancelled",
+        "Abandoned",
+        "Postponed",
+        "Inactive",
+      ],
       default: "Upcoming",
     },
     createdBy: {
@@ -71,6 +79,11 @@ const tournamentSchema = new mongoose.Schema(
       type: String,
       enum: ["Regular", "Cement", "Matte"],
       required: true,
+    },
+
+    maxChangesAllowed: {
+      type: Number,
+      default: null,
     },
 
     additionalInfo: {

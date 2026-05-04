@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 export const MyTournamentList = () => {
   const { data, isLoading } = useGetMyTournamentQuery();
   const navigate = useNavigate();
-  console.log(data);
 
   // function to get tournament information related with tournament id
   const handleOnClickBtn = (tournamentId) => {

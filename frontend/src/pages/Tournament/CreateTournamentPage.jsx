@@ -35,6 +35,7 @@ export const CreateTournamentPage = ({ mode }) => {
         additionalInfo: data?.myTournament?.additionalInfo,
         ballType: data?.myTournament?.ballType,
         pitchType: data?.myTournament?.pitchType,
+        maxChangesAllowed: data?.myTournament?.maxChangesAllowed || "",
       });
     }
   }, [mode, data]);
@@ -61,6 +62,7 @@ export const CreateTournamentPage = ({ mode }) => {
     additionalInfo: "",
     ballType: "",
     pitchType: "",
+    maxChangesAllowed: "",
   });
 
   // state to activate modal
@@ -89,24 +91,19 @@ export const CreateTournamentPage = ({ mode }) => {
       e.preventDefault();
       if (!validateDates()) return;
 
-      if (mode === "edit" && data) {
-        setTournamentInfo({
-          tournamentName: data?.myTournament?.tournamentName,
-          organiserName: data?.myTournament?.ograniserName,
-          phone: data?.myTournament?.phone,
-          city: data?.myTournament?.city,
-          ground: data?.myTournament?.ground,
-          startDate: data?.myTournament?.startDate,
-          endDate: data?.myTournament?.endDate,
-          tournamentCategory: data?.myTournament?.tournamentCategory,
-          additionalInfo: data?.myTournament?.additionalInfo,
-          ballType: data?.myTournament?.ballType,
-          pitchType: data?.myTournament?.pitchType,
-        });
+      // ✅ convert maxChangesAllowed properly
+      const payload = {
+        ...tournamentInfo,
+        maxChangesAllowed:
+          tournamentInfo.maxChangesAllowed === ""
+            ? null
+            : Number(tournamentInfo.maxChangesAllowed),
+      };
 
+      if (mode === "edit" && data) {
         await updateTournament({
           tournamentId,
-          updatedFields: tournamentInfo,
+          updatedFields: payload,
         }).unwrap();
 
         navigate(`/my-tournament/${tournamentId}/tournament-info`);
@@ -124,12 +121,11 @@ export const CreateTournamentPage = ({ mode }) => {
           toast.error("All Fields are required", {
             duration: 1500,
           });
-
           return;
-        } else {
-          await addTournament(tournamentInfo).unwrap();
-          navigate("/my-tournament");
         }
+
+        await addTournament(payload).unwrap();
+        navigate("/my-tournament");
       }
     } catch (error) {
       console.log("Form submit error", error);
@@ -379,6 +375,35 @@ export const CreateTournamentPage = ({ mode }) => {
                 </div>
               </div>
 
+              {/* select player vhange limit */}
+              <label
+                htmlFor="max-changes"
+                className="w-full flex flex-col gap-3"
+              >
+                <span className="font-bold">
+                  Maximum Changes Allowed (Optional)
+                </span>
+
+                <input
+                  id="max-changes"
+                  type="text"
+                  value={tournamentInfo.maxChangesAllowed}
+                  maxLength={1} // ❌ prevent double digit
+                  onChange={(e) => {
+                    const value = e.target.value;
+
+                    // allow only numbers 1–6
+                    if (/^[1-6]?$/.test(value)) {
+                      setTournamentInfo({
+                        ...tournamentInfo,
+                        maxChangesAllowed: e.target.value,
+                      });
+                    }
+                  }}
+                  className="border border-base-content/30 w-full h-10 rounded-md outline-0 pl-3 focus:border-base-content"
+                  placeholder="Enter 1–6"
+                />
+              </label>
               {/* additional information */}
               <label
                 htmlFor="additional-info"

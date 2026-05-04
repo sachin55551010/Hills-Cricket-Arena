@@ -1,4 +1,3 @@
-import { log } from "console";
 import { Player } from "../models/playerSchema.js";
 import { Tournament } from "../models/tournamentSchema.js";
 import { CustomErrHandler } from "../utils/CustomErrHandler.js";
@@ -20,6 +19,7 @@ export const addTournament = async (req, res, next) => {
       ballType,
       tournamentCategory,
       additionalInfo,
+      maxChangesAllowed,
       pitchType,
     } = req.body;
 
@@ -45,6 +45,7 @@ export const addTournament = async (req, res, next) => {
       tournamentName,
       ground,
     });
+
     if (isTournamentExists)
       return next(
         new CustomErrHandler(
@@ -52,6 +53,24 @@ export const addTournament = async (req, res, next) => {
           `Tournament "${tournamentName}" already exists at ground "${ground} pleaase change the name of Tournament and try again"`,
         ),
       );
+
+    let parsedMaxChanges = null;
+
+    if (
+      maxChangesAllowed !== undefined &&
+      maxChangesAllowed !== null &&
+      String(maxChangesAllowed).trim() !== ""
+    ) {
+      const num = Number(maxChangesAllowed);
+
+      if (Number.isNaN(num) || num < 1 || num > 6) {
+        return next(
+          new CustomErrHandler(400, "Max changes must be between 1 and 6"),
+        );
+      }
+
+      parsedMaxChanges = num;
+    }
 
     const tournament = await Tournament.create({
       tournamentName,
@@ -66,7 +85,9 @@ export const addTournament = async (req, res, next) => {
       additionalInfo: additionalInfo || "",
       startDate: startDate || null,
       endDate: endDate || null,
+      maxChangesAllowed: parsedMaxChanges,
     });
+
     if (req.body.role !== "organiser") {
       await Player.findByIdAndUpdate(
         req.user.id,
@@ -74,6 +95,7 @@ export const addTournament = async (req, res, next) => {
         { new: true },
       );
     }
+
     io.emit("newTournament", tournament);
 
     return res.status(201).json({
