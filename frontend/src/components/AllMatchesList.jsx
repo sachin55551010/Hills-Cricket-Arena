@@ -7,13 +7,13 @@ import { useEffect } from "react";
 import { getSocket } from "../utils/socket";
 import { useDispatch } from "react-redux";
 import { tournamentApi } from "../store/tournamentApi";
+import { useNavigate } from "react-router-dom";
 export const AllMatchesList = () => {
   const tournamentCategory = location.pathname.split("/").pop();
-
+  const navigate = useNavigate();
   const { data, isLoading } = useGetAllMatchesQuery(tournamentCategory);
 
   const allMatches = data?.allMatches ?? [];
-  console.log(allMatches);
 
   const dispatch = useDispatch();
   // Dynamic badge color
@@ -66,6 +66,13 @@ export const AllMatchesList = () => {
   if (isLoading) {
     return <DummyCardLoadingSkelton />;
   }
+
+  // handle match click button
+  const handleMatchClickBtn = (match) => {
+    console.log(match?._id);
+    navigate(`/match/${match?._id}`);
+  };
+
   return (
     <div className="p-2 overflow-y-scroll">
       {noMatches && (
@@ -77,8 +84,9 @@ export const AllMatchesList = () => {
       <ul className="pt-4 pb-14 grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {allMatches.map((match) => (
           <div
+            onClick={() => handleMatchClickBtn(match)}
             key={match._id}
-            className="bg-base-100 border border-base-200 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
+            className="bg-base-100 border border-base-200 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden cursor-pointer"
           >
             {/* Header */}
             <div className="px-5 pt-5 pb-4 border-b border-base-200">

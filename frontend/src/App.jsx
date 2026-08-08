@@ -37,6 +37,11 @@ import { AllPanchayatOpenMatches } from "./pages/Match/AllPanchayatOpenMatches";
 import { AllCorporateMatches } from "./pages/Match/AllCorporateMatches";
 import { AllMatches } from "./pages/Match/Allmatches";
 import { CricketLoader } from "./ui/CricketLoader";
+import { MatchInfo } from "./pages/Match/MatchInfo";
+import { LiveMatch } from "./pages/Match/LiveMatch";
+import { MatchSquad } from "./pages/Match/MatchSquad";
+import { ScoreCard } from "./pages/Match/ScoreCard";
+import { MatchInfoPage } from "./components/MatchInfoPage";
 function App() {
   const { authUser } = useSelector((state) => state.auth);
   const { isLoading } = useCheckAuthUserQuery();
@@ -112,13 +117,11 @@ function App() {
               <Route path="corporate" element={<AllCorporateMatches />} />
             </Route>
           </Route>
-
           {/* login page  */}
           <Route
             path="/login"
             element={!authUser ? <LoginPage /> : <Navigate to="/" />}
           />
-
           {/*
           organiser dashboard
           containes info matches and  teams routes
@@ -129,16 +132,13 @@ function App() {
               authUser?.player?.role === "organiser" && <OrganiserDashBoard />
             }
           />
-
           {/* my profile page  */}
           <Route path="/profile/:playerId" element={<ProfilePage />} />
-
           {/* player career stats page  */}
           <Route
             path="/profile/career-stats/:playerId"
             element={<CareerStats />}
           />
-
           {/*
            edit profile page
            to edit name, age, gender, profile photo etc
@@ -147,7 +147,6 @@ function App() {
             path="/profile/edit-profile/:playerId"
             element={authUser && <EditProfile />}
           />
-
           {/*
             all routes related with tournaments actions like create edit delete
            */}
@@ -171,7 +170,6 @@ function App() {
               )
             }
           />
-
           {/*
            * routes for specific tournament
            * contain tournament info page
@@ -226,13 +224,29 @@ function App() {
               />
             </Route>
           </Route>
+          {/* all routes related with matches actions like live match, scorecard,
+          match info, match squad*/}
+          {/* Specific match routes */}
+          <Route path="/match/:matchId" element={<MatchInfoPage />}>
+            {/* Default page */}
+            <Route index element={<Navigate to="info" replace />} />
 
+            {/* Match information */}
+            <Route path="info" element={<MatchInfo />} />
+
+            {/* Live match */}
+            <Route path="live" element={<LiveMatch />} />
+
+            {/* Scorecard */}
+            <Route path="scorecard" element={<ScoreCard />} />
+
+            {/* Match squad */}
+            <Route path="squad" element={<MatchSquad />} />
+          </Route>
           <Route path="/all-tournaments" element={<AllTournaments />} />
-
           {/* team join route */}
           <Route path="/join-team/:token" element={<JoinTeamPage />} />
           {/* for invalid routes */}
-
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>

@@ -315,3 +315,21 @@ export const getAllMatches = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getMatchById = async (req, res, next) => {
+  try {
+    const { matchId } = req.params;
+    console.log("match id : ", matchId);
+
+    const match = await Match.findById(matchId);
+    console.log("Match", match);
+
+    res.status(200).json({
+      match,
+      success: true,
+    });
+  } catch (error) {
+    console.log("Get match error : ", error);
+    next(error);
+  }
+};

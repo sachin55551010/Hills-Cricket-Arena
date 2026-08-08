@@ -40,14 +40,14 @@ export const SideMenuBar = () => {
       >
         {/* menu header  */}
         <header className="flex justify-between border-b py-4 px-2 lg:hidden">
-          <h2 className="font-extrabold text-2xl">Menu</h2>
+          <h2 className="font-extrabold text-xl">Menu</h2>
 
           {/* cross button to close side menu  */}
           <button
             onClick={() => dispatch(setIsMenuOpen(false))}
             className="flex items-center justify-center rounded-md hover:bg-base-content/400 w-8 transition-all duration-200"
           >
-            <X strokeWidth={4} />
+            <X strokeWidth={3} />
           </button>
         </header>
         {/* menu list items  */}
@@ -97,7 +97,7 @@ export const SideMenuBar = () => {
                       <h1 className="font-bold md:font-normal">
                         {authUser?.player?.playerName}
                       </h1>
-                      <p className="text-[.8rem] truncate max-w-[13rem] lg:hidden">
+                      <p className="text-[.76rem] truncate max-w-[13rem] lg:hidden">
                         {authUser?.player?.playerId?.email}
                       </p>
                     </div>
@@ -113,7 +113,9 @@ export const SideMenuBar = () => {
                     className="flex gap-4 items-center lg:gap-1"
                   >
                     <Target className="lg:size-4 md:hidden" />
-                    <h1 className="font-bold md:font-normal">My Tournaments</h1>
+                    <h1 className="font-bold text-sm md:font-normal">
+                      My Tournaments
+                    </h1>
                   </NavLink>
                 </li>
               )}
@@ -124,7 +126,7 @@ export const SideMenuBar = () => {
                   className="flex items-center gap-4 lg:gap-1"
                 >
                   <Trophy className="lg:size-4 md:hidden" />
-                  <h1 className="font-bold md:font-normal">
+                  <h1 className="font-bold text-sm md:font-normal">
                     Create New Tournament
                   </h1>
                 </NavLink>
@@ -136,7 +138,9 @@ export const SideMenuBar = () => {
               >
                 <div className="flex gap-4 lg:gap-1 items-center">
                   <Palette className="lg:size-4 md:hidden" />
-                  <h1 className="font-bold md:font-normal">Change Theme</h1>
+                  <h1 className="font-bold text-sm md:font-normal">
+                    Change Theme
+                  </h1>
                 </div>
               </li>
             </ul>

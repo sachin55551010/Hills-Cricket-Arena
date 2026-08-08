@@ -3,6 +3,7 @@ import { isAuthenticated } from "../middlewares/isAuthenticated.js";
 import {
   createMatch,
   getAllMatches,
+  getMatchById,
   myTournamentMatches,
   scheduleMatch,
 } from "../controllers/match.controller.js";
@@ -25,3 +26,5 @@ match_route.get("/tournament-matches/:tournamentId", myTournamentMatches);
 
 // match_route.patch("/update-match/:matchId")
 match_route.get("/all-matches/:tournamentCategory", getAllMatches);
+
+match_route.get("/match/:matchId", getMatchById);

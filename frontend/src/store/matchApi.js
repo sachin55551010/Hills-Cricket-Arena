@@ -43,6 +43,14 @@ export const matchApi = createApi({
       }),
       providesTags: ["Match"],
     }),
+
+    // get match by id
+    getMatchById: builder.query({
+      query: (matchId) => ({
+        url: `/match/${matchId}`,
+      }),
+      providesTags: ["Match"],
+    }),
   }),
 });
 
