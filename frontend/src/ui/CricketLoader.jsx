@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+// eslint-disable-next-line no-unused-vars
+import { motion, AnimatePresence } from "motion/react";
 
 const tips = [
   "Preparing the pitch...",
