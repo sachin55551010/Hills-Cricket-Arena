@@ -5,6 +5,7 @@ import { setChooseTheme } from "../store/themeSlice";
 import { setIsMenuOpen } from "../store/authSlice";
 import { defaultAvatar } from "../utils/noprofilePicHelper";
 import { useProfileQuery } from "../store/authApi";
+
 export const SideMenuBar = () => {
   const { authUser } = useSelector((state) => state.auth);
   const dispatch = useDispatch();

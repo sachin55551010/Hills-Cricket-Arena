@@ -144,9 +144,13 @@ export const getTeamPlayers = async (req, res, next) => {
 export const getTeamById = async (req, res, next) => {
   try {
     const { teamId } = req.params;
+
     if (!teamId || !mongoose.Types.ObjectId.isValid(teamId))
       return next(new CustomErrHandler(403, "Invalid team id"));
     const team = await Team.findById(teamId).select("");
+    const tournamentId = await Tournament.findById(team.tournamentId);
+    // console.log("Tournament ID", tournamentId);
+
     if (!team) return next(new CustomErrHandler(404, "No team found"));
 
     return res.status(200).json({ team, success: true });
@@ -278,6 +282,7 @@ export const updateTeam = async (req, res, next) => {
   }
 };
 
+// delete team function
 export const deleteTeam = async (req, res, next) => {
   try {
     const { tournamentId, teamId } = req.params;
@@ -323,6 +328,8 @@ export const deleteTeam = async (req, res, next) => {
   }
 };
 
+// role update function like making player captain vice captain
+// or wicket keeper etc
 export const updateTeamPlayerRole = async (req, res, next) => {
   try {
     const { teamId, playerId } = req.params;
@@ -398,6 +405,7 @@ export const updateTeamPlayerRole = async (req, res, next) => {
   }
 };
 
+// remove the player from team function
 export const removePlayerFromTeam = async (req, res, next) => {
   try {
     const { tournamentId, teamId, playerId } = req.params;

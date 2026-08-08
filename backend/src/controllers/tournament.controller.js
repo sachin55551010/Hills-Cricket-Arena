@@ -108,7 +108,6 @@ export const addTournament = async (req, res, next) => {
     next(error);
   }
 };
-
 //function to get the tournaments related with specific organiser
 export const getMyTournaments = async (req, res, next) => {
   try {

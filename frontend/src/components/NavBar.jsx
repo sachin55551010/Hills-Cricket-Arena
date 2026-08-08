@@ -3,6 +3,7 @@ import { SideMenuBar } from "./SideMenuBar";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsMenuOpen } from "../store/authSlice";
 import { NavLink } from "react-router-dom";
+
 export const NavBar = () => {
   const { isMenuOpen } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
@@ -27,6 +28,7 @@ export const NavBar = () => {
             <h1 className="font-extrabold">Hills Cricket Arena</h1>
           </div>
         </div>
+
         <div className="lg:flex">
           <SideMenuBar />
         </div>

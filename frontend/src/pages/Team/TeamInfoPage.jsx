@@ -2,10 +2,23 @@ import { useParams } from "react-router-dom";
 import { useGetTeamByIdQuery } from "../../store/teamApi";
 import { Hash, MapPin, Shield } from "lucide-react";
 import { defaultAvatar } from "../../utils/noprofilePicHelper";
+import { useSelector } from "react-redux";
+import { useGetTournamentInfoQuery } from "../../store/tournamentApi";
 
 export const TeamInfoPage = () => {
   const { teamId } = useParams();
   const { data, isLoading } = useGetTeamByIdQuery(teamId);
+  const tournamentId = data?.team?.tournamentId;
+
+  const { data: tournamentData } = useGetTournamentInfoQuery(tournamentId);
+  const { authUser } = useSelector((state) => state.auth);
+  // console.log("Loggedin user", authUser?.player?._id);
+  const organiserId = tournamentData?.myTournament?.createdBy?._id;
+  const loggedInUserId = authUser?.player?._id;
+  const teamAdminId = data?.team?.createdBy;
+
+  const canSeeAdminNumber =
+    loggedInUserId === organiserId || loggedInUserId === teamAdminId;
 
   if (isLoading) {
     return (
@@ -77,11 +90,13 @@ export const TeamInfoPage = () => {
                   </p>
                 </div>
               )}
-              {data?.team?.adminNumber && (
+
+              {canSeeAdminNumber && data?.team?.adminNumber && (
                 <div>
                   <p className="text-sm text-base-content/60 mb-1">
                     Contact Number
                   </p>
+
                   <p className="text-base font-medium text-base-content/80">
                     {data?.team?.adminNumber}
                   </p>
