@@ -23,7 +23,7 @@ export const MatchInfoPage = () => {
             } text-center flex-1 pb-2`
           }
         >
-          Live Score
+          Live
         </NavLink>
 
         <NavLink
@@ -34,7 +34,7 @@ export const MatchInfoPage = () => {
             } text-center flex-1 pb-2`
           }
         >
-          Scorecard
+          Score Card
         </NavLink>
 
         <NavLink
@@ -45,7 +45,7 @@ export const MatchInfoPage = () => {
             } text-center flex-1 pb-2`
           }
         >
-          Squads
+          Squad
         </NavLink>
       </div>
 
