@@ -319,13 +319,25 @@ export const getAllMatches = async (req, res, next) => {
 export const getMatchById = async (req, res, next) => {
   try {
     const { matchId } = req.params;
-    console.log("match id : ", matchId);
 
     const match = await Match.findById(matchId)
       .populate("tournamentId")
-      .populate("firstTeamId", "teamName teamLogo")
-      .populate("secondTeamId", "teamName teamLogo");
-    console.log("Match", match);
+      .populate({
+        path: "firstTeamId",
+        select: "teamName teamLogo teamPlayers",
+        populate: {
+          path: "teamPlayers.player",
+          select: "playerName profilePicture",
+        },
+      })
+      .populate({
+        path: "secondTeamId",
+        select: "teamName teamLogo teamPlayers",
+        populate: {
+          path: "teamPlayers.player",
+          select: "playerName profilePicture",
+        },
+      });
 
     res.status(200).json({
       match,

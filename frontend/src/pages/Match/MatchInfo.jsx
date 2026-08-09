@@ -9,7 +9,6 @@ export const MatchInfo = () => {
   const navigate = useNavigate();
   const firstTeamId = data?.match?.firstTeamId?._id;
   const secondTeamId = data?.match?.secondTeamId?._id;
-  console.log(data);
 
   const tournamentId = data?.match?.tournamentId?._id;
   console.log(tournamentId);
