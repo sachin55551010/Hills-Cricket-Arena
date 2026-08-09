@@ -2,8 +2,8 @@ import { NavLink, Outlet } from "react-router-dom";
 
 export const MatchInfoPage = () => {
   return (
-    <div className="pt-15">
-      <div className="flex text-sm">
+    <div className="pt-12">
+      <div className="flex text-sm pt-4 bg-base-200 fixed w-full z-50">
         <NavLink
           to="info"
           className={({ isActive }) =>

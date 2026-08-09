@@ -9,7 +9,7 @@ export const LiveMatch = () => {
   // Later this can come from match data/API
 
   return (
-    <div className="flex min-h-[300px] items-center justify-center p-4">
+    <div className="flex min-h-[300px] items-center justify-center p-4 mt-14">
       <div className="w-full lg:w-[70%] rounded-md border border-base-300 bg-base-100 p-6 text-center shadow-sm">
         {/* Status */}
         <div className="mb-4 flex justify-center">

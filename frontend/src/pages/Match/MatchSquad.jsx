@@ -37,7 +37,7 @@ export const MatchSquad = () => {
   };
 
   return (
-    <div className="flex flex-col items-center px-2">
+    <div className="flex flex-col items-center px-2 mt-14">
       {/* Tournament */}
       <h1 className="px-3 text-lg font-semibold">
         {match?.tournamentId?.tournamentName}

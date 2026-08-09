@@ -31,7 +31,7 @@ export const MatchInfo = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-2 space-y-4">
+    <div className="max-w-4xl mx-auto p-2 space-y-4 mt-14">
       {/* Match */}
       <div className="card bg-base-100 border border-base-300 shadow-sm">
         <div className="card-body items-center text-center">

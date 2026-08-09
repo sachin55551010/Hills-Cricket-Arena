@@ -52,7 +52,7 @@ export const ScoreCard = () => {
   });
 
   return (
-    <div className="max-w-4xl mx-auto p-3 space-y-4">
+    <div className="max-w-4xl mx-auto p-3 space-y-4 mt-14">
       {/* Scorecard / Match Status */}
       <div className="card bg-base-100 border border-base-300 shadow-sm overflow-hidden">
         <div className="p-6">
