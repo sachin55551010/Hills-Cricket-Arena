@@ -8,6 +8,12 @@ import { getSocket } from "../utils/socket";
 import { useDispatch } from "react-redux";
 import { tournamentApi } from "../store/tournamentApi";
 import { useNavigate } from "react-router-dom";
+
+/**
+ *
+ *  this compoent will display on all the match list
+ * it will show matches according to category
+ */
 export const AllMatchesList = () => {
   const tournamentCategory = location.pathname.split("/").pop();
   const navigate = useNavigate();
@@ -69,7 +75,6 @@ export const AllMatchesList = () => {
 
   // handle match click button
   const handleMatchClickBtn = (match) => {
-    console.log(match?._id);
     navigate(`/match/${match?._id}`);
   };
 

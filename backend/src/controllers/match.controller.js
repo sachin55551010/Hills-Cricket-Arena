@@ -321,7 +321,10 @@ export const getMatchById = async (req, res, next) => {
     const { matchId } = req.params;
     console.log("match id : ", matchId);
 
-    const match = await Match.findById(matchId);
+    const match = await Match.findById(matchId)
+      .populate("tournamentId")
+      .populate("firstTeamId", "teamName teamLogo")
+      .populate("secondTeamId", "teamName teamLogo");
     console.log("Match", match);
 
     res.status(200).json({

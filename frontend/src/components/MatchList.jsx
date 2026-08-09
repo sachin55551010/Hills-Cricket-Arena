@@ -3,6 +3,11 @@ import { DummyCardLoadingSkelton } from "./modals/DummyLoadingSkelton";
 import noData from "../../assets/No data-amico.svg";
 import { defaultAvatar } from "../utils/noprofilePicHelper";
 import { Calendar, MapPin, Clock, Trophy } from "lucide-react";
+
+/*
+this component used inside organiser match list
+it will show the matches related with that organiser only
+*/
 export const MatchList = ({ tournamentId }) => {
   const { data, isLoading } = useGetMyTournamentTeamsQuery(tournamentId);
 

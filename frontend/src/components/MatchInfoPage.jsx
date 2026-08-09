@@ -3,12 +3,12 @@ import { NavLink, Outlet } from "react-router-dom";
 export const MatchInfoPage = () => {
   return (
     <div className="pt-15">
-      <div className="flex">
+      <div className="flex text-sm">
         <NavLink
           to="info"
           className={({ isActive }) =>
             `${
-              isActive && "border-b-2 font-extrabold text-success"
+              isActive && "border-b-2 font-bold text-success"
             } text-center flex-1 pb-2`
           }
         >
@@ -19,7 +19,7 @@ export const MatchInfoPage = () => {
           to="live"
           className={({ isActive }) =>
             `${
-              isActive && "border-b-2 font-extrabold text-success"
+              isActive && "border-b-2 font-bold text-success"
             } text-center flex-1 pb-2`
           }
         >
@@ -30,7 +30,7 @@ export const MatchInfoPage = () => {
           to="scorecard"
           className={({ isActive }) =>
             `${
-              isActive && "border-b-2 font-extrabold text-success"
+              isActive && "border-b-2 font-bold text-success"
             } text-center flex-1 pb-2`
           }
         >
@@ -41,7 +41,7 @@ export const MatchInfoPage = () => {
           to="squad"
           className={({ isActive }) =>
             `${
-              isActive && "border-b-2 font-extrabold text-success"
+              isActive && "border-b-2 font-bold text-success"
             } text-center flex-1 pb-2`
           }
         >

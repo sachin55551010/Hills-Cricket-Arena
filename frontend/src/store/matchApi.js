@@ -59,4 +59,5 @@ export const {
   useScheduleMatchMutation,
   useGetMyTournamentTeamsQuery,
   useGetAllMatchesQuery,
+  useGetMatchByIdQuery,
 } = matchApi;
