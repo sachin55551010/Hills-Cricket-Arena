@@ -20,7 +20,7 @@ export const MatchInfo = () => {
   const tournament = match?.tournamentId;
 
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-4">
+    <div className="max-w-4xl mx-auto p-2 space-y-4">
       {/* Match */}
       <div className="card bg-base-100 border border-base-300 shadow-sm">
         <div className="card-body items-center text-center">
@@ -43,7 +43,7 @@ export const MatchInfo = () => {
                 </div>
               )}
 
-              <h1 className="text-lg capitalize font-bold text-center">
+              <h1 className="capitalize font-bold text-center">
                 {match?.firstTeamId?.teamName || "Team 1"}
               </h1>
             </div>
@@ -65,7 +65,7 @@ export const MatchInfo = () => {
                 </div>
               )}
 
-              <h1 className="text-lg capitalize font-bold text-center">
+              <h1 className="capitalize font-bold text-center">
                 {match?.secondTeamId?.teamName || "Team 2"}
               </h1>
             </div>
@@ -79,10 +79,10 @@ export const MatchInfo = () => {
 
       {/* Match Details */}
       <div className="card bg-base-100 border border-base-300 shadow-sm">
-        <div className="card-body">
+        <div className="p-2">
           <h2 className="card-title text-lg">Match Details</h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
             <InfoItem
               label="Date"
               value={new Date(match?.matchScheduleDate).toLocaleDateString(
