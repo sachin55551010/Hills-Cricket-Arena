@@ -1,12 +1,18 @@
 import React from "react";
 import { useGetMatchByIdQuery } from "../../store/matchApi";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { defaultAvatar } from "../../utils/noprofilePicHelper";
 
 export const MatchInfo = () => {
   const { matchId } = useParams();
   const { data, isLoading } = useGetMatchByIdQuery(matchId);
+  const navigate = useNavigate();
+  const firstTeamId = data?.match?.firstTeamId?._id;
+  const secondTeamId = data?.match?.secondTeamId?._id;
   console.log(data);
+
+  const tournamentId = data?.match?.tournamentId?._id;
+  console.log(tournamentId);
 
   if (isLoading) {
     return (
@@ -19,18 +25,27 @@ export const MatchInfo = () => {
   const match = data?.match;
   const tournament = match?.tournamentId;
 
+  const handleTeamClickBtn = (teamId) => {
+    navigate(
+      `/my-tournament/${tournamentId}/tournament-teams/${teamId}/team-info`,
+    );
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-2 space-y-4">
       {/* Match */}
       <div className="card bg-base-100 border border-base-300 shadow-sm">
         <div className="card-body items-center text-center">
-          <p className="text-sm text-base-content/60">
+          <p className="text-lg font-bold text-base-content/60">
             {tournament?.tournamentName}
           </p>
 
           <div className="flex items-center justify-center gap-6 my-6">
             {/* First Team */}
-            <div className="flex flex-col items-center gap-2">
+            <div
+              onClick={() => handleTeamClickBtn(firstTeamId)}
+              className="flex flex-col items-center gap-2 cursor-pointer"
+            >
               {match?.firstTeamId?.teamLogo ? (
                 <img
                   src={match.firstTeamId.teamLogo}
@@ -52,7 +67,10 @@ export const MatchInfo = () => {
             <div className="text-base-content/40 font-bold">VS</div>
 
             {/* Second Team */}
-            <div className="flex flex-col items-center gap-2">
+            <div
+              onClick={() => handleTeamClickBtn(secondTeamId)}
+              className="flex flex-col items-center gap-2 cursor-pointer"
+            >
               {match?.secondTeamId?.teamLogo ? (
                 <img
                   src={match.secondTeamId.teamLogo}
@@ -107,8 +125,6 @@ export const MatchInfo = () => {
             <InfoItem label="Ball Type" value={tournament?.ballType} />
 
             <InfoItem label="Pitch Type" value={tournament?.pitchType} />
-
-            <InfoItem label="Status" value={match?.status} />
 
             <InfoItem label="Tournament" value={tournament?.tournamentName} />
           </div>
