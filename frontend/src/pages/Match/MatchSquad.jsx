@@ -37,14 +37,14 @@ export const MatchSquad = () => {
   };
 
   return (
-    <div>
+    <div className="flex flex-col items-center w-full p-3">
       {/* Tournament */}
       <h1 className="text-center text-lg font-semibold text-base-content mt-4 capitalize">
         {match?.tournamentId?.tournamentName}
       </h1>
 
       {/* Teams */}
-      <div className="grid mx-3 grid-cols-2 rounded-md p-4 shadow-[0px_0px_7px_rgba(0,0,0,.3)] mt-4">
+      <div className="grid mx-3 grid-cols-2 rounded-md p-4 border border-base-300 mt-4 w-full lg:w-[70%]">
         {teams.map((team, teamIndex) => (
           <div
             key={team?._id || teamIndex}

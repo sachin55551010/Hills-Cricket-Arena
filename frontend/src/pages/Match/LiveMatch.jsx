@@ -10,7 +10,7 @@ export const LiveMatch = () => {
 
   return (
     <div className="flex min-h-[300px] items-center justify-center p-4">
-      <div className="w-full lg:w-[70%] rounded-2xl border border-base-300 bg-base-100 p-6 text-center shadow-sm">
+      <div className="w-full lg:w-[70%] rounded-md border border-base-300 bg-base-100 p-6 text-center shadow-sm">
         {/* Status */}
         <div className="mb-4 flex justify-center">
           <span className="rounded-full bg-warning/15 px-4 py-1.5 text-sm font-medium text-warning">
