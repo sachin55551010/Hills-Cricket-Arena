@@ -37,32 +37,32 @@ export const MatchSquad = () => {
   };
 
   return (
-    <div className="flex flex-col items-center w-full p-3">
+    <div className="flex flex-col items-center px-2">
       {/* Tournament */}
-      <h1 className="text-center text-lg font-semibold text-base-content mt-4 capitalize">
+      <h1 className="px-3 text-lg font-semibold">
         {match?.tournamentId?.tournamentName}
       </h1>
 
       {/* Teams */}
-      <div className="grid mx-3 grid-cols-2 rounded-md p-4 border border-base-300 mt-4 w-full lg:w-[70%]">
+      <div className="mx-3 mt-4 grid w-full grid-cols-2 rounded-md border border-base-300 p-2 sm:p-4 lg:w-[70%]">
         {teams.map((team, teamIndex) => (
           <div
             key={team?._id || teamIndex}
             className={`
-              px-4
-              ${teamIndex === 0 ? "border-r border-base-200" : ""}
-            `}
+            px-1 sm:px-2
+            ${teamIndex === 0 ? "border-r border-base-200" : ""}
+          `}
           >
             {/* Team */}
-            <div className="flex flex-col items-center pb-4">
+            <div className="flex flex-col items-center pb-3">
               {team?.teamLogo ? (
                 <img
                   src={team.teamLogo}
                   alt={team.teamName}
-                  className="h-14 w-14 rounded-full object-cover"
+                  className="h-12 w-12 rounded-full object-cover sm:h-14 sm:w-14"
                 />
               ) : (
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-base-200 text-lg font-semibold text-base-content">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-base-200 text-lg font-semibold text-base-content sm:h-14 sm:w-14">
                   {defaultAvatar(team?.teamName)}
                 </div>
               )}
@@ -73,11 +73,10 @@ export const MatchSquad = () => {
             </div>
 
             {/* Players */}
-            <div>
+            <div className="w-full">
               {team?.teamPlayers?.length ? (
                 team.teamPlayers.map((member, index) => {
                   const player = member?.player;
-
                   const playerId = player?._id;
 
                   const playerName =
@@ -89,7 +88,7 @@ export const MatchSquad = () => {
                     <div
                       key={playerId || index}
                       onClick={() => handlePlayerClickBtn(playerId)}
-                      className="flex cursor-pointer items-center gap-2 rounded-md py-2 transition hover:bg-base-200"
+                      className="flex w-full cursor-pointer items-center gap-1.5 rounded-md py-1.5 transition hover:bg-base-200 sm:gap-2 sm:py-2"
                     >
                       {/* Profile */}
                       {player?.profilePicture ? (
@@ -105,10 +104,11 @@ export const MatchSquad = () => {
                       )}
 
                       {/* Name + Role */}
-                      <p className="min-w-0 truncate text-sm text-base-content">
-                        {playerName}{" "}
+                      <p className="min-w-0 flex-1 text-left text-xs leading-tight text-base-content sm:text-sm">
+                        <span className="break-words">{playerName}</span>
+
                         {role && (
-                          <span className="text-[0.8rem] text-base-content/60">
+                          <span className="ml-1 text-[0.7rem] text-base-content/60 sm:text-[0.8rem]">
                             ({role})
                           </span>
                         )}
