@@ -66,7 +66,7 @@ function App() {
     }
   }, [authUser, navigate]);
 
-  if (true) {
+  if (isLoading && !authUser) {
     return <CricketLoader />;
   }
 
