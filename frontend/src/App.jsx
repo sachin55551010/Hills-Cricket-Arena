@@ -65,7 +65,7 @@ function App() {
       localStorage.removeItem("redirectAfterLogin");
     }
   }, [authUser, navigate]);
-
+  //
   if (isLoading && !authUser) {
     return <CricketLoader />;
   }

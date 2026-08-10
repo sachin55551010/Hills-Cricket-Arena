@@ -158,7 +158,7 @@ export const PlayerList = ({ data, teamId }) => {
                 <li
                   onClick={() => handlePlayerClickBtn(teamPlayer.player._id)}
                   key={teamPlayer.player._id}
-                  className="group flex items-center gap-3 p-2 rounded-xl border border-base-content/10 bg-base-100/50 backdrop-blur-sm hover:bg-base-content/5 hover:border-base-content/20 transition-all duration-200 cursor-pointer"
+                  className="group flex items-center gap-3 p-2.5 rounded-xl border border-base-content/10 bg-base-100/50 backdrop-blur-sm hover:bg-base-content/5 hover:border-base-content/20 transition-all duration-200 cursor-pointer"
                 >
                   {/* Player Profile Image */}
                   <div className="h-9 w-9 shrink-0">
@@ -175,10 +175,10 @@ export const PlayerList = ({ data, teamId }) => {
                     )}
                   </div>
 
-                  {/* Player Details */}
-                  <div className="flex flex-col min-w-0 flex-1 gap-0.5">
-                    {/* Name + Role Badges */}
-                    <div className="flex items-center gap-1.5">
+                  {/* Player Content */}
+                  <div className="flex flex-col min-w-0 flex-1 gap-1.5">
+                    {/* Row 1: Name + Role */}
+                    <div className="flex items-center gap-1.5 min-w-0">
                       <h3 className="font-semibold text-sm capitalize text-base-content truncate">
                         {teamPlayer?.player?.playerName}
                       </h3>
@@ -200,36 +200,42 @@ export const PlayerList = ({ data, teamId }) => {
                       </div>
                     </div>
 
-                    {/* Compact stats row */}
-                    <div className="flex justify-between gap-2.5 text-[0.68rem] text-base-content/60">
-                      <span className="flex items-center gap-1">
+                    {/* Row 2: Player Profile Information */}
+                    <div className="grid grid-cols-3 gap-2 text-[0.68rem] text-base-content/60">
+                      {/* Batting */}
+                      <span className="flex items-center gap-1 min-w-0">
                         <img
                           src={bat}
                           alt="Batting"
-                          className="h-2.5 w-auto opacity-70 group-hover:opacity-100 transition-opacity"
+                          className="h-2.5 w-auto shrink-0 opacity-70 group-hover:opacity-100 transition-opacity"
                         />
-                        <span className="capitalize">
+
+                        <span className="capitalize truncate">
                           {teamPlayer?.player?.battingStyle || "-"}
                         </span>
                       </span>
 
-                      <span className="flex items-center gap-1">
+                      {/* Bowling */}
+                      <span className="flex items-center gap-1 min-w-0">
                         <img
                           src={ball}
                           alt="Bowling"
-                          className="h-2.5 w-auto opacity-70 group-hover:opacity-100 transition-opacity"
+                          className="h-2.5 w-auto shrink-0 opacity-70 group-hover:opacity-100 transition-opacity"
                         />
-                        <span className="capitalize">
+
+                        <span className="capitalize truncate">
                           {teamPlayer?.player?.bowlingStyle || "-"}
                         </span>
                       </span>
 
-                      <span className="flex items-center gap-1">
+                      {/* Playing Role */}
+                      <span className="flex items-center gap-1 min-w-0">
                         <UserRound
                           size={10}
-                          className="opacity-70 group-hover:opacity-100 transition-opacity"
+                          className="shrink-0 opacity-70 group-hover:opacity-100 transition-opacity"
                         />
-                        <span className="capitalize">
+
+                        <span className="capitalize truncate">
                           {teamPlayer?.player?.playingRole || "-"}
                         </span>
                       </span>
