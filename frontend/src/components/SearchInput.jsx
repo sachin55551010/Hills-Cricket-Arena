@@ -6,6 +6,7 @@ export const SearchInput = ({ onSearch }) => {
     value: "",
     status: "",
   });
+  console.log("filter", filter);
 
   const handleSearchBtn = (value) => {
     const newFilter = { ...filter, value };
@@ -84,6 +85,9 @@ export const SearchInput = ({ onSearch }) => {
           <option value="Ongoing">Ongoing</option>
           <option value="Completed">Completed</option>
           <option value="Cancelled">Cancelled</option>
+          <option value="Inactive">Inactive</option>
+          <option value="Abandoned">Abandoned</option>
+          <option value="Postponed">Postponed</option>
         </select>
       </div>
     </div>

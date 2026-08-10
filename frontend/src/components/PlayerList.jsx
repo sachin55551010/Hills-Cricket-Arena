@@ -100,11 +100,11 @@ export const PlayerList = ({ data, teamId }) => {
         </div>
       ) : (
         <>
-          <div className="mt-4 bg-base-200 py-4 px-2 rounded-lg">
+          <div className="mt-4 border border-base-content/10 py-4 px-2 rounded-lg">
             {canAddPlayers ? (
               <div className="flex items-center justify-between ml-3">
                 <div>
-                  <h1 className="font-semibold text-lg">Add more players ?</h1>
+                  <h1 className="font-semibold">Add more players ?</h1>
                   <p className="text-[.75rem] text-base-content/60 mt-4">
                     Add more players in your team via invite link
                   </p>
@@ -126,9 +126,9 @@ export const PlayerList = ({ data, teamId }) => {
 
           <div className="flex items-center justify-between">
             <div className="badge badge-soft badge-success flex gap-2 my-4 items-center py-5 px-4">
-              <Users size={25} />
-              <h1 className="font-bold text-base-content/60">Players</h1>
-              <span className="font-bold text-xl">{totalPlayersInTeam}</span>
+              <Users size={20} />
+              <h1 className="font-semibold text-base-content/60">Players</h1>
+              <span className="font-bold">{totalPlayersInTeam}</span>
             </div>
 
             {canAddPlayers && (
@@ -155,91 +155,87 @@ export const PlayerList = ({ data, teamId }) => {
           <ul className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
             {playerList.map((teamPlayer) => {
               return (
-                <button
+                <li
                   onClick={() => handlePlayerClickBtn(teamPlayer.player._id)}
                   key={teamPlayer.player._id}
-                  className="border border-base-content/20 p-2 rounded-md flex flex-col gap-1 hover:cursor-pointer"
+                  className="group flex items-center gap-3 p-2 rounded-xl border border-base-content/10 bg-base-100/50 backdrop-blur-sm hover:bg-base-content/5 hover:border-base-content/20 transition-all duration-200 cursor-pointer"
                 >
-                  <div className="flex items-center">
-                    <div className="flex w-full gap-2">
-                      {/* player profile image */}
-                      <div className="h-14 w-14">
-                        {teamPlayer?.player?.profilePicture === "" ? (
-                          <div className="bg-accent h-full w-full rounded-full flex items-center justify-center font-bold text-xl">
-                            {defaultAvatar(teamPlayer?.player?.playerName)}
-                          </div>
-                        ) : (
-                          <img
-                            src={teamPlayer?.player?.profilePicture}
-                            alt="img"
-                            className="h-full w-full object-cover rounded-full border border-base-content/20"
-                          />
-                        )}
+                  {/* Player Profile Image */}
+                  <div className="h-9 w-9 shrink-0">
+                    {teamPlayer?.player?.profilePicture === "" ? (
+                      <div className="bg-accent h-full w-full rounded-full flex items-center justify-center font-medium text-sm text-accent-content">
+                        {defaultAvatar(teamPlayer?.player?.playerName)}
                       </div>
-
-                      {/* player name and role section */}
-                      <section className="flex justify-between items-center">
-                        <h1 className="font-bold capitalize">
-                          {teamPlayer?.player?.playerName}
-                        </h1>
-
-                        {/* role badge */}
-                        <div className="flex ml-2 gap-2 text-[.7rem]">
-                          {teamPlayer?.role?.map((role) => {
-                            const style = roleStyle[role];
-                            if (!style) return null;
-
-                            return (
-                              <span
-                                key={role}
-                                className={`${style.className} text-[.7rem] font-bold h-6`}
-                              >
-                                {style.label}
-                              </span>
-                            );
-                          })}
-                        </div>
-                      </section>
-                    </div>
-
-                    {/* varified badge */}
-                    {/* <div>
-                      {teamPlayer?.player?.isVarified && (
-                        <span className="flex items-center gap-1">
-                          <BadgeCheck
-                            size={19}
-                            className="text-green-500 rounded-full"
-                          />
-                          <h1 className="font-bold text-[.7rem]">Verified</h1>
-                        </span>
-                      )}
-                    </div> */}
+                    ) : (
+                      <img
+                        src={teamPlayer?.player?.profilePicture}
+                        alt={teamPlayer?.player?.playerName}
+                        className="h-full w-full object-cover rounded-full ring-1 ring-base-content/10"
+                      />
+                    )}
                   </div>
 
-                  {/* player styles section */}
-                  <section className="flex items-center justify-between gap-1">
-                    <div className="flex items-center">
-                      <img src={bat} alt="" className="h-4 w-auto" />
-                      <h1 className="capitalize text-[.65rem] text-base-content/70">
-                        {teamPlayer?.player?.battingStyle || "_"}
-                      </h1>
+                  {/* Player Details */}
+                  <div className="flex flex-col min-w-0 flex-1 gap-0.5">
+                    {/* Name + Role Badges */}
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="font-semibold text-sm capitalize text-base-content truncate">
+                        {teamPlayer?.player?.playerName}
+                      </h3>
+
+                      <div className="flex gap-1 shrink-0">
+                        {teamPlayer?.role?.map((role) => {
+                          const style = roleStyle[role];
+                          if (!style) return null;
+
+                          return (
+                            <span
+                              key={role}
+                              className={`${style.className} text-[0.6rem] px-1.5 py-0.5 rounded font-medium leading-none`}
+                            >
+                              {style.label}
+                            </span>
+                          );
+                        })}
+                      </div>
                     </div>
 
-                    <div className="flex items-center">
-                      <img src={ball} alt="" className="h-3 w-auto" />
-                      <h1 className="capitalize text-[.65rem] text-base-content/70">
-                        {teamPlayer?.player?.bowlingStyle || "_"}
-                      </h1>
-                    </div>
+                    {/* Compact stats row */}
+                    <div className="flex justify-between gap-2.5 text-[0.68rem] text-base-content/60">
+                      <span className="flex items-center gap-1">
+                        <img
+                          src={bat}
+                          alt="Batting"
+                          className="h-2.5 w-auto opacity-70 group-hover:opacity-100 transition-opacity"
+                        />
+                        <span className="capitalize">
+                          {teamPlayer?.player?.battingStyle || "-"}
+                        </span>
+                      </span>
 
-                    <div className="flex items-center">
-                      <UserRound size={17} />
-                      <h1 className="capitalize text-[.65rem] text-base-content/70">
-                        {teamPlayer?.player?.playingRole || "_"}
-                      </h1>
+                      <span className="flex items-center gap-1">
+                        <img
+                          src={ball}
+                          alt="Bowling"
+                          className="h-2.5 w-auto opacity-70 group-hover:opacity-100 transition-opacity"
+                        />
+                        <span className="capitalize">
+                          {teamPlayer?.player?.bowlingStyle || "-"}
+                        </span>
+                      </span>
+
+                      <span className="flex items-center gap-1">
+                        <UserRound
+                          size={10}
+                          className="opacity-70 group-hover:opacity-100 transition-opacity"
+                        />
+                        <span className="capitalize">
+                          {teamPlayer?.player?.playingRole || "-"}
+                        </span>
+                      </span>
                     </div>
-                  </section>
-                </button>
+                  </div>
+                </li>
               );
             })}
           </ul>
