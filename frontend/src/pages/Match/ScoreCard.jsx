@@ -21,7 +21,7 @@ export const ScoreCard = () => {
 
   if (isLoading) {
     return (
-      <div className="p-4">
+      <div className="p-4 mt-12">
         <div className="card bg-base-100 border border-base-300">
           <div className="p-6 space-y-4 animate-pulse">
             <div className="h-6 bg-base-300 rounded w-1/3 mx-auto" />
@@ -92,7 +92,9 @@ export const ScoreCard = () => {
           <div className="flex justify-center mt-6">
             <div className="flex items-center gap-2 text-sm text-base-content/70">
               <Trophy size={16} />
-              <span>{tournament?.tournamentName || "Tournament"}</span>
+              <span className="capitalize">
+                {tournament?.tournamentName || "Tournament"}
+              </span>
             </div>
           </div>
         </div>

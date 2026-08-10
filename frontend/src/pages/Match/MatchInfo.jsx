@@ -15,8 +15,8 @@ export const MatchInfo = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-10">
-        <span className="loading loading-spinner loading-md" />
+      <div className="flex justify-center items-center min-h-[300px] mt-14">
+        <span className="loading loading-ring loading-xl"></span>
       </div>
     );
   }
