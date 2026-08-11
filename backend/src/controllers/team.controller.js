@@ -148,8 +148,7 @@ export const getTeamById = async (req, res, next) => {
     if (!teamId || !mongoose.Types.ObjectId.isValid(teamId))
       return next(new CustomErrHandler(403, "Invalid team id"));
     const team = await Team.findById(teamId).select("");
-    const tournamentId = await Tournament.findById(team.tournamentId);
-    // console.log("Tournament ID", tournamentId);
+ 
 
     if (!team) return next(new CustomErrHandler(404, "No team found"));
 

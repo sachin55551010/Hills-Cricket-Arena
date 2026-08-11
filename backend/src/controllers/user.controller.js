@@ -7,7 +7,6 @@ import { CustomErrHandler } from "../utils/CustomErrHandler.js";
 export const checkAuth = async (req, res, next) => {
   try {
     const { id } = req.user;
-
     const player = await Player.findById(id).populate("playerId");
     if (!player) return next(new CustomErrHandler(404, "User not found"));
 
@@ -60,6 +59,8 @@ export const updatePlayer = async (req, res, next) => {
     if (playerId !== req.user.id)
       return next(new CustomErrHandler(403, "unatherised or invalid request"));
     let player = await Player.findById(req.user.id);
+
+    
 
     if (
       req.body.profilePicture &&

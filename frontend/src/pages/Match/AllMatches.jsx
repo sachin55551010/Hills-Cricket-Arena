@@ -1,16 +1,8 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { SearchInput } from "../../components/SearchInput";
-import { useState } from "react";
 
-export const AllTournaments = () => {
-  const [searchData, setSearchData] = useState({
-    search: "",
-    value: "",
-    status: "",
-  });
-
+export const AllMatches = () => {
   return (
-    <div className="">
+    <div className="h-dvh">
       <div className="flex flex-col fixed z-[70] w-full bg-base-100">
         <nav className="w-full bg-base-100 flex justify-around pt-18 text-[.8rem]">
           <NavLink
@@ -54,10 +46,8 @@ export const AllTournaments = () => {
             Corporate
           </NavLink>
         </nav>
-        <SearchInput onSearch={setSearchData} />
       </div>
-
-      <Outlet context={{ searchData }} />
+      <Outlet />
     </div>
   );
 };
