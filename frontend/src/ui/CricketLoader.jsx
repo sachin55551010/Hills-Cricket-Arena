@@ -1,5 +1,6 @@
 import cricketBall from "../../assets/cricket_ball.svg";
 import myAppLogo from "../../public/my_app_logo.png";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 
@@ -22,6 +23,7 @@ export const CricketLoader = ({ progress } = {}) => {
     }, 2200);
 
     return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const balls = [0, 1, 2];
