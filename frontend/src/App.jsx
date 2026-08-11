@@ -35,7 +35,7 @@ import { AllOpenMatches } from "./pages/Match/AllOpenMatches";
 import { AllPanchayatMatches } from "./pages/Match/AllPanchayatMatches";
 import { AllPanchayatOpenMatches } from "./pages/Match/AllPanchayatOpenMatches";
 import { AllCorporateMatches } from "./pages/Match/AllCorporateMatches";
-import { AllMatches } from "./pages/Match/Allmatches";
+import {AllMatches} from "./pages/Match/AllMatches";
 import { CricketLoader } from "./ui/CricketLoader";
 import { MatchInfo } from "./pages/Match/MatchInfo";
 import { LiveMatch } from "./pages/Match/LiveMatch";

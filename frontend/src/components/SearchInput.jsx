@@ -6,7 +6,7 @@ export const SearchInput = ({ onSearch }) => {
     value: "",
     status: "",
   });
-  console.log("filter", filter);
+  
 
   const handleSearchBtn = (value) => {
     const newFilter = { ...filter, value };
