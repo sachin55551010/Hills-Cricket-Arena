@@ -10,6 +10,7 @@ export const SideMenuBar = () => {
   const { authUser } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const { isMenuOpen } = useSelector((state) => state.auth);
+
   const handleChangeThemeBtn = (e) => {
     e.stopPropagation();
     dispatch(setChooseTheme(true));
@@ -22,130 +23,239 @@ export const SideMenuBar = () => {
     dispatch(setIsMenuOpen(false));
   };
 
-  return (
-    // side menu bar
+  const navItemClass = ({ isActive }) =>
+    `
+      group flex items-center gap-3
+      rounded-xl px-3 py-2.5
+      text-sm font-medium
+      transition-all duration-200
+      ${
+        isActive
+          ? "bg-primary/10 text-primary"
+          : "text-base-content/70 hover:bg-base-content/5 hover:text-base-content"
+      }
+      lg:gap-2 lg:px-2.5 lg:py-2
+    `;
 
+  return (
     <div
       onClick={closeBtn}
-      className={`lg:static max-h-dvh lg:w-fit lg:h-fit lg:bg-transparent ${
-        isMenuOpen ? "fixed inset-0 z-95 bg-black/80 " : "hidden lg:block"
-      } `}
+      className={`
+        lg:static lg:h-fit lg:w-fit lg:bg-transparent
+        ${
+          isMenuOpen
+            ? "fixed inset-0 z-95 bg-black/50 backdrop-blur-[2px]"
+            : "hidden lg:block"
+        }
+      `}
     >
-      {/* section for side menu items  */}
       <section
-        onClick={(e) => {
-          e.stopPropagation();
-        }}
-        className="bg-base-100 h-dvh w-[80%] lg:w-fit lg:h-fit lg:bg-transparent"
+        onClick={(e) => e.stopPropagation()}
+        className="
+          h-dvh w-[82%] max-w-[320px]
+          bg-base-100
+          shadow-2xl
+          lg:h-fit lg:w-fit lg:max-w-none
+          lg:bg-transparent lg:shadow-none
+        "
       >
-        {/* menu header  */}
-        <header className="flex justify-between border-b py-4 px-2 lg:hidden">
-          <h2 className="font-extrabold text-xl">Menu</h2>
+        {/* Mobile Header */}
+        <header
+          className="
+            flex items-center justify-between
+            border-b border-base-content/10
+            px-4 py-4
+            lg:hidden
+          "
+        >
+          <div>
+            <h2 className="text-lg font-bold tracking-tight">Menu</h2>
+            <p className="mt-0.5 text-xs text-base-content/50">
+              Navigate your account
+            </p>
+          </div>
 
-          {/* cross button to close side menu  */}
           <button
             onClick={() => dispatch(setIsMenuOpen(false))}
-            className="flex items-center justify-center rounded-md hover:bg-base-content/400 w-8 transition-all duration-200"
+            className="
+              flex h-9 w-9 items-center justify-center
+              rounded-xl
+              text-base-content/60
+              transition-all duration-200
+              hover:bg-base-content/5
+              hover:text-base-content
+              active:scale-95
+            "
+            aria-label="Close menu"
           >
-            <X strokeWidth={3} />
+            <X size={20} strokeWidth={2} />
           </button>
         </header>
-        {/* menu list items  */}
 
-        <>
-          {isLoading ? (
-            <div className="text-center mt-10">
-              <span className="loading loading-dots loading-xl"></span>
-            </div>
-          ) : (
-            <ul
-              onClick={() => dispatch(setIsMenuOpen(false))}
-              className="grid grid-cols-1 p-2 gap-2 lg:flex lg:items-center lg:text-[.7rem] lg:p-0 cursor-pointer lg:gap-1"
-            >
-              {/* user profile  */}
-              <li className="p-2 rounded-md hover:bg-base-content/40 transition-all duration-200">
-                {/* if user not loggedin  */}
-                {!authUser ? (
-                  <NavLink to="/login" className="flex items-center gap-4">
-                    <UserRound className="lg:hidden" />
-                    <h1 className="font-bold md:font-normal">Log In</h1>
-                  </NavLink>
-                ) : (
-                  <NavLink
-                    to={`/profile/${playerId}`}
-                    className="flex items-center gap-4 lg:h-5 lg:gap-2"
+        {/* Menu */}
+        {isLoading ? (
+          <div className="flex justify-center py-10">
+            <span className="loading loading-dots loading-md" />
+          </div>
+        ) : (
+          <ul
+            onClick={() => dispatch(setIsMenuOpen(false))}
+            className="
+              flex flex-col gap-1.5
+              p-3
+              lg:flex-row lg:items-center
+              lg:gap-1
+              lg:p-0
+            "
+          >
+            {/* Profile */}
+            <li className="mb-2 lg:mb-0">
+              {!authUser ? (
+                <NavLink to="/login" className={navItemClass}>
+                  <div
+                    className="
+                      flex h-9 w-9 shrink-0
+                      items-center justify-center
+                      rounded-xl
+                      bg-base-content/5
+                      lg:hidden
+                    "
                   >
-                    {authUser?.player?.profilePicture === "" ? (
-                      <div className="rounded-full h-15 w-15 lg:h-7 lg:w-7 flex items-center justify-center bg-info">
-                        <div className="text-lg font-bold lg:text-sm capitalize">
-                          {defaultAvatar(authUser?.player?.playerName)}
-                        </div>
-                      </div>
-                    ) : (
-                      <img
-                        className="h-15 w-15 rounded-full lg:h-7 lg:w-7 object-cover"
-                        src={
-                          authUser?.player?.profilePicture ||
-                          authUser?.player?.playerId?.profileImg ||
-                          "avatar.jpg"
-                        }
-                        alt=""
-                      />
-                    )}
+                    <UserRound size={18} strokeWidth={1.8} />
+                  </div>
 
-                    <div className="lg:hidden">
-                      <h1 className="font-bold md:font-normal">
-                        {authUser?.player?.playerName}
-                      </h1>
-                      <p className="text-[.76rem] truncate max-w-[13rem] lg:hidden">
-                        {authUser?.player?.playerId?.email}
-                      </p>
-                    </div>
-                  </NavLink>
-                )}
-              </li>
-
-              {/* my tournaments  */}
-              {authUser?.player?.role === "organiser" && (
-                <li className="p-2 rounded-md hover:bg-base-content/40 transition-all duration-200">
-                  <NavLink
-                    to="my-tournament"
-                    className="flex gap-4 items-center lg:gap-1"
-                  >
-                    <Target className="lg:size-4 md:hidden" />
-                    <h1 className="font-bold text-sm md:font-normal">
-                      My Tournaments
-                    </h1>
-                  </NavLink>
-                </li>
-              )}
-
-              <li className="p-2 rounded-md hover:bg-base-content/40 transition-all duration-200">
+                  <span>Log In</span>
+                </NavLink>
+              ) : (
                 <NavLink
-                  to="add-tournament"
-                  className="flex items-center gap-4 lg:gap-1"
+                  to={`/profile/${playerId}`}
+                  className={({ isActive }) =>
+                    `
+                      group flex items-center gap-3
+                      rounded-xl px-3 py-2
+                      transition-all duration-200
+                      lg:gap-2 lg:px-2 lg:py-1
+                      ${
+                        isActive
+                          ? "bg-primary/10"
+                          : "hover:bg-base-content/5"
+                      }
+                    `
+                  }
                 >
-                  <Trophy className="lg:size-4 md:hidden" />
-                  <h1 className="font-bold text-sm md:font-normal">
-                    Create New Tournament
-                  </h1>
+                  {/* Avatar */}
+                  {authUser?.player?.profilePicture === "" ? (
+                    <div
+                      className="
+                        flex h-11 w-11 shrink-0
+                        items-center justify-center
+                        rounded-full
+                        bg-primary/10
+                        text-primary
+                        ring-1 ring-primary/10
+                        lg:h-7 lg:w-7
+                      "
+                    >
+                      <span className="text-base font-bold capitalize lg:text-xs">
+                        {defaultAvatar(authUser?.player?.playerName)}
+                      </span>
+                    </div>
+                  ) : (
+                    <img
+                      className="
+                        h-11 w-11 shrink-0
+                        rounded-full
+                        object-cover
+                        ring-1 ring-base-content/10
+                        lg:h-7 lg:w-7
+                      "
+                      src={
+                        authUser?.player?.profilePicture ||
+                        authUser?.player?.playerId?.profileImg ||
+                        "avatar.jpg"
+                      }
+                      alt=""
+                    />
+                  )}
+
+                  {/* User information */}
+                  <div className="min-w-0 lg:hidden">
+                    <h1 className="truncate text-sm font-semibold">
+                      {authUser?.player?.playerName}
+                    </h1>
+
+                    <p className="mt-0.5 max-w-[14rem] truncate text-xs text-base-content/50">
+                      {authUser?.player?.playerId?.email}
+                    </p>
+                  </div>
+                </NavLink>
+              )}
+            </li>
+
+            {/* Desktop separator */}
+            <div className="hidden h-5 w-px bg-base-content/10 lg:block" />
+
+            {/* My Tournaments */}
+            {authUser?.player?.role === "organiser" && (
+              <li>
+                <NavLink to="my-tournament" className={navItemClass}>
+                  <Target
+                    size={18}
+                    strokeWidth={1.8}
+                    className="shrink-0 lg:size-4"
+                  />
+
+                  <span>My Tournaments</span>
                 </NavLink>
               </li>
+            )}
 
-              <li
+            {/* Create Tournament */}
+            <li>
+              <NavLink to="add-tournament" className={navItemClass}>
+                <Trophy
+                  size={18}
+                  strokeWidth={1.8}
+                  className="shrink-0 lg:size-4"
+                />
+
+                <span>Create New Tournament</span>
+              </NavLink>
+            </li>
+
+            {/* Theme */}
+            <li>
+              <button
                 onClick={handleChangeThemeBtn}
-                className="p-2 rounded-md hover:bg-base-content/40 transition-all duration-200"
+                className="
+                  group flex w-full items-center gap-3
+                  rounded-xl
+                  px-3 py-2.5
+                  text-left text-sm font-medium
+                  text-base-content/70
+                  transition-all duration-200
+                  hover:bg-base-content/5
+                  hover:text-base-content
+                  active:scale-[0.99]
+                  lg:gap-2 lg:px-2.5 lg:py-2
+                "
               >
-                <div className="flex gap-4 lg:gap-1 items-center">
-                  <Palette className="lg:size-4 md:hidden" />
-                  <h1 className="font-bold text-sm md:font-normal">
-                    Change Theme
-                  </h1>
-                </div>
-              </li>
-            </ul>
-          )}
-        </>
+                <Palette
+                  size={18}
+                  strokeWidth={1.8}
+                  className="
+                    shrink-0
+                    transition-transform duration-200
+                    group-hover:rotate-12
+                    lg:size-4
+                  "
+                />
+
+                <span>Change Theme</span>
+              </button>
+            </li>
+          </ul>
+        )}
       </section>
     </div>
   );

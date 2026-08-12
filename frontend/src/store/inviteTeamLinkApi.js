@@ -6,6 +6,7 @@ export const inviteLinkApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: `${import.meta.env.VITE_BACKEND_URL}/invite`,
     credentials: "include",
+    
   }),
   tagTypes: ["Invite"],
   endpoints: (builder) => ({
