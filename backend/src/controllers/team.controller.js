@@ -12,76 +12,126 @@ export const createTeam = async (req, res, next) => {
     const { tournamentId } = req.params;
     let { teamName, teamLogo, city, adminNumber, adminName, addMe } = req.body;
 
-    if (!req.user.id)
+    if (!req.user.id) {
       return next(
-        new CustomErrHandler(401, "You are not allowed to perform this action"),
+        new CustomErrHandler(
+          401,
+          "You are not allowed to perform this action",
+        ),
       );
+    }
 
-    if (!tournamentId)
+    if (!tournamentId) {
       return next(
-        new CustomErrHandler(404, "No tournament found or invalid tournament"),
+        new CustomErrHandler(
+          404,
+          "No tournament found or invalid tournament",
+        ),
       );
+    }
 
-    if (!teamName?.trim() || !city?.trim())
-      return next(new CustomErrHandler(400, "required fields cannot be empty"));
+    if (!teamName?.trim() || !city?.trim()) {
+      return next(
+        new CustomErrHandler(400, "Required fields cannot be empty"),
+      );
+    }
 
+    // Find tournament
+    const tournament = await Tournament.findById(tournamentId);
+
+    if (!tournament) {
+      return next(
+        new CustomErrHandler(404, "Tournament not found"),
+      );
+    }
+
+    // Team creation is not allowed for these tournament statuses
+    const restrictedStatuses = [
+      "Completed",
+      "Cancelled",
+      "Abandoned",
+      "Postponed",
+      "Inactive",
+    ];
+
+    if (restrictedStatuses.includes(tournament.status)) {
+      return next(
+        new CustomErrHandler(
+          400,
+          `You cannot create a team because this tournament is ${tournament.status.toLowerCase()}.`,
+        ),
+      );
+    }
+
+    // Check duplicate team name
     const findDuplicateTeam = await Team.findOne({
       tournamentId,
       teamName: teamName.toLowerCase(),
     });
 
-    // checking if team with same name already exist or not
-    if (findDuplicateTeam)
+    if (findDuplicateTeam) {
       return next(
         new CustomErrHandler(
           409,
-          "Team is already exist in this tournament. please choose different name",
+          "Team already exists in this tournament. Please choose a different name",
         ),
       );
+    }
 
-    // updating team logo
+    // Update team logo
     if (teamLogo && teamLogo.startsWith("data:image")) {
-      let uploadTeamLogo = await cloudinary.uploader.upload(teamLogo, {
+      const uploadTeamLogo = await cloudinary.uploader.upload(teamLogo, {
         folder: "teamLogo",
       });
+
       teamLogo = uploadTeamLogo.secure_url;
     }
 
-    //checking is player in a team or not
+    // Check if player is already in another team
     const checkDuplicatePlayerInOtherTeam = await Team.exists({
       tournamentId,
       "teamPlayers.player": req.user.id,
     });
 
-    if (addMe && checkDuplicatePlayerInOtherTeam)
+    if (addMe && checkDuplicatePlayerInOtherTeam) {
       return next(
         new CustomErrHandler(
           409,
           "You are already registered with another team in this tournament. Please leave that team before joining a new one.",
         ),
       );
+    }
 
+    // Create team
     const team = await Team.create({
       tournamentId,
       teamName: teamName.toLowerCase(),
       city,
-      teamLogo: teamLogo,
+      teamLogo,
       adminNumber: adminNumber || "",
       adminName: adminName || "",
       createdBy: req.user.id,
     });
 
+    // Add creator as player
     if (addMe) {
       await Team.findByIdAndUpdate(team._id, {
-        $addToSet: { teamPlayers: { player: req.user.id } },
+        $addToSet: {
+          teamPlayers: {
+            player: req.user.id,
+          },
+        },
       });
     }
+
     io.emit("createTeam", team);
-    return res
-      .status(201)
-      .json({ message: "Team created successfully", success: true });
+
+    return res.status(201).json({
+      message: "Team created successfully",
+      success: true,
+    });
   } catch (error) {
-    console.log("create team error : ", error);
+    console.log("create team error:", error);
     next(error);
   }
 };
