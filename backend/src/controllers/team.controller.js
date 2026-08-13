@@ -191,6 +191,7 @@ export const getTeamPlayers = async (req, res, next) => {
   }
 };
 
+// get team by id
 export const getTeamById = async (req, res, next) => {
   try {
     const { teamId } = req.params;

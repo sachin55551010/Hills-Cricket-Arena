@@ -1,8 +1,10 @@
 import { MapPin, Share2, Trash2, Users } from "lucide-react";
 import { defaultAvatar } from "../utils/noprofilePicHelper";
 import { useNavigate } from "react-router-dom";
+
 export const TeamList = ({ data, tournamentId }) => {
   const navigate = useNavigate();
+
   const handleTeamClickBtn = (teamId) => {
     navigate(`/my-tournament/${tournamentId}/tournament-teams/${teamId}`);
   };
@@ -12,61 +14,115 @@ export const TeamList = ({ data, tournamentId }) => {
 
   return (
     <>
-      <div className="mx-3 flex items-center justify-between px-2">
-        <div className="badge badge-soft badge-success flex gap-2 my-4 items-center py-6 px-4">
-          <Users size={25} />
-          <h1 className="font-bold text-base-content/60">Teams</h1>
-          <span className="font-bold text-xl">{teamCount}</span>
+      {/* Header */}
+      <div className="mx-3 mt-5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-success/10 text-success">
+            <Users size={21} strokeWidth={2.2} />
+          </div>
+
+          <div>
+            <h1 className="text-sm font-bold text-base-content">
+              Tournament Teams
+            </h1>
+            <p className="text-xs text-base-content/50">
+              Registered teams
+            </p>
+          </div>
+        </div>
+
+        <div className="flex min-w-12 items-center justify-center rounded-xl bg-base-200 px-3 py-2">
+          <span className="text-lg font-bold text-base-content">
+            {teamCount}
+          </span>
         </div>
       </div>
-      <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-3 my-4">
+
+      {/* Team List */}
+      <ul className="grid grid-cols-1 gap-3 p-3 my-4 md:grid-cols-2 lg:grid-cols-3">
         {teamList?.map((teams) => {
           return (
             <li
               onClick={() => handleTeamClickBtn(teams._id)}
               key={teams._id}
-              className="p-2 flex gap-4 rounded-md border border-base-content/20 cursor-pointer hover:scale-102 duration-300"
+              className="
+                group
+                relative
+                flex
+                cursor-pointer
+                gap-3
+                overflow-hidden
+                rounded-2xl
+                border
+                border-base-content/10
+                bg-base-100
+                p-3
+                shadow-sm
+                transition-all
+                duration-300
+                hover:-translate-y-0.5
+                hover:border-success/30
+                hover:shadow-md
+              "
             >
-              {/* team logo */}
-              <div>
+              {/* subtle hover accent */}
+              <div className="absolute inset-y-0 left-0 w-1 bg-success/0 transition-all duration-300 group-hover:bg-success/70" />
+
+              {/* Team Logo */}
+              <div className="shrink-0">
                 {teams.teamLogo === "" ? (
-                  <div className="h-12 w-12 rounded-full bg-base-300 border flex items-center justify-center font-extrabold text-bg-content">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-base-content/10 bg-base-200 text-lg font-extrabold text-base-content/60">
                     {defaultAvatar(teams.teamName)}
                   </div>
                 ) : (
                   <img
                     src={teams.teamLogo}
                     alt=""
-                    className="h-12 w-14 rounded-full object-cover bg-red-400"
+                    className="h-14 w-14 rounded-2xl border border-base-content/10 bg-base-200 object-cover"
                   />
                 )}
               </div>
 
-              {/* team details */}
-              <div className="flex flex-col justify-between w-full gap-2">
-                <h1 className="font-bold text-sm capitalize">
-                  {teams.teamName}
-                </h1>
+              {/* Team Details */}
+              <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 py-0.5">
+                <div className="flex items-start justify-between gap-2">
+                  <h1 className="truncate text-sm font-bold capitalize text-base-content">
+                    {teams.teamName}
+                  </h1>
 
-                {/* team captain vice captain info */}
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 flex gap-2 items-center text-[.75rem] text-base-content/60">
-                    <div className="badge badge-soft badge-accent p-1 rounded-full">
-                      <MapPin size={15} />
+                  <span className="shrink-0 rounded-full bg-base-200 px-2 py-1 text-[10px] font-semibold text-base-content/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    View
+                  </span>
+                </div>
+
+                {/* Team Info */}
+                <div className="flex min-w-0 items-center gap-3">
+                  {/* City */}
+                  <div className="flex min-w-0 items-center gap-1.5 text-base-content/50">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-base-200 text-success">
+                      <MapPin size={13} strokeWidth={2.2} />
                     </div>
 
-                    <h4 className="capitalize font-bold">{teams.city}</h4>
+                    <h4 className="truncate text-[11px] font-semibold capitalize">
+                      {teams.city}
+                    </h4>
                   </div>
 
+                  {/* Captain */}
                   {teams.captainName && (
-                    <div className="flex-1 flex gap-2 items-center text-[.75rem] text-base-content/60">
-                      <h4 className="badge badge-soft badge-accent rounded-full w-3 h-auto font-bold">
-                        C
-                      </h4>
-                      <h4 className="capitalize font-bold">
-                        {teams.captainName || "No info"}
-                      </h4>
-                    </div>
+                    <>
+                      <div className="h-4 w-px bg-base-content/10" />
+
+                      <div className="flex min-w-0 items-center gap-1.5 text-base-content/50">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-[10px] font-bold text-accent">
+                          C
+                        </span>
+
+                        <h4 className="truncate text-[11px] font-semibold capitalize">
+                          {teams.captainName || "No info"}
+                        </h4>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>

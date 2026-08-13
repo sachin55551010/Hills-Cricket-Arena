@@ -10,6 +10,9 @@ export const MyTournamentTeams = () => {
   const { authUser } = useSelector((state) => state.auth);
   const { data, isLoading } = useGetTeamsByTournamentQuery(tournamentId);
 
+ 
+  
+
   const myTournamentTeams = data?.myTournamentTeams ?? [];
 
   //dummy skelton when data is loading
@@ -24,21 +27,25 @@ export const MyTournamentTeams = () => {
   return (
     <div className="max-h-dvh min-h-dvh pt-22 overflow-y-scroll">
       {myTournamentTeams?.length > 0 && (
-        <div className="flex justify-between items-center px-4 mt-4 py-6 bg-base-200 mx-3 rounded-lg">
-          <p className="text-[.75rem] font-semibold">
-            Want to add your team in this tournament ?
-          </p>
+        <div className="mx-3 mt-4 flex items-center justify-between gap-4 rounded-xl border border-base-300 bg-base-200/60 px-4 py-4 shadow-sm backdrop-blur-sm">
+  <p className="text-sm font-medium text-base-content/80">
+    Want to add your team to this tournament?
+  </p>
 
-          {authUser ? (
-            <Link to="create-team">
-              <button className="btn btn-info">Create</button>
-            </Link>
-          ) : (
-            <Link to="/login">
-              <button className="btn btn-outline btn-info">Log in first</button>
-            </Link>
-          )}
-        </div>
+  {authUser ? (
+    <Link to="create-team">
+      <button className="btn btn-info btn-sm rounded-lg px-5 shadow-sm">
+        Create
+      </button>
+    </Link>
+  ) : (
+    <Link to="/login">
+      <button className="btn btn-outline btn-info btn-sm rounded-lg px-4">
+        Log in first
+      </button>
+    </Link>
+  )}
+</div>
       )}
       {myTournamentTeams.length === 0 ? (
         // if no data
