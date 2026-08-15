@@ -2,6 +2,7 @@ import { useDispatch } from "react-redux";
 import { getSocket } from "../utils/socket";
 import { useEffect, useMemo } from "react";
 import noData from "../../assets/No data-amico.svg";
+// eslint-disable-next-line no-unused-vars
 import {motion} from "motion/react"
 import { useOutletContext, useLocation, useNavigate } from "react-router-dom";
 import {

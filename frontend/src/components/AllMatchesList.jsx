@@ -8,6 +8,7 @@ import { getSocket } from "../utils/socket";
 import { useDispatch } from "react-redux";
 import { tournamentApi } from "../store/tournamentApi";
 import { useNavigate } from "react-router-dom";
+// eslint-disable-next-line no-unused-vars
 import {motion} from "motion/react"
 
 /**
