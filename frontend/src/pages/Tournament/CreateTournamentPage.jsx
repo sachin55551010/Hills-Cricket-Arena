@@ -149,307 +149,553 @@ export const CreateTournamentPage = ({ mode }) => {
               <span className="loading loading-ring w-20 h-20"></span>
             </div>
           ) : (
-            <form
-              onSubmit={handleFormSubmit}
-              className="mt-18 w-[97%] flex flex-col items-center p-4 border md:w-[70%] lg:w-[60%] gap-6 border-base-content/20 rounded-lg mb-6"
+           <form
+  onSubmit={handleFormSubmit}
+  className="mt-18 mb-8 w-[96%] md:w-[85%] lg:w-[70%] xl:w-[62%] 
+  overflow-hidden rounded-2xl border border-base-content/10 
+  bg-base-100/80 shadow-xl shadow-base-content/5 backdrop-blur-sm"
+>
+  {/* Header */}
+  <div className="w-full border-b border-base-content/10 bg-base-200/40 px-5 py-6 sm:px-8">
+    <div className="flex items-start gap-4">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <span className="text-2xl">🏏</span>
+      </div>
+
+      <div>
+        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+          {mode === "create" ? "Create Tournament" : "Update Tournament"}
+        </h1>
+
+        <p className="mt-1 text-sm text-base-content/60">
+          {mode === "create"
+            ? "Set up your tournament details and match preferences."
+            : "Update your tournament details and preferences."}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  {/* Form Content */}
+  <div className="flex flex-col gap-8 p-5 sm:p-8">
+
+    {/* Basic Information */}
+    <section>
+      <div className="mb-5">
+        <h2 className="text-base font-bold sm:text-lg">
+          Tournament Information
+        </h2>
+        <p className="mt-1 text-xs text-base-content/50 sm:text-sm">
+          Add the basic details of your tournament.
+        </p>
+      </div>
+
+      <div className="grid w-full grid-cols-1 gap-5 md:grid-cols-2">
+
+        {/* Tournament Name */}
+        <label
+          htmlFor="tournament-name"
+          className="flex w-full flex-col gap-2"
+        >
+          <span className="text-sm font-semibold">
+            Tournament Name <span className="text-error">*</span>
+          </span>
+
+          <input
+            required
+            value={tournamentInfo.tournamentName}
+            onChange={(e) => {
+              setTournamentInfo({
+                ...tournamentInfo,
+                tournamentName: e.target.value,
+              });
+            }}
+            type="text"
+            id="tournament-name"
+            placeholder="e.g. Hill Premier League"
+            className="h-12 w-full rounded-xl border border-base-content/15 
+            bg-base-200/40 px-4 text-sm outline-none transition-all 
+            placeholder:text-base-content/30
+            focus:border-primary focus:bg-base-100 
+            focus:ring-4 focus:ring-primary/10"
+          />
+        </label>
+
+        {/* City */}
+        <label
+          htmlFor="city-name"
+          className="flex w-full flex-col gap-2"
+        >
+          <span className="text-sm font-semibold">
+            City <span className="text-error">*</span>
+          </span>
+
+          <input
+            required
+            value={tournamentInfo.city}
+            onChange={(e) => {
+              const { value } = e.target;
+
+              if (validateInputs(value))
+                setTournamentInfo({
+                  ...tournamentInfo,
+                  city: e.target.value,
+                });
+            }}
+            type="text"
+            id="city-name"
+            placeholder="Enter city"
+            className="h-12 w-full rounded-xl border border-base-content/15 
+            bg-base-200/40 px-4 text-sm capitalize outline-none transition-all
+            placeholder:text-base-content/30
+            focus:border-primary focus:bg-base-100 
+            focus:ring-4 focus:ring-primary/10"
+          />
+        </label>
+
+        {/* Ground */}
+        <label
+          htmlFor="ground-name"
+          className="flex w-full flex-col gap-2"
+        >
+          <span className="text-sm font-semibold">
+            Ground <span className="text-error">*</span>
+          </span>
+
+          <input
+            required
+            value={tournamentInfo.ground}
+            onChange={(e) => {
+              const { value } = e.target;
+
+              if (validateInputs(value))
+                setTournamentInfo({
+                  ...tournamentInfo,
+                  ground: e.target.value,
+                });
+            }}
+            type="text"
+            id="ground-name"
+            placeholder="Enter ground name"
+            className="h-12 w-full rounded-xl border border-base-content/15 
+            bg-base-200/40 px-4 text-sm capitalize outline-none transition-all
+            placeholder:text-base-content/30
+            focus:border-primary focus:bg-base-100 
+            focus:ring-4 focus:ring-primary/10"
+          />
+        </label>
+
+        {/* Organiser Name */}
+        <label
+          htmlFor="oraniser-name"
+          className="flex w-full flex-col gap-2"
+        >
+          <span className="text-sm font-semibold">
+            Organiser Name <span className="text-error">*</span>
+          </span>
+
+          <input
+            required
+            defaultValue={authUser?.player?.playerName || ""}
+            onChange={(e) => {
+              const { value } = e.target;
+
+              if (validateInputs(value))
+                setTournamentInfo({
+                  ...tournamentInfo,
+                  organiserName: e.target.value,
+                });
+            }}
+            type="text"
+            id="organiser-name"
+            placeholder="Enter organiser name"
+            className="h-12 w-full rounded-xl border border-base-content/15 
+            bg-base-200/40 px-4 text-sm capitalize outline-none transition-all
+            placeholder:text-base-content/30
+            focus:border-primary focus:bg-base-100 
+            focus:ring-4 focus:ring-primary/10"
+          />
+        </label>
+
+        {/* Organiser Number */}
+        <label
+          htmlFor="oraniser-number"
+          className="flex w-full flex-col gap-2"
+        >
+          <span className="text-sm font-semibold">
+            Organiser Number <span className="text-error">*</span>
+          </span>
+
+          <input
+            required
+            value={tournamentInfo.phone}
+            onChange={(e) => {
+              const { value } = e.target;
+              const regex = /^[0-9]*$/;
+
+              if (regex.test(value))
+                setTournamentInfo({
+                  ...tournamentInfo,
+                  phone: e.target.value,
+                });
+            }}
+            type="text"
+            maxLength={10}
+            id="organiser-number"
+            placeholder="10 digit mobile number"
+            className="h-12 w-full rounded-xl border border-base-content/15 
+            bg-base-200/40 px-4 text-sm outline-none transition-all
+            placeholder:text-base-content/30
+            focus:border-primary focus:bg-base-100 
+            focus:ring-4 focus:ring-primary/10"
+          />
+        </label>
+
+        {/* Email */}
+        <div className="flex w-full flex-col gap-2">
+          <h1 className="text-sm font-semibold">
+            Organiser Email
+          </h1>
+
+          <div
+            className="flex h-12 w-full items-center overflow-hidden rounded-xl 
+            border border-base-content/10 bg-base-200/60 px-4 text-sm 
+            text-base-content/45"
+          >
+            <span className="truncate">
+              {authUser?.player?.playerId?.email}
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* Tournament Dates */}
+    <section>
+      <div className="mb-5">
+        <h2 className="text-base font-bold sm:text-lg">
+          Tournament Schedule
+        </h2>
+
+        <p className="mt-1 text-xs text-base-content/50 sm:text-sm">
+          Select when your tournament will take place.
+        </p>
+      </div>
+
+      <div className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2">
+
+        {/* Start Date */}
+        <label
+          htmlFor="start-date"
+          className="flex w-full flex-col gap-2"
+        >
+          <span className="text-sm font-semibold">
+            Start Date
+          </span>
+
+          <input
+            id="start-date"
+            value={
+              tournamentInfo.startDate
+                ? tournamentInfo.startDate.split("T")[0]
+                : ""
+            }
+            onChange={(e) =>
+              setTournamentInfo({
+                ...tournamentInfo,
+                startDate: e.target.value,
+              })
+            }
+            min={todayDate}
+            type="date"
+            className="h-12 w-full rounded-xl border border-base-content/15 
+            bg-base-200/40 px-4 text-sm outline-none transition-all
+            focus:border-primary focus:bg-base-100 
+            focus:ring-4 focus:ring-primary/10"
+          />
+        </label>
+
+        {/* End Date */}
+        <label
+          htmlFor="end-date"
+          className="flex w-full flex-col gap-2"
+        >
+          <span className="text-sm font-semibold">
+            End Date
+          </span>
+
+          <input
+            id="end-date"
+            min={tournamentInfo.startDate}
+            value={
+              tournamentInfo.endDate
+                ? tournamentInfo.endDate.split("T")[0]
+                : ""
+            }
+            onChange={(e) =>
+              setTournamentInfo({
+                ...tournamentInfo,
+                endDate: e.target.value,
+              })
+            }
+            type="date"
+            className="h-12 w-full rounded-xl border border-base-content/15 
+            bg-base-200/40 px-4 text-sm outline-none transition-all
+            focus:border-primary focus:bg-base-100 
+            focus:ring-4 focus:ring-primary/10"
+          />
+        </label>
+      </div>
+    </section>
+
+    {/* Tournament Category */}
+    <section>
+      <div className="mb-4">
+        <h2 className="text-sm font-bold sm:text-base">
+          Tournament Category <span className="text-error">*</span>
+        </h2>
+
+        <p className="mt-1 text-xs text-base-content/50">
+          Choose the type of tournament you are organising.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {TOURNAMENT_CATEGORY.map((val, index) => {
+          const isSelected =
+            tournamentInfo.tournamentCategory === val;
+
+          return (
+            <button
+              type="button"
+              onClick={() =>
+                handleBadgeSelectorBtn(
+                  "tournamentCategory",
+                  val
+                )
+              }
+              key={index}
+              className={`min-h-12 rounded-xl border px-3 py-3 
+              text-sm capitalize transition-all duration-200
+              ${
+                isSelected
+                  ? "border-primary bg-primary text-primary-content shadow-lg shadow-primary/20 scale-[1.02] font-semibold"
+                  : "border-base-content/10 bg-base-200/40 hover:border-primary/40 hover:bg-primary/5"
+              }`}
             >
-              {/* form input fields */}
-              <div className="w-full flex flex-col gap-4 md:grid grid-cols-2">
-                <label
-                  htmlFor="tournament-name"
-                  className="w-full flex flex-col gap-3"
-                >
-                  <span className="font-bold">Tournament Name *</span>
-                  <input
-                    required
-                    value={tournamentInfo.tournamentName}
-                    onChange={(e) => {
-                      setTournamentInfo({
-                        ...tournamentInfo,
-                        tournamentName: e.target.value,
-                      });
-                    }}
-                    type="text"
-                    className="border border-base-content/30 w-full h-10 rounded-md outline-0 pl-3 focus:border-base-content capitalize"
-                    id="tournament-name"
-                  />
-                </label>
-                <label
-                  htmlFor="city-name"
-                  className="w-full flex flex-col gap-3"
-                >
-                  <span className="font-bold">City *</span>
-                  <input
-                    required
-                    value={tournamentInfo.city}
-                    onChange={(e) => {
-                      const { value } = e.target;
-                      if (validateInputs(value))
-                        setTournamentInfo({
-                          ...tournamentInfo,
-                          city: e.target.value,
-                        });
-                    }}
-                    type="text"
-                    className="border border-base-content/30 w-full h-10 rounded-md outline-0 pl-3 focus:border-base-content capitalize"
-                    id="city-name"
-                  />
-                </label>
-                <label
-                  htmlFor="ground-name"
-                  className="w-full flex flex-col gap-3"
-                >
-                  <span className="font-bold">Ground *</span>
-                  <input
-                    required
-                    value={tournamentInfo.ground}
-                    onChange={(e) => {
-                      const { value } = e.target;
-                      if (validateInputs(value))
-                        setTournamentInfo({
-                          ...tournamentInfo,
-                          ground: e.target.value,
-                        });
-                    }}
-                    type="text"
-                    className="border border-base-content/30 w-full h-10 rounded-md outline-0 pl-3 focus:border-base-content capitalize"
-                    id="ground-name"
-                  />
-                </label>
-                <label
-                  htmlFor="oraniser-name"
-                  className="w-full flex flex-col gap-3"
-                >
-                  <span className="font-bold">Organiser Name *</span>
-                  <input
-                    required
-                    defaultValue={authUser?.player?.playerName || ""}
-                    onChange={(e) => {
-                      const { value } = e.target;
-                      if (validateInputs(value))
-                        setTournamentInfo({
-                          ...tournamentInfo,
-                          organiserName: e.target.value,
-                        });
-                    }}
-                    type="text"
-                    className="border border-base-content/30 w-full h-10 rounded-md outline-0 pl-3 focus:border-base-content capitalize"
-                    id="organiser-name"
-                  />
-                </label>
-                <label
-                  htmlFor="oraniser-number"
-                  className="w-full flex flex-col gap-3"
-                >
-                  <span className="font-bold">Organiser Number *</span>
-                  <input
-                    required
-                    value={tournamentInfo.phone}
-                    onChange={(e) => {
-                      const { value } = e.target;
-                      const regex = /^[0-9]*$/;
-                      if (regex.test(value))
-                        setTournamentInfo({
-                          ...tournamentInfo,
-                          phone: e.target.value,
-                        });
-                    }}
-                    type="text"
-                    maxLength={10}
-                    className="border border-base-content/30 w-full h-10 rounded-md outline-0 pl-3 focus:border-base-content"
-                    id="organiser-number"
-                  />
-                </label>
-                <div className="w-full flex flex-col gap-3">
-                  <h1 className="font-bold">Organiser Email</h1>
-                  <div className="border h-10 rounded-md border-base-content/30 flex items-center pl-3 text-base-content/40 cursor-not-allowed">
-                    {authUser?.player?.playerId?.email}
-                  </div>
-                </div>
-              </div>
+              {val}
+            </button>
+          );
+        })}
+      </div>
+    </section>
 
-              {/* tournament start end date */}
-              <div className="flex justify-between gap-4 w-full">
-                <label htmlFor="" className="flex flex-col gap-3 w-full">
-                  <span className="font-bold">Start Date</span>
-                  <input
-                    value={
-                      tournamentInfo.startDate
-                        ? tournamentInfo.startDate.split("T")[0]
-                        : ""
-                    }
-                    onChange={(e) =>
-                      setTournamentInfo({
-                        ...tournamentInfo,
-                        startDate: e.target.value,
-                      })
-                    }
-                    min={todayDate}
-                    type="date"
-                    className="border border-base-content/30 h-10 rounded-md px-2 focus:border-base-conten"
-                  />
-                </label>
-                <label htmlFor="" className="flex flex-col gap-3 w-full">
-                  <span className="font-bold">End Date</span>
-                  <input
-                    min={tournamentInfo.startDate}
-                    value={
-                      tournamentInfo.endDate
-                        ? tournamentInfo.endDate.split("T")[0]
-                        : ""
-                    }
-                    onChange={(e) =>
-                      setTournamentInfo({
-                        ...tournamentInfo,
-                        endDate: e.target.value,
-                      })
-                    }
-                    type="date"
-                    className="border border-base-content/30 h-10 rounded-md px-2 focus:border-base-conten"
-                  />
-                </label>
-              </div>
+    {/* Ball Type */}
+    <section>
+      <div className="mb-4">
+        <h2 className="text-sm font-bold sm:text-base">
+          Ball Type <span className="text-error">*</span>
+        </h2>
 
-              {/* tournament category */}
-              <div className="w-full p-2">
-                <span className="font-bold">Tournament Category *</span>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-4">
-                  {TOURNAMENT_CATEGORY.map((val, index) => {
-                    return (
-                      <div
-                        onClick={() =>
-                          handleBadgeSelectorBtn("tournamentCategory", val)
-                        }
-                        key={index}
-                        className={`badge badge-soft badge-info rounded-full py-4 transition-all duration-300 cursor-pointer hover:border-info/90 hover:shadow-[0px_0px_10px_var(--color-info)] ${
-                          tournamentInfo.tournamentCategory === val &&
-                          "scale-110 border-info/90 shadow-[0px_0px_10px_var(--color-info)] font-bold"
-                        } capitalize`}
-                      >
-                        {val}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+        <p className="mt-1 text-xs text-base-content/50">
+          Select the type of ball used in matches.
+        </p>
+      </div>
 
-              {/* Ball type */}
-              <div className="w-full">
-                <span className="font-bold">Select Ball Type *</span>
-                <div className="grid grid-cols-3 md:flex gap-6 mt-4 justify-normal">
-                  {BALL_TYPE.map((val, index) => {
-                    return (
-                      <div
-                        onClick={() => handleBadgeSelectorBtn("ballType", val)}
-                        key={index}
-                        className={`badge badge-soft badge-info rounded-full py-4 transition-all duration-300 cursor-pointer hover:border-info/90 hover:shadow-[0px_0px_10px_var(--color-info)] ${
-                          tournamentInfo.ballType === val &&
-                          "scale-110 border-info/90 shadow-[0px_0px_10px_var(--color-info)] font-bold"
-                        } `}
-                      >
-                        {val}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {BALL_TYPE.map((val, index) => {
+          const isSelected = tournamentInfo.ballType === val;
 
-              {/* Pitch Type */}
-              <div className="w-full">
-                <span className="font-bold">Select Pitch Type *</span>
-                <div className="grid grid-cols-4 md:flex gap-4 mt-4">
-                  {PITCH_TYPE.map((val, index) => {
-                    return (
-                      <div
-                        onClick={() => handleBadgeSelectorBtn("pitchType", val)}
-                        key={index}
-                        className={`badge badge-soft badge-info rounded-full py-4 transition-all duration-300 cursor-pointer hover:border-info/90 hover:shadow-[0px_0px_10px_var(--color-info)] ${
-                          tournamentInfo.pitchType === val &&
-                          "scale-110 border-info/90 shadow-[0px_0px_10px_var(--color-info)] font-bold"
-                        } `}
-                      >
-                        {val}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+          return (
+            <button
+              type="button"
+              onClick={() =>
+                handleBadgeSelectorBtn("ballType", val)
+              }
+              key={index}
+              className={`min-h-12 rounded-xl border px-4 py-3 
+              text-sm capitalize transition-all duration-200
+              ${
+                isSelected
+                  ? "border-primary bg-primary text-primary-content shadow-lg shadow-primary/20 scale-[1.02] font-semibold"
+                  : "border-base-content/10 bg-base-200/40 hover:border-primary/40 hover:bg-primary/5"
+              }`}
+            >
+              {val}
+            </button>
+          );
+        })}
+      </div>
+    </section>
 
-              {/* select player vhange limit */}
-              <label
-                htmlFor="max-changes"
-                className="w-full flex flex-col gap-3"
-              >
-                <span className="font-bold">
-                  Maximum Changes Allowed (Optional)
-                </span>
+    {/* Pitch Type */}
+    <section>
+      <div className="mb-4">
+        <h2 className="text-sm font-bold sm:text-base">
+          Pitch Type <span className="text-error">*</span>
+        </h2>
 
-                <input
-                  id="max-changes"
-                  type="text"
-                  value={tournamentInfo.maxChangesAllowed}
-                  maxLength={1} // ❌ prevent double digit
-                  onChange={(e) => {
-                    const value = e.target.value;
+        <p className="mt-1 text-xs text-base-content/50">
+          Choose the pitch condition for your tournament.
+        </p>
+      </div>
 
-                    // allow only numbers 1–6
-                    if (/^[1-6]?$/.test(value)) {
-                      setTournamentInfo({
-                        ...tournamentInfo,
-                        maxChangesAllowed: e.target.value,
-                      });
-                    }
-                  }}
-                  className="border border-base-content/30 w-full h-10 rounded-md outline-0 pl-3 focus:border-base-content"
-                  placeholder="Enter 1–6"
-                />
-              </label>
-              {/* additional information */}
-              <label
-                htmlFor="additional-info"
-                className="flex flex-col gap-3 w-full"
-              >
-                Additional Info
-                <textarea
-                  value={tournamentInfo.additionalInfo}
-                  onChange={(e) =>
-                    setTournamentInfo({
-                      ...tournamentInfo,
-                      additionalInfo: e.target.value,
-                    })
-                  }
-                  name=""
-                  id="additional-info"
-                  className="border border-base-content/30 w-full h-30 rounded-md outline-0 pl-3 pt-3 focus:border-base-content capitalize"
-                  placeholder="Enter winner Cash Prize, Runnerup Prize, Man of the match, man of the series, rules and any important information etc"
-                ></textarea>
-              </label>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {PITCH_TYPE.map((val, index) => {
+          const isSelected = tournamentInfo.pitchType === val;
 
-              <div
-                className={`w-full ${
-                  mode === "edit" && "grid grid-cols-1 gap-2 md:grid-cols-2"
-                }`}
-              >
-                <button
-                  className={`btn btn-success w-full rounded-lg ${
-                    mode === "edit" && "btn-warning"
-                  }`}
-                  disabled={isAdding}
-                >
-                  {mode === "create" ? "Create" : "Update"}
-                </button>
-                {mode === "edit" && (
-                  <button
-                    type="button"
-                    onClick={() => setIsDeleteModal(true)}
-                    className="btn btn-error w-full rounded-lg"
-                    disabled={isUpdating}
-                  >
-                    Delete
-                  </button>
-                )}
-              </div>
-            </form>
+          return (
+            <button
+              type="button"
+              onClick={() =>
+                handleBadgeSelectorBtn("pitchType", val)
+              }
+              key={index}
+              className={`min-h-12 rounded-xl border px-3 py-3 
+              text-sm capitalize transition-all duration-200
+              ${
+                isSelected
+                  ? "border-primary bg-primary text-primary-content shadow-lg shadow-primary/20 scale-[1.02] font-semibold"
+                  : "border-base-content/10 bg-base-200/40 hover:border-primary/40 hover:bg-primary/5"
+              }`}
+            >
+              {val}
+            </button>
+          );
+        })}
+      </div>
+    </section>
+
+    {/* Match Rules */}
+    <section>
+      <div className="mb-5">
+        <h2 className="text-base font-bold sm:text-lg">
+          Match Rules
+        </h2>
+
+        <p className="mt-1 text-xs text-base-content/50 sm:text-sm">
+          Configure optional tournament rules.
+        </p>
+      </div>
+
+      <label
+        htmlFor="max-changes"
+        className="flex w-full flex-col gap-2"
+      >
+        <span className="text-sm font-semibold">
+          Maximum Changes Allowed
+          <span className="ml-1 text-xs font-normal text-base-content/45">
+            (Optional)
+          </span>
+        </span>
+
+        <input
+          id="max-changes"
+          type="text"
+          value={tournamentInfo.maxChangesAllowed}
+          maxLength={1}
+          onChange={(e) => {
+            const value = e.target.value;
+
+            if (/^[1-6]?$/.test(value)) {
+              setTournamentInfo({
+                ...tournamentInfo,
+                maxChangesAllowed: e.target.value,
+              });
+            }
+          }}
+          className="h-12 w-full rounded-xl border border-base-content/15 
+          bg-base-200/40 px-4 text-sm outline-none transition-all
+          placeholder:text-base-content/30
+          focus:border-primary focus:bg-base-100 
+          focus:ring-4 focus:ring-primary/10"
+          placeholder="Enter 1–6"
+        />
+      </label>
+    </section>
+
+    {/* Additional Information */}
+    <section>
+      <div className="mb-4">
+        <h2 className="text-base font-bold sm:text-lg">
+          Additional Information
+        </h2>
+
+        <p className="mt-1 text-xs text-base-content/50 sm:text-sm">
+          Add prizes, rules, awards or any other important information.
+        </p>
+      </div>
+
+      <textarea
+        value={tournamentInfo.additionalInfo}
+        onChange={(e) =>
+          setTournamentInfo({
+            ...tournamentInfo,
+            additionalInfo: e.target.value,
+          })
+        }
+        name=""
+        id="additional-info"
+        className="min-h-32 w-full resize-y rounded-xl border 
+        border-base-content/15 bg-base-200/40 px-4 py-3 text-sm 
+        outline-none transition-all
+        placeholder:text-base-content/30
+        focus:border-primary focus:bg-base-100 
+        focus:ring-4 focus:ring-primary/10"
+        placeholder="Enter winner cash prize, runner-up prize, Man of the Match, Man of the Series, rules and any important information..."
+      />
+    </section>
+
+    {/* Actions */}
+    <div
+      className={`w-full pt-2 ${
+        mode === "edit"
+          ? "grid grid-cols-1 gap-3 sm:grid-cols-2"
+          : ""
+      }`}
+    >
+      <button
+        className={`btn h-12 w-full rounded-xl border-0 text-sm font-semibold shadow-lg transition-all hover:-translate-y-0.5 ${
+          mode === "edit"
+            ? "btn-warning shadow-warning/20"
+            : "btn-primary shadow-primary/20"
+        }`}
+        disabled={isAdding}
+      >
+        {isAdding ? (
+          <>
+            <span className="loading loading-spinner loading-sm"></span>
+            {mode === "create" ? "Creating..." : "Updating..."}
+          </>
+        ) : (
+          <>
+            {mode === "create" ? "Create Tournament" : "Update Tournament"}
+          </>
+        )}
+      </button>
+
+      {mode === "edit" && (
+        <button
+          type="button"
+          onClick={() => setIsDeleteModal(true)}
+          className="btn btn-error h-12 w-full rounded-xl border-0 
+          text-sm font-semibold shadow-lg shadow-error/20 
+          transition-all hover:-translate-y-0.5"
+          disabled={isUpdating}
+        >
+          {isUpdating ? (
+            <>
+              <span className="loading loading-spinner loading-sm"></span>
+              Deleting...
+            </>
+          ) : (
+            "Delete Tournament"
+          )}
+        </button>
+      )}
+    </div>
+  </div>
+</form>
           )}
         </div>
       </div>
