@@ -2,12 +2,16 @@ import { Tournament } from "../models/tournamentSchema.js";
 import { Match } from "../models/matchSchema.js";
 
 export const updateTournamentService = async () => {
+
+  
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
+  
+  
     //  Upcoming -> Ongoing
     await Tournament.updateMany(
+
       {
         startDate: { $lte: today },
         endDate: { $gte: today },
@@ -20,6 +24,9 @@ export const updateTournamentService = async () => {
     const playedTournamentIds = await Match.distinct("tournamentId", {
       status: { $in: ["live", "completed", "abandoned"] },
     });
+
+    
+    
 
     //  Expired + NO matches → Inactive
     await Tournament.updateMany(

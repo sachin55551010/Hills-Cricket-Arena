@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { useGetTeamsByTournamentQuery } from "../../store/teamApi";
 import { TeamList } from "../../components/TeamList";
 import { DummyListLoadingSkelton } from "../../components/modals/DummyLoadingSkelton";
+import { NoDataFoundPage } from "../../components/NoDataFoundPage";
 export const MyTournamentTeams = () => {
   const { tournamentId } = useParams();
 
@@ -50,8 +51,10 @@ export const MyTournamentTeams = () => {
       {myTournamentTeams.length === 0 ? (
         // if no data
         <div className="flex flex-col min-h-[85dvh] items-center justify-center gap-4">
-          <img src={noData} alt="" className="h-60 w-60" />
-          <p className="font-bold">No Team data found !</p>
+          <div>
+            <NoDataFoundPage image={noData} title="No team data found" description="There are no team data available right now."/>
+          </div>
+          
 
           {authUser ? (
             <Link to="create-team">

@@ -3,6 +3,7 @@ import { DummyCardLoadingSkelton } from "./modals/DummyLoadingSkelton";
 import noData from "../../assets/No data-amico.svg";
 import { defaultAvatar } from "../utils/noprofilePicHelper";
 import { Calendar, MapPin, Clock, Trophy } from "lucide-react";
+import { NoDataFoundPage } from "./NoDataFoundPage";
 
 /*
 this component used inside organiser match list
@@ -38,8 +39,7 @@ export const MatchList = ({ tournamentId }) => {
     <div className="p-2">
       {noMatches && (
         <div className="h-[50%] w-auto flex flex-col items-center justify-center">
-          <img src={noData} alt="No data" className="h-90 w-90 md:h-80" />
-          <p>No Match found</p>
+          <NoDataFoundPage image={noData} title="No match found" description="There are no match available right now."/>
         </div>
       )}
       <ul className="pt-4 pb-16 grid md:grid-cols-2 lg:grid-cols-3 gap-4">
