@@ -35,13 +35,14 @@ import { AllOpenMatches } from "./pages/Match/AllOpenMatches";
 import { AllPanchayatMatches } from "./pages/Match/AllPanchayatMatches";
 import { AllPanchayatOpenMatches } from "./pages/Match/AllPanchayatOpenMatches";
 import { AllCorporateMatches } from "./pages/Match/AllCorporateMatches";
-import {AllMatches} from "./pages/Match/AllMatches";
+import { AllMatches } from "./pages/Match/AllMatches";
 import { CricketLoader } from "./ui/CricketLoader";
 import { MatchInfo } from "./pages/Match/MatchInfo";
 import { LiveMatch } from "./pages/Match/LiveMatch";
 import { MatchSquad } from "./pages/Match/MatchSquad";
 import { ScoreCard } from "./pages/Match/ScoreCard";
 import { MatchInfoPage } from "./components/MatchInfoPage";
+import { MatchScoring } from "./pages/MatchScoring";
 function App() {
   const { authUser } = useSelector((state) => state.auth);
   const { isLoading } = useCheckAuthUserQuery();
@@ -246,6 +247,11 @@ function App() {
           <Route path="/all-tournaments" element={<AllTournaments />} />
           {/* team join route */}
           <Route path="/join-team/:token" element={<JoinTeamPage />} />
+
+          {/* *match play route
+           *usually for friendly matches
+           */}
+          <Route path="/match/setup" element={<MatchScoring />} />
           {/* for invalid routes */}
           <Route path="*" element={<NotFound />} />
         </Routes>

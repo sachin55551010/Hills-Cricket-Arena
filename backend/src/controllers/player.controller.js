@@ -1,4 +1,4 @@
-import { Player } from "../models/playerSchema.js";
+
 export const createPlayer = async (req, res, next) => {
   try {
     const { id } = req.user;

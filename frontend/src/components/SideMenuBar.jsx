@@ -5,6 +5,7 @@ import { setChooseTheme } from "../store/themeSlice";
 import { setIsMenuOpen } from "../store/authSlice";
 import { defaultAvatar } from "../utils/noprofilePicHelper";
 import { useProfileQuery } from "../store/authApi";
+import { GiCricketBat } from "react-icons/gi";
 
 export const SideMenuBar = () => {
   const { authUser } = useSelector((state) => state.auth);
@@ -135,11 +136,7 @@ export const SideMenuBar = () => {
                       rounded-xl px-3 py-2
                       transition-all duration-200
                       lg:gap-2 lg:px-2 lg:py-1
-                      ${
-                        isActive
-                          ? "bg-primary/10"
-                          : "hover:bg-base-content/5"
-                      }
+                      ${isActive ? "bg-primary/10" : "hover:bg-base-content/5"}
                     `
                   }
                 >
@@ -193,7 +190,7 @@ export const SideMenuBar = () => {
             </li>
 
             {/* Desktop separator */}
-            <div className="hidden h-5 w-px bg-base-content/10 lg:block" />
+            <div className="hidden h-5 w-px lg:block" />
 
             {/* My Tournaments */}
             {authUser?.player?.role === "organiser" && (
@@ -253,6 +250,27 @@ export const SideMenuBar = () => {
 
                 <span>Change Theme</span>
               </button>
+
+              <NavLink to="/match/setup">
+                <div
+                  className="
+                  group flex w-full items-center gap-3
+                  rounded-xl
+                  px-3 py-2.5
+                  text-left text-sm font-medium
+                  text-base-content/70
+                  transition-all duration-200
+                  hover:bg-base-content/5
+                  hover:text-base-content
+                  active:scale-[0.99]
+                  lg:gap-2 lg:px-2.5 lg:py-2
+                  lg:hidden
+                "
+                >
+                  <GiCricketBat size={21} />
+                  <span>Lets Play</span>
+                </div>
+              </NavLink>
             </li>
           </ul>
         )}
