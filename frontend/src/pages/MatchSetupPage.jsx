@@ -3,10 +3,11 @@ import { Header } from "../components/Header";
 import { z } from "zod";
 import { nanoid } from "nanoid";
 import { AdvanceOptionModal } from "../components/AdvanceOptionModal";
+import { useNavigate } from "react-router-dom";
 
-export const MatchScoring = () => {
+export const MatchSetupPage = () => {
   const matchId = nanoid();
-
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
     firstTeamName: "",
@@ -25,7 +26,7 @@ export const MatchScoring = () => {
     noBallRuns: 1,
     wideBallRuns: 1,
   });
-  //   console.log("advance data", advanceData);
+
   // Zod schema
   const matchSchema = z
     .object({
@@ -71,6 +72,9 @@ export const MatchScoring = () => {
       },
     );
 
+  const checkStatus = matchSchema.safeParse(formData);
+  const isFormField = checkStatus.success;
+
   // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -87,12 +91,11 @@ export const MatchScoring = () => {
     }));
   };
 
-  //   console.log("advance data", advanceData);
-
   // Submit
   const handleSubmitBtn = (e) => {
     e.preventDefault();
-
+    const firstTeamId = nanoid();
+    const secondTeamId = nanoid();
     const result = matchSchema.safeParse(formData);
     const errorFields = {};
 
@@ -110,16 +113,32 @@ export const MatchScoring = () => {
     }
 
     const matchData = {
-      ...formData,
-      ...advanceData,
       matchId,
+      firstTeam: {
+        teamId: firstTeamId,
+        name: formData.firstTeamName,
+        players: [],
+      },
+      secondTeam: {
+        teamId: secondTeamId,
+        name: formData.secondTeamName,
+        players: [],
+      },
+      toss: {
+        winner:
+          formData.tossWinner === formData.firstTeamName
+            ? firstTeamId
+            : secondTeamId,
+        decision: formData.tossDecision,
+      },
+      status: "players",
     };
 
     setFormData(matchData);
     setErrors({});
-    console.log(formData);
+    navigate("/match/players");
 
-    // localStorage.setItem("matchData", JSON.stringify(matchData));
+    localStorage.setItem("matchData", JSON.stringify(matchData));
   };
 
   return (
@@ -396,7 +415,11 @@ export const MatchScoring = () => {
               Advance Option
             </button>
 
-            <button type="submit" className="btn btn-primary px-8">
+            <button
+              disabled={!isFormField}
+              type="submit"
+              className={`btn btn-primary px-8  disabled:cursor-not-allowed cursor-pointer`}
+            >
               Start Match
             </button>
           </div>

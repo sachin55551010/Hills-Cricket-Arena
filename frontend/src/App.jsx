@@ -42,7 +42,10 @@ import { LiveMatch } from "./pages/Match/LiveMatch";
 import { MatchSquad } from "./pages/Match/MatchSquad";
 import { ScoreCard } from "./pages/Match/ScoreCard";
 import { MatchInfoPage } from "./components/MatchInfoPage";
-import { MatchScoring } from "./pages/MatchScoring";
+import { MatchSetupPage } from "./pages/MatchSetupPage";
+import { PlayerSetupPage } from "./pages/PlayerSetupPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { ScoringPage } from "./pages/ScoringPage";
 function App() {
   const { authUser } = useSelector((state) => state.auth);
   const { isLoading } = useCheckAuthUserQuery();
@@ -251,7 +254,23 @@ function App() {
           {/* *match play route
            *usually for friendly matches
            */}
-          <Route path="/match/setup" element={<MatchScoring />} />
+          <Route path="/match/setup" element={<MatchSetupPage />} />
+          <Route
+            path="match/players"
+            element={
+              <ProtectedRoute allowedStatus="players">
+                <PlayerSetupPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/match/scoring"
+            element={
+              <ProtectedRoute allowedStatus="scoring">
+                <ScoringPage />
+              </ProtectedRoute>
+            }
+          />
           {/* for invalid routes */}
           <Route path="*" element={<NotFound />} />
         </Routes>
