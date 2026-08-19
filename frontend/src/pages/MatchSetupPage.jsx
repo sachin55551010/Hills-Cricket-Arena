@@ -142,10 +142,10 @@ export const MatchSetupPage = () => {
   };
 
   return (
-    <div className="min-h-dvh bg-base-200 pt-20 px-4 pb-10 ">
+    <div className="min-h-dvh bg-base-200 pt-20 px-4 pb-10">
       <Header data="Hills Cricket Scorer" />
 
-      <main className="mx-auto w-full max-w-2xl ">
+      <main className="mx-auto w-full max-w-2xl">
         {/* Page heading */}
         <div className="mb-6">
           <p className="text-sm font-medium text-base-content/50">
@@ -194,7 +194,7 @@ export const MatchSetupPage = () => {
                   placeholder="e.g. Hills XI"
                   className={`input w-full ${
                     errors.firstTeamName ? "input-error" : ""
-                  }`}
+                  } outline-0`}
                 />
 
                 {errors.firstTeamName && (
@@ -222,7 +222,7 @@ export const MatchSetupPage = () => {
                   placeholder="e.g. Shimla Warriors"
                   className={`input w-full ${
                     errors.secondTeamName ? "input-error" : ""
-                  }`}
+                  } outline-0`}
                 />
 
                 {errors.secondTeamName && (
@@ -392,7 +392,7 @@ export const MatchSetupPage = () => {
                 min="1"
                 max="50"
                 placeholder="e.g. 10"
-                className={`input w-full ${errors.overs ? "input-error" : ""}`}
+                className={`input w-full ${errors.overs ? "input-error" : ""} outline-0`}
               />
 
               <p className="mt-1.5 text-xs text-base-content/45">
