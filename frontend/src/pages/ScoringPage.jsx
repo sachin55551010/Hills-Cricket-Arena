@@ -5,7 +5,7 @@ export const ScoringPage = () => {
   return (
     <div className="h-dvh w-screen pt-12">
       <Header data="Hills Cricket Scoring" />
-      Cricket scoring
+      Cricket scoring Live
     </div>
   );
 };

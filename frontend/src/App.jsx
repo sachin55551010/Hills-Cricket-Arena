@@ -3,7 +3,7 @@ import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/User/LoginPage";
 import { useSelector } from "react-redux";
-// import { useCheckAuthUserQuery } from "./store/authApi";
+import { useCheckAuthUserQuery } from "./store/authApi";
 import { ProfilePage } from "./pages/User/ProfilePage";
 import { ToastContainer } from "react-toastify";
 import { CareerStats } from "./pages/User/CareerStats";
@@ -48,7 +48,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { ScoringPage } from "./pages/ScoringPage";
 function App() {
   const { authUser } = useSelector((state) => state.auth);
-  // const { isLoading } = useCheckAuthUserQuery();
+  const { isLoading } = useCheckAuthUserQuery();
   const { myTheme } = useSelector((state) => state.theme);
   const { chooseTheme } = useSelector((state) => state.theme);
 
@@ -70,9 +70,9 @@ function App() {
     }
   }, [authUser, navigate]);
   //
-  // if (isLoading && !authUser) {
-  //   return <CricketLoader />;
-  // }
+  if (isLoading && !authUser) {
+    return <CricketLoader />;
+  }
 
   return (
     <div data-theme={myTheme} className={`min-h-dvh`}>
