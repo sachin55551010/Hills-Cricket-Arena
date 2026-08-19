@@ -127,11 +127,16 @@ export const MatchSetupPage = () => {
       toss: {
         winner:
           formData.tossWinner === formData.firstTeamName
-            ? firstTeamId
-            : secondTeamId,
+            ? { name: formData.firstTeamName, teamId: firstTeamId }
+            : { name: formData.secondTeamName, teamId: secondTeamId },
         decision: formData.tossDecision,
       },
       status: "players",
+      overs: Number(formData.overs),
+      firstTeamTotalPlayer: Number(advanceData.firstTeamPlayers),
+      secondTeamTotalPlayer: Number(advanceData.secondTeamPlayers),
+      noBallRun: Number(advanceData.noBallRuns),
+      wideBallRun: Number(advanceData.wideBallRuns),
     };
 
     setFormData(matchData);
