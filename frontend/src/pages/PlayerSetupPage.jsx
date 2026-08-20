@@ -6,6 +6,7 @@ import { nanoid } from "nanoid";
 export const PlayerSetupPage = () => {
   const navigate = useNavigate();
   const matchData = JSON.parse(localStorage.getItem("matchData"));
+  // console.log(matchData);
 
   const [formData, setFormData] = useState({
     striker: "",
@@ -60,6 +61,7 @@ export const PlayerSetupPage = () => {
 
   const handleStartMatch = (e) => {
     e.preventDefault();
+
     const result = playerSchema.safeParse(formData);
     const fieldError = {};
 
@@ -88,23 +90,22 @@ export const PlayerSetupPage = () => {
         name: formData.bowler,
       },
     };
-    let battingTeamId;
-    let bowlingTeamId;
+
+    let battingTeam, bowlingTeam;
     // checking for first team if they won toss
     if (
-      matchData.firstTeam.teamId === matchData.toss.winner &&
+      matchData.firstTeam.teamId === matchData.toss.winner.teamId &&
       matchData.toss.decision === "bat"
     ) {
       matchData.firstTeam.players.push(
         currentPlayers.striker,
         currentPlayers.nonStriker,
       );
-
+      battingTeam = matchData.firstTeam.name;
+      bowlingTeam = matchData.secondTeam.name;
       matchData.secondTeam.players.push(currentPlayers.bowler);
-      battingTeamId = matchData.firstTeam.teamId;
-      bowlingTeamId = matchData.secondTeam.teamId;
     } else if (
-      matchData.firstTeam.teamId === matchData.toss.winner &&
+      matchData.firstTeam.teamId === matchData.toss.winner.teamId &&
       matchData.toss.decision === "bowl"
     ) {
       matchData.secondTeam.players.push(
@@ -112,11 +113,11 @@ export const PlayerSetupPage = () => {
         currentPlayers.nonStriker,
       );
 
+      battingTeam = matchData.secondTeam.name;
+      bowlingTeam = matchData.firstTeam.name;
       matchData.firstTeam.players.push(currentPlayers.bowler);
-      battingTeamId = matchData.secondTeam.teamId;
-      bowlingTeamId = matchData.firstTeam.teamId;
     } else if (
-      matchData.secondTeam.teamId === matchData.toss.winner &&
+      matchData.secondTeam.teamId === matchData.toss.winner.teamId &&
       matchData.toss.decision === "bat"
     ) {
       matchData.secondTeam.players.push(
@@ -124,21 +125,20 @@ export const PlayerSetupPage = () => {
         currentPlayers.nonStriker,
       );
 
+      battingTeam = matchData.secondTeam.name;
+      bowlingTeam = matchData.firstTeam.name;
       matchData.firstTeam.players.push(currentPlayers.bowler);
-      battingTeamId = matchData.secondTeam.teamId;
-      bowlingTeamId = matchData.firstTeam.teamId;
     } else if (
-      matchData.secondTeam.teamId === matchData.toss.winner &&
+      matchData.secondTeam.teamId === matchData.toss.winner.teamId &&
       matchData.toss.decision === "bowl"
     ) {
       matchData.firstTeam.players.push(
         currentPlayers.striker,
         currentPlayers.nonStriker,
       );
-
+      battingTeam = matchData.firstTeam.name;
+      bowlingTeam = matchData.secondTeam.name;
       matchData.secondTeam.players.push(currentPlayers.bowler);
-      battingTeamId = matchData.firstTeam.teamId;
-      bowlingTeamId = matchData.secondTeam.teamId;
     }
 
     // Add currentPlayers and status to the complete matchData
@@ -149,11 +149,11 @@ export const PlayerSetupPage = () => {
       innings: [
         {
           inning: 1,
-          battingTeamId,
-          bowlingTeamId,
           runs: 0,
           wickets: 0,
           legalBalls: 0,
+          battingTeam,
+          bowlingTeam,
           extras: {
             wideBallRun: 0,
             noBallRun: 0,

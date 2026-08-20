@@ -1,22 +1,70 @@
-import React from "react";
+import { useState } from "react";
+import { ExtraRunCountModal } from "../components/ExtraRunCountModal";
 import { Header } from "../components/Header";
 
 export const ScoringPage = () => {
   const matchData = JSON.parse(localStorage.getItem("matchData"));
-  console.log(matchData);
-
+  // console.log(matchData);
+  const [isExtraModalOpen, setIsExtraModalOpen] = useState(false);
+  const [extraType, setExtraType] = useState("");
   const dummyData = [
     { name: "Sachin", runs: 10, balls: 5, four: 2, six: 0, sr: 105 },
     { name: "Ajay", runs: 20, balls: 6, four: 3, six: 1, sr: 150 },
   ];
 
-  const scoringButton = ["0", "1", "2", "3", "4", "5", "6", "..."];
+  const scoringButton = [
+    "0",
+    "1",
+    "2",
+    "MORE",
+    "UNDO",
+    "3",
+    "4",
+    "6",
+    "...",
+    "SWAP",
+    "WD",
+    "NB",
+    "LB",
+    "BYE",
+    "OUT",
+  ];
+
+  const onConfirm = (data) => {
+    console.log(data);
+    console.log("onconfirm run");
+  };
+
+  const handleScoreBtnClick = (val) => {
+    if (["WD", "NB", "LB", "BYE"].includes(val)) {
+      setIsExtraModalOpen(true);
+      setExtraType(val);
+    }
+  };
 
   // const ballColors = {
   //   wicket: "bg-red-500",
   //   four: "bg-orange-600",
   //   six: "bg-green-600",
   // };
+
+  const buttonColors = {
+    0: "bg-green-500",
+    1: "bg-green-500",
+    2: "bg-green-500",
+    3: "bg-green-500",
+    4: "bg-green-500",
+    6: "bg-green-500",
+    "...": "bg-green-500",
+    MORE: "bg-green-500 text-sm",
+    UNDO: "bg-yellow-500 text-sm",
+    SWAP: "bg-yellow-500 text-sm",
+    WD: "bg-blue-500",
+    NB: "bg-blue-500",
+    LB: "bg-blue-500",
+    BYE: "bg-blue-500 text-sm",
+    OUT: "bg-red-500 text-sm",
+  };
 
   return (
     <div className="h-dvh w-screen pt-12 flex justify-center">
@@ -115,19 +163,15 @@ export const ScoringPage = () => {
 
         {/* socring button and extra button */}
         <div className=" flex border-base-content/15 rounded-md gap-2">
-          {/* extra key */}
-          <div className="flex flex-col gap-2 border rounded-md border-base-content/15 p-2">
-            <button className="btn btn-info h-9 text-[.8rem]">Undo</button>
-            <button className="btn btn-info h-9 text-[.8rem]">
-              Partnership
-            </button>
-            <button className="btn btn-info h-9 text-[.8rem]">Extra</button>
-          </div>
           {/* scoring button */}
-          <div className="flex-2 border border-base-content/15 p-2 rounded-md grid gap-2 grid-cols-4 place-items-center">
+          <div className="flex-2 border border-base-content/15 py-4 px-2 rounded-md grid gap-y-4 grid-cols-5 place-items-center">
             {scoringButton.map((btn) => {
               return (
-                <button className="border border-base-content/15 w-13 h-13 rounded-full font-semibold">
+                <button
+                  onClick={() => handleScoreBtnClick(btn)}
+                  className={`border border-base-content/15 w-13 h-13 rounded-full font-semibold ${buttonColors[btn]} cursor-pointer `}
+                  key={btn}
+                >
                   {btn}
                 </button>
               );
@@ -135,6 +179,13 @@ export const ScoringPage = () => {
           </div>
         </div>
       </div>
+      {isExtraModalOpen && (
+        <ExtraRunCountModal
+          extraType={extraType}
+          onClose={() => setIsExtraModalOpen(false)}
+          onConfirm={onConfirm}
+        />
+      )}
     </div>
   );
 };
