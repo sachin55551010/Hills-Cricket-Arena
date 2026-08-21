@@ -1,7 +1,7 @@
 import { Navigate } from "react-router-dom";
 
 const ProtectedRoute = ({ allowedStatus, children }) => {
-  const match = JSON.parse(localStorage.getItem("matchData"));
+  const match = JSON.parse(localStorage.getItem("currentMatch")) || null;
 
   if (!match) {
     return <Navigate to="/match/setup" replace />;

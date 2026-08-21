@@ -5,7 +5,7 @@ import { Header } from "../components/Header";
 import { nanoid } from "nanoid";
 export const PlayerSetupPage = () => {
   const navigate = useNavigate();
-  const matchData = JSON.parse(localStorage.getItem("matchData"));
+  const matchData = JSON.parse(localStorage.getItem("currentMatch")) || {};
   // console.log(matchData);
 
   const [formData, setFormData] = useState({
@@ -80,14 +80,32 @@ export const PlayerSetupPage = () => {
       striker: {
         playerId: nanoid(),
         name: formData.striker,
+        Runs: 0,
+        Balls: 0,
+        Four: 0,
+        Six: 0,
+        StrikeRate: 0,
+        wicket: false,
       },
       nonStriker: {
         playerId: nanoid(),
         name: formData.nonStriker,
+        Runs: 0,
+        Balls: 0,
+        Four: 0,
+        Six: 0,
+        StrikeRate: 0,
+        wicket: false,
       },
       bowler: {
         playerId: nanoid(),
         name: formData.bowler,
+        Runs: 0,
+        Balls: 0,
+        Four: 0,
+        Six: 0,
+        StrikeRate: 0,
+        wicket: false,
       },
     };
 
@@ -164,10 +182,14 @@ export const PlayerSetupPage = () => {
           perBallStat: [],
         },
       ],
+      matchStatus: "ongoing",
     };
+    const matchHistory = JSON.parse(localStorage.getItem("matchHistory")) || [];
 
+    const updatedTeamList = [...matchHistory, updatedData];
     // Save EVERYTHING
-    localStorage.setItem("matchData", JSON.stringify(updatedData));
+    localStorage.setItem("currentMatch", JSON.stringify(updatedData));
+    localStorage.setItem("matchHistory", JSON.stringify(updatedTeamList));
 
     // Then navigate
     navigate("/match/scoring");

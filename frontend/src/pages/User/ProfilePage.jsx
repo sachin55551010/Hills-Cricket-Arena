@@ -1,4 +1,4 @@
-import { CalendarDays, Mars, Pen, Phone, UserRoundPen } from "lucide-react";
+import { CalendarDays, Mars, Pen, Phone } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useLogoutMutation, useProfileQuery } from "../../store/authApi";

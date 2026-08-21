@@ -3,7 +3,8 @@ import { Header } from "../components/Header";
 import { z } from "zod";
 import { nanoid } from "nanoid";
 import { AdvanceOptionModal } from "../components/AdvanceOptionModal";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 export const MatchSetupPage = () => {
   const matchId = nanoid();
@@ -137,20 +138,39 @@ export const MatchSetupPage = () => {
       secondTeamTotalPlayer: Number(advanceData.secondTeamPlayers),
       noBallRun: Number(advanceData.noBallRuns),
       wideBallRun: Number(advanceData.wideBallRuns),
+      createdAt: new Date().toISOString(),
     };
 
     setFormData(matchData);
     setErrors({});
     navigate("/match/players");
 
-    localStorage.setItem("matchData", JSON.stringify(matchData));
+    const getLocalTeams = JSON.parse(localStorage.getItem("localTeams")) || [];
+    const updatedTeams = [
+      ...getLocalTeams,
+      matchData.firstTeam,
+      matchData.secondTeam,
+    ];
+
+    localStorage.setItem("localTeams", JSON.stringify(updatedTeams));
+
+    localStorage.setItem("currentMatch", JSON.stringify(matchData));
+  };
+
+  const handleBackBtn = () => {
+    navigate("/");
   };
 
   return (
-    <div className="min-h-dvh bg-base-200 pt-20 px-4 pb-10">
-      <Header data="Hills Cricket Scorer" />
+    <div className="min-h-dvh bg-base-200 pt-20 pb-10">
+      <header className="fixed top-0 left-0 z-[999] h-[var(--nav-h)] bg-base-100 flex items-center gap-2 px-2 w-dvw">
+        <div className="flex items-center gap-2">
+          <ArrowLeft size={30} strokeWidth={3} onClick={handleBackBtn} />
+          <h4 className="font-bold">Hills Cricket Scorer</h4>
+        </div>
+      </header>
 
-      <main className="mx-auto w-full max-w-2xl">
+      <main className="mx-auto w-full max-w-2xl mb-10 px-4">
         {/* Page heading */}
         <div className="mb-6">
           <p className="text-sm font-medium text-base-content/50">
@@ -441,6 +461,19 @@ export const MatchSetupPage = () => {
             setAdvanceData={setAdvanceData}
           />
         )}
+      </div>
+      <div className="fixed bottom-2 w-full flex justify-center items-center">
+        <footer className="flex justify-between items-center gap-2 border border-base-content/15 py-4 px-4 rounded-full text-[.8rem] backdrop-blur-md w-[70%] lg:w-[40%] font-semibold">
+          <Link className="cursor-pointer" to="/match/setup">
+            New Match
+          </Link>
+          <Link className="cursor-pointer" to="/match/teams">
+            Team
+          </Link>
+          <Link className="cursor-pointer" to="/match/local-match-history">
+            History
+          </Link>
+        </footer>
       </div>
     </div>
   );

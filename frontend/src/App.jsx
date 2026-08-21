@@ -46,6 +46,8 @@ import { MatchSetupPage } from "./pages/MatchSetupPage";
 import { PlayerSetupPage } from "./pages/PlayerSetupPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { ScoringPage } from "./pages/ScoringPage";
+import { LocalTeamList } from "./pages/Local Match Page/LocalTeamList";
+import { LocalMatchHisory } from "./pages/Local Match Page/LocalMatchHisory";
 function App() {
   const { authUser } = useSelector((state) => state.auth);
   const { isLoading } = useCheckAuthUserQuery();
@@ -270,6 +272,13 @@ function App() {
                 <ScoringPage />
               </ProtectedRoute>
             }
+          />
+
+          {/* local match pages */}
+          <Route path="/match/teams" element={<LocalTeamList />} />
+          <Route
+            path="/match/local-match-history"
+            element={<LocalMatchHisory />}
           />
           {/* for invalid routes */}
           <Route path="*" element={<NotFound />} />

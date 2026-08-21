@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ExtraRunCountModal } from "../components/ExtraRunCountModal";
-import { Header } from "../components/Header";
-
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 export const ScoringPage = () => {
-  const matchData = JSON.parse(localStorage.getItem("matchData"));
-  // console.log(matchData);
+  const matchData = JSON.parse(localStorage.getItem("currentMatch")) || {};
+  console.log(matchData);
   const [isExtraModalOpen, setIsExtraModalOpen] = useState(false);
   const [extraType, setExtraType] = useState("");
   const dummyData = [
@@ -42,6 +43,25 @@ export const ScoringPage = () => {
     }
   };
 
+  const navigate = useNavigate();
+
+  const lastBackPress = useRef(0);
+
+  const handleBackBtn = () => {
+    const now = Date.now();
+
+    if (now - lastBackPress.current < 1500) {
+      navigate("/match/setup");
+      return;
+    }
+
+    lastBackPress.current = now;
+
+    toast.dark("Press back twice to leave", {
+      autoClose: 1000,
+    });
+  };
+
   // const ballColors = {
   //   wicket: "bg-red-500",
   //   four: "bg-orange-600",
@@ -68,7 +88,12 @@ export const ScoringPage = () => {
 
   return (
     <div className="h-dvh w-screen pt-12 flex justify-center">
-      <Header data="Hills Cricket Scoring" />
+      <header className="fixed top-0 left-0 z-[999] h-[var(--nav-h)] bg-base-100 flex items-center gap-2 px-2 w-dvw">
+        <div className="flex items-center gap-2">
+          <ArrowLeft size={30} strokeWidth={3} onClick={handleBackBtn} />
+          <h4 className="font-bold">Hills Cricket Scorer</h4>
+        </div>
+      </header>
 
       {/* main scoring screen */}
       <div className="flex flex-col gap-2 w-[97%] lg:w-[60%]">
@@ -106,7 +131,7 @@ export const ScoringPage = () => {
         {/* current score board list */}
         <div className="border border-base-content/15 rounded-md">
           <table className="w-full table-fixed text-[.85rem]">
-            <thead>
+            <thead className="">
               <tr className="">
                 <th className="text-left px-3 py-2">Batsman</th>
                 <th className="px-3 py-2">R</th>
@@ -117,7 +142,7 @@ export const ScoringPage = () => {
               </tr>
             </thead>
 
-            <tbody className="">
+            <tbody className="border-b border-base-content/15">
               {dummyData.map((elem) => (
                 <tr key={elem.name} className="">
                   <td className="text-left px-3 py-2">{elem.name}</td>
@@ -129,9 +154,18 @@ export const ScoringPage = () => {
                 </tr>
               ))}
             </tbody>
-
-            <tbody>
-              <tr className="border-t border-base-content/15">
+            <thead>
+              <tr>
+                <th className="text-left px-3 py-2">Batsman</th>
+                <th className="px-3 py-2">O</th>
+                <th className="px-3 py-2">M</th>
+                <th className="px-3 py-2">4s</th>
+                <th className="px-3 py-2">6s</th>
+                <th className="px-3 py-2">SR</th>
+              </tr>
+            </thead>
+            <tbody className="">
+              <tr className="">
                 <td className="text-left px-3 py-2">Gaurav</td>
                 <td className="text-center px-3 py-2">15</td>
                 <td className="text-center px-3 py-2">3</td>
