@@ -104,8 +104,9 @@ export const PlayerSetupPage = () => {
         Balls: 0,
         Four: 0,
         Six: 0,
-        StrikeRate: 0,
-        wicket: false,
+        Economy: 0,
+        Maidens: 0,
+        wicket: 0,
       },
     };
 

@@ -8,10 +8,6 @@ export const ScoringPage = () => {
   console.log(matchData);
   const [isExtraModalOpen, setIsExtraModalOpen] = useState(false);
   const [extraType, setExtraType] = useState("");
-  const dummyData = [
-    { name: "Sachin", runs: 10, balls: 5, four: 2, six: 0, sr: 105 },
-    { name: "Ajay", runs: 20, balls: 6, four: 3, six: 1, sr: 150 },
-  ];
 
   const scoringButton = [
     "0",
@@ -69,21 +65,21 @@ export const ScoringPage = () => {
   // };
 
   const buttonColors = {
-    0: "bg-green-500",
-    1: "bg-green-500",
-    2: "bg-green-500",
-    3: "bg-green-500",
-    4: "bg-green-500",
-    6: "bg-green-500",
-    "...": "bg-green-500",
-    MORE: "bg-green-500 text-sm",
-    UNDO: "bg-yellow-500 text-sm",
-    SWAP: "bg-yellow-500 text-sm",
-    WD: "bg-blue-500",
-    NB: "bg-blue-500",
-    LB: "bg-blue-500",
-    BYE: "bg-blue-500 text-sm",
-    OUT: "bg-red-500 text-sm",
+    0: "bg-green-600 ",
+    1: "bg-green-600 ",
+    2: "bg-green-600",
+    3: "bg-green-600",
+    4: "bg-green-600",
+    6: "bg-green-600",
+    "...": "bg-green-600",
+    MORE: "bg-green-600 text-[.8rem]",
+    UNDO: "bg-yellow-600 text-[.8rem]",
+    SWAP: "bg-yellow-600 text-[.8rem]",
+    WD: "bg-blue-600",
+    NB: "bg-blue-600",
+    LB: "bg-blue-600",
+    BYE: "bg-blue-600 text-[.8rem]",
+    OUT: "bg-red-600 text-[.8rem]",
   };
 
   return (
@@ -143,42 +139,86 @@ export const ScoringPage = () => {
             </thead>
 
             <tbody className="border-b border-base-content/15">
-              {dummyData.map((elem) => (
-                <tr key={elem.name} className="">
-                  <td className="text-left px-3 py-2">{elem.name}</td>
-                  <td className="text-center px-3 py-2">{elem.runs}</td>
-                  <td className="text-center px-3 py-2">{elem.balls}</td>
-                  <td className="text-center px-3 py-2">{elem.four}</td>
-                  <td className="text-center px-3 py-2">{elem.six}</td>
-                  <td className="text-center px-3 py-2">{elem.sr}</td>
-                </tr>
-              ))}
+              <tr className="">
+                <td className="text-left px-3 py-2">
+                  {matchData.currentPlayers.striker.name}
+                </td>
+                <td className="text-center px-3 py-2">
+                  {matchData.currentPlayers.striker.Runs}
+                </td>
+                <td className="text-center px-3 py-2">
+                  {matchData.currentPlayers.striker.Balls}
+                </td>
+                <td className="text-center px-3 py-2">
+                  {matchData.currentPlayers.striker.Four}
+                </td>
+                <td className="text-center px-3 py-2">
+                  {matchData.currentPlayers.striker.Six}
+                </td>
+                <td className="text-center px-3 py-2">
+                  {matchData.currentPlayers.striker.StrikeRate}
+                </td>
+              </tr>
+
+              <tr className="">
+                <td className="text-left px-3 py-2">
+                  {matchData.currentPlayers.nonStriker.name}
+                </td>
+                <td className="text-center px-3 py-2">
+                  {matchData.currentPlayers.nonStriker.Runs}
+                </td>
+                <td className="text-center px-3 py-2">
+                  {matchData.currentPlayers.nonStriker.Balls}
+                </td>
+                <td className="text-center px-3 py-2">
+                  {matchData.currentPlayers.nonStriker.Four}
+                </td>
+                <td className="text-center px-3 py-2">
+                  {matchData.currentPlayers.nonStriker.Six}
+                </td>
+                <td className="text-center px-3 py-2">
+                  {matchData.currentPlayers.nonStriker.StrikeRate}
+                </td>
+              </tr>
             </tbody>
             <thead>
               <tr>
-                <th className="text-left px-3 py-2">Batsman</th>
+                <th className="text-left px-3 py-2">Bowler</th>
                 <th className="px-3 py-2">O</th>
                 <th className="px-3 py-2">M</th>
-                <th className="px-3 py-2">4s</th>
-                <th className="px-3 py-2">6s</th>
-                <th className="px-3 py-2">SR</th>
+                <th className="px-3 py-2">R</th>
+                <th className="px-3 py-2">W</th>
+                <th className="px-3 py-2">ECO</th>
               </tr>
             </thead>
             <tbody className="">
               <tr className="">
-                <td className="text-left px-3 py-2">Gaurav</td>
-                <td className="text-center px-3 py-2">15</td>
-                <td className="text-center px-3 py-2">3</td>
-                <td className="text-center px-3 py-2">0</td>
-                <td className="text-center px-3 py-2">0</td>
-                <td className="text-center px-3 py-2">3</td>
+                <td className="text-left px-3 py-2">
+                  {matchData.currentPlayers.bowler.name}
+                </td>
+                <td className="text-center px-3 py-2">
+                  {Math.floor(matchData.currentPlayers.bowler.Balls / 6)}.
+                  {matchData.currentPlayers.bowler.Balls % 6}
+                </td>
+                <td className="text-center px-3 py-2">
+                  {matchData.currentPlayers.bowler.Maidens}
+                </td>
+                <td className="text-center px-3 py-2">
+                  {matchData.currentPlayers.bowler.Runs}
+                </td>
+                <td className="text-center px-3 py-2">
+                  {matchData.currentPlayers.bowler.wicket}
+                </td>
+                <td className="text-center px-3 py-2">
+                  {matchData.currentPlayers.bowler.Economy}
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
 
         {/* per ball record */}
-        <div className="h-10 border border-base-content/15 rounded-md flex items-center text-[.85rem] pl-2 gap-2 ">
+        <div className="border border-base-content/15 rounded-md flex items-center text-[.85rem] pl-2 gap-2 py-2">
           <p className="shrink-0 whitespace-nowrap">This over :</p>
 
           <div className="flex gap-2 overflow-x-auto min-w-0 hide-scrollbar">
@@ -203,7 +243,7 @@ export const ScoringPage = () => {
               return (
                 <button
                   onClick={() => handleScoreBtnClick(btn)}
-                  className={`border border-base-content/15 w-13 h-13 rounded-full font-semibold ${buttonColors[btn]} cursor-pointer `}
+                  className={`border-base-content/40 w-15 h-15 rounded-full font-semibold ${buttonColors[btn]} cursor-pointer border-2 shadow-[inset_0px_0px_5px_rgba(0,0,0,1)]`}
                   key={btn}
                 >
                   {btn}
