@@ -55,6 +55,7 @@ export const ScoringPage = () => {
 
     toast.dark("Press back twice to leave", {
       autoClose: 1000,
+      position: "bottom-right",
     });
   };
 
