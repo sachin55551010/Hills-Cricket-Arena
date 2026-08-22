@@ -3,9 +3,13 @@ import { ExtraRunCountModal } from "../components/ExtraRunCountModal";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+
 export const ScoringPage = () => {
   const matchData = JSON.parse(localStorage.getItem("currentMatch")) || {};
-  console.log(matchData);
+
+  const [currentMatchData, setCurrentMatchData] = useState(() => {
+    return JSON.parse(localStorage.getItem("currentMatch"));
+  });
   const [isExtraModalOpen, setIsExtraModalOpen] = useState(false);
   const [extraType, setExtraType] = useState("");
 
@@ -36,6 +40,7 @@ export const ScoringPage = () => {
     if (["WD", "NB", "LB", "BYE"].includes(val)) {
       setIsExtraModalOpen(true);
       setExtraType(val);
+      console.log(val);
     }
   };
 
@@ -47,7 +52,7 @@ export const ScoringPage = () => {
     const now = Date.now();
 
     if (now - lastBackPress.current < 1500) {
-      navigate("/match/setup");
+      navigate("/local-match/setup");
       return;
     }
 
@@ -66,22 +71,29 @@ export const ScoringPage = () => {
   // };
 
   const buttonColors = {
-    0: "bg-green-600 ",
-    1: "bg-green-600 ",
-    2: "bg-green-600",
-    3: "bg-green-600",
-    4: "bg-green-600",
-    6: "bg-green-600",
-    "...": "bg-green-600",
-    MORE: "bg-green-600 text-[.8rem]",
-    UNDO: "bg-yellow-600 text-[.8rem]",
-    SWAP: "bg-yellow-600 text-[.8rem]",
-    WD: "bg-blue-600",
-    NB: "bg-blue-600",
-    LB: "bg-blue-600",
-    BYE: "bg-blue-600 text-[.8rem]",
-    OUT: "bg-red-600 text-[.8rem]",
+    0: "border-3 border-green-600 text-green-600",
+    1: "border-3 border-green-600 text-green-600",
+    2: "border-3 border-green-600 text-green-600",
+    3: "border-3 border-green-600 text-green-600",
+    4: "border-3 border-green-600 text-green-600",
+    6: "border-3 border-green-600 text-green-600",
+    "...": "border-3 border-green-600 text-green-600",
+    MORE: "border-3 border-green-600 text-green-600 text-[.8rem]",
+    UNDO: "border-3 border-yellow-600 text-yellow-600 text-[.8rem]",
+    SWAP: "border-3 border-yellow-600 text-yellow-600 text-[.8rem]",
+    WD: "border-3 border-blue-600 text-blue-600",
+    NB: "border-3 border-blue-600 text-blue-600",
+    LB: "border-3 border-blue-600 text-blue-600",
+    BYE: "border-3 border-blue-600 text-blue-600 text-[.8rem]",
+    OUT: "border-3 border-red-600 text-red-600 text-[.8rem]",
   };
+
+  const currentInning = currentMatchData.innings.length - 1;
+
+  const totalRuns = currentMatchData.innings[currentInning].runs;
+  const legalBalls = currentMatchData.innings[0].legalBalls;
+
+  const currentRunRate = legalBalls > 0 ? (totalRuns / legalBalls) * 6 : 0;
 
   return (
     <div className="h-dvh w-screen pt-12 flex justify-center">
@@ -96,9 +108,9 @@ export const ScoringPage = () => {
       <div className="flex flex-col gap-2 w-[97%] lg:w-[60%]">
         {/* header */}
         <div className="flex justify-center gap-2 h-15 items-center">
-          <h1>{matchData.firstTeam.name}</h1>
+          <h1>{currentMatchData.firstTeam.name}</h1>
           <span>Vs</span>
-          <h2>{matchData.secondTeam.name}</h2>
+          <h2>{currentMatchData.secondTeam.name}</h2>
         </div>
 
         {/* score display */}
@@ -112,8 +124,8 @@ export const ScoringPage = () => {
                 <p>1st Inning</p>
               </div>
               <div className="flex items-center gap-1">
-                <div className="text-3xl font-semibold">0-0</div>
-                <div>(0.0)</div>
+                <div className="text-3xl font-semibold">{totalRuns}-0</div>
+                <div>{legalBalls}</div>
               </div>
             </div>
           </div>
@@ -121,7 +133,7 @@ export const ScoringPage = () => {
           {/* runrate */}
           <div className="flex-1 p-2 text-sm">
             <p>CRR</p>
-            <p>18.03</p>
+            <p>{currentRunRate > 0 ? currentRunRate : "00.00"}</p>
           </div>
         </div>
 

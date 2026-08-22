@@ -143,7 +143,7 @@ export const MatchSetupPage = () => {
 
     setFormData(matchData);
     setErrors({});
-    navigate("/match/players");
+    navigate(`/local-match/players`);
 
     const getLocalTeams = JSON.parse(localStorage.getItem("localTeams")) || [];
     const updatedTeams = [
@@ -464,13 +464,16 @@ export const MatchSetupPage = () => {
       </div>
       <div className="fixed bottom-2 w-full flex justify-center items-center">
         <footer className="flex justify-between items-center gap-2 border border-base-content/15 py-4 px-4 rounded-full text-[.8rem] backdrop-blur-md w-[70%] lg:w-[40%] font-semibold">
-          <Link className="cursor-pointer" to="/match/setup">
+          <Link className="cursor-pointer" to="/local-match/setup">
             New Match
           </Link>
-          <Link className="cursor-pointer" to="/match/teams">
+          <Link className="cursor-pointer" to="/local-match/teams">
             Team
           </Link>
-          <Link className="cursor-pointer" to="/match/local-match-history">
+          <Link
+            className="cursor-pointer"
+            to="/local-match/local-match-history"
+          >
             History
           </Link>
         </footer>

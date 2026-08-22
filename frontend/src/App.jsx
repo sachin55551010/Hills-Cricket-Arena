@@ -256,9 +256,9 @@ function App() {
           {/* *match play route
            *usually for friendly matches
            */}
-          <Route path="/match/setup" element={<MatchSetupPage />} />
+          <Route path="/local-match/setup" element={<MatchSetupPage />} />
           <Route
-            path="match/players"
+            path="/local-match/players"
             element={
               <ProtectedRoute allowedStatus="players">
                 <PlayerSetupPage />
@@ -266,7 +266,7 @@ function App() {
             }
           />
           <Route
-            path="/match/scoring"
+            path="/local-match/scoring"
             element={
               <ProtectedRoute allowedStatus="scoring">
                 <ScoringPage />
@@ -275,9 +275,9 @@ function App() {
           />
 
           {/* local match pages */}
-          <Route path="/match/teams" element={<LocalTeamList />} />
+          <Route path="/local-match/teams" element={<LocalTeamList />} />
           <Route
-            path="/match/local-match-history"
+            path="/local-match/local-match-history"
             element={<LocalMatchHisory />}
           />
           {/* for invalid routes */}

@@ -251,7 +251,7 @@ export const SideMenuBar = () => {
                 <span>Change Theme</span>
               </button>
 
-              <NavLink to="/match/setup">
+              <NavLink to="/local-match/setup">
                 <div
                   className="
                   group flex w-full items-center gap-3

@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 export const ExtraRunCountModal = ({ extraType, onClose, onConfirm }) => {
-  const [runs, setRuns] = useState(1);
+  const [runs, setRuns] = useState("");
   const [isWicket, setIsWicket] = useState(false);
 
   const extraConfig = {
@@ -10,12 +10,14 @@ export const ExtraRunCountModal = ({ extraType, onClose, onConfirm }) => {
       description: "Any bye runs?",
       min: 0,
       max: 7,
+      isLegalDelivery: false,
     },
     NB: {
       label: "No Ball",
       description: "Any extra runs on no ball?",
       min: 0,
       max: 7,
+      isLegalDelivery: false,
     },
     BYE: {
       label: "Bye",
@@ -41,6 +43,8 @@ export const ExtraRunCountModal = ({ extraType, onClose, onConfirm }) => {
   );
 
   const handleConfirm = () => {
+    console.log("config", config.label);
+
     onConfirm({
       type: extraType,
       runs,

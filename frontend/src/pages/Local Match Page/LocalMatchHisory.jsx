@@ -5,9 +5,13 @@ import { defaultAvatar } from "../../utils/noprofilePicHelper";
 import { MdDelete } from "react-icons/md";
 import { useState } from "react";
 import { DeleteMatchHistoryModal } from "../../components/modals/DeleteMatchHistoryModal";
+import { useNavigate } from "react-router-dom";
+
 export const LocalMatchHisory = () => {
   const matchList = JSON.parse(localStorage.getItem("matchHistory")) || [];
   console.log(matchList);
+
+  const navigate = useNavigate();
 
   const [deleteMatchModal, setDeleteMatchModal] = useState(false);
   const [matchId, setmatchId] = useState("");
@@ -15,6 +19,15 @@ export const LocalMatchHisory = () => {
     setmatchId(id);
     setDeleteMatchModal(true);
   };
+
+  const handleResumeBtn = (id) => {
+    console.log(id);
+    const match = matchList.find((match) => match.matchId === id);
+    console.log(match);
+    localStorage.setItem("currentMatch", JSON.stringify(match));
+    navigate("/local-match/scoring");
+  };
+
   return (
     <div className="pt-12 h-dvh w-screen flex justify-center">
       <Header data="Match History" />
@@ -111,6 +124,9 @@ export const LocalMatchHisory = () => {
                     className="flex justify-end cursor-pointer"
                   >
                     <MdDelete size={18} />
+                  </div>
+                  <div onClick={() => handleResumeBtn(match.matchId)}>
+                    <button className="btn btn-info">Resume</button>
                   </div>
                 </li>
               );

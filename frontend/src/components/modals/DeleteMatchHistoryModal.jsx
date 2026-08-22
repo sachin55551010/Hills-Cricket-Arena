@@ -1,9 +1,16 @@
 export const DeleteMatchHistoryModal = ({ onClose, matchId, matchList }) => {
+  const currentMatch = JSON.parse(localStorage.getItem("currentMatch"));
+  console.log(currentMatch.matchId);
+
   const deleteTeam = () => {
     const updatedMatch = matchList.filter((match) => match.matchId !== matchId);
+    if (currentMatch.matchId === matchId) {
+      localStorage.removeItem("currentMatch");
+    }
     localStorage.setItem("matchHistory", JSON.stringify(updatedMatch));
     onClose();
   };
+
   return (
     <div className="inset-0 fixed flex items-center justify-center backdrop-blur-lg">
       <div className=" border border-base-content/15 rounded-md w-[80%] lg:w-[30%] flex flex-col p-4 gap-4">

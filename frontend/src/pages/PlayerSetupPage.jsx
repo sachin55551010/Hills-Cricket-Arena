@@ -193,7 +193,7 @@ export const PlayerSetupPage = () => {
     localStorage.setItem("matchHistory", JSON.stringify(updatedTeamList));
 
     // Then navigate
-    navigate("/match/scoring");
+    navigate("/local-match/scoring");
   };
 
   return (
