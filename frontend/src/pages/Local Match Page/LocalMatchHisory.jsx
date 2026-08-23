@@ -29,12 +29,12 @@ export const LocalMatchHisory = () => {
   };
 
   return (
-    <div className="pt-12 h-dvh w-screen flex justify-center">
+    <div className="min-h-dvh w-full bg-base-100 pt-14">
       <Header data="Match History" />
 
-      <div className="w-full lg:w-[60%]">
+      <div className="mx-auto w-full max-w-2xl">
         {matchList.length === 0 ? (
-          <div className="pt-10 w-auto flex flex-col items-center justify-center">
+          <div className="flex w-full justify-center px-4 pt-10">
             <NoDataFoundPage
               image={noData}
               title="No match found"
@@ -42,91 +42,174 @@ export const LocalMatchHisory = () => {
             />
           </div>
         ) : (
-          <ul className="p-4 flex flex-col gap-4">
+          <ul className="flex flex-col gap-3 px-3 py-4">
             {matchList.map((match) => {
               return (
                 <li
                   key={match.matchId}
-                  className="border flex flex-col gap-3 p-2 rounded-md border-base-content/15"
+                  className="
+                  overflow-hidden
+                  rounded-2xl
+                  border border-base-content/10
+                  bg-base-100
+                  shadow-sm
+                  transition-all
+                  active:scale-[0.99]
+                "
                 >
-                  {/* time */}
-                  <div className="text-[.8rem]">
-                    {new Date(match.createdAt)
-                      .toLocaleString("en-GB", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      })
-                      .replace(",", " -")}
+                  {/* Date + Delete */}
+                  <div className="flex items-center justify-between px-4 pt-3">
+                    <span className="text-[11px] font-medium text-base-content/50">
+                      {new Date(match.createdAt)
+                        .toLocaleString("en-GB", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })
+                        .replace(",", " -")}
+                    </span>
+
+                    <button
+                      onClick={() => handleDeleteBtn(match.matchId)}
+                      className="
+                      flex h-8 w-8 items-center justify-center
+                      rounded-full
+                      text-base-content/50
+                      transition
+                      hover:bg-error/10
+                      hover:text-error
+                      active:scale-90
+                    "
+                    >
+                      <MdDelete size={17} />
+                    </button>
                   </div>
 
-                  {/*first team name and score */}
-                  <div className="flex items-center justify-between">
-                    {/* first team name and photo */}
-                    <div className="flex items-center gap-2">
-                      {/* photo */}
-                      <div className="border border-base-content/15 h-8 w-8 rounded-full flex items-center justify-center text-sm">
-                        {defaultAvatar(match.firstTeam.name)}
+                  {/* Teams + Scores */}
+                  <div className="px-4 py-4">
+                    {/* First Team */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div
+                          className="
+                          flex h-10 w-10 shrink-0 items-center justify-center
+                          rounded-full
+                          bg-base-content/5
+                          text-sm font-semibold
+                        "
+                        >
+                          {defaultAvatar(match.firstTeam.name)}
+                        </div>
+
+                        <h6 className="truncate text-sm font-semibold">
+                          {match.firstTeam.name}
+                        </h6>
                       </div>
-                      {/* name  */}
-                      <h6 className="text-sm font-semibold">
-                        {match.firstTeam.name}
-                      </h6>
+
+                      <div className="ml-3 flex shrink-0 items-baseline gap-2">
+                        <div className="flex items-baseline font-bold">
+                          <span className="text-lg">
+                            {match.innings[0].runs}
+                          </span>
+
+                          <span className="mx-0.5 text-base-content/40">/</span>
+
+                          <span className="text-sm text-base-content/70">
+                            {match.innings[0].wickets}
+                          </span>
+                        </div>
+
+                        <span className="text-xs text-base-content/50">
+                          {Math.floor(
+                            (match?.innings?.[0]?.legalBalls ?? 0) / 6,
+                          )}
+                          .{(match?.innings?.[0]?.legalBalls ?? 0) % 6}
+                        </span>
+                      </div>
                     </div>
-                    {/*first team score */}
-                    <div className="flex gap-2">
-                      <div className="flex font-semibold">
-                        <h6>{match.innings[0].runs}</h6>
-                        <span>/</span>
-                        <p>{match.innings[0].wickets}</p>
+
+                    {/* VS Divider */}
+                    <div className="my-2 flex items-center gap-3">
+                      <div className="h-px flex-1 bg-base-content/10" />
+                      <span className="text-[9px] font-semibold tracking-wider text-base-content/30">
+                        VS
+                      </span>
+                      <div className="h-px flex-1 bg-base-content/10" />
+                    </div>
+
+                    {/* Second Team */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div
+                          className="
+                          flex h-10 w-10 shrink-0 items-center justify-center
+                          rounded-full
+                          bg-base-content/5
+                          text-sm font-semibold
+                        "
+                        >
+                          {defaultAvatar(match.secondTeam.name)}
+                        </div>
+
+                        <h6 className="truncate text-sm font-semibold">
+                          {match.secondTeam.name}
+                        </h6>
                       </div>
-                      <div>
-                        {Math.floor((match?.innings?.[0]?.legalBalls ?? 0) / 6)}
-                        .{(match?.innings?.[0]?.legalBalls ?? 0) % 6}
+
+                      <div className="ml-3 flex shrink-0 items-baseline gap-2">
+                        <div className="flex items-baseline font-bold">
+                          <span className="text-lg">
+                            {match.innings[0].runs}
+                          </span>
+
+                          <span className="mx-0.5 text-base-content/40">/</span>
+
+                          <span className="text-sm text-base-content/70">
+                            {match.innings[0].wickets}
+                          </span>
+                        </div>
+
+                        <span className="text-xs text-base-content/50">
+                          {Math.floor(
+                            (match?.innings?.[0]?.legalBalls ?? 0) / 6,
+                          )}
+                          .{(match?.innings?.[0]?.legalBalls ?? 0) % 6}
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* second team name and score */}
-                  <div className="flex items-center justify-between">
-                    {/* first team name and photo */}
-                    <div className="flex items-center gap-2">
-                      {/* photo */}
-                      <div className="border border-base-content/15 h-8 w-8 rounded-full flex items-center justify-center text-sm">
-                        {defaultAvatar(match.secondTeam.name)}
-                      </div>
-                      {/* name  */}
-                      <h6 className="text-sm font-semibold">
-                        {match.secondTeam.name}
-                      </h6>
-                    </div>
-                    {/*first team score */}
-                    <div className="flex gap-2 ">
-                      <div className="flex font-semibold">
-                        <h6>{match.innings[0].runs}</h6>
-                        <span>/</span>
-                        <p>{match.innings[0].wickets}</p>
-                      </div>
-                      <div>
-                        {Math.floor((match?.innings?.[0]?.legalBalls ?? 0) / 6)}
-                        .{(match?.innings?.[0]?.legalBalls ?? 0) % 6}
-                      </div>
-                    </div>
+                  {/* Toss */}
+                  <div className="border-t border-base-content/10 px-4 py-3">
+                    <p className="text-[11px] leading-relaxed text-base-content/55">
+                      <span className="font-medium text-base-content/70">
+                        {match.toss.winner.name}
+                      </span>{" "}
+                      won the toss and chose to{" "}
+                      <span className="font-medium text-base-content/70">
+                        {match.toss.decision}
+                      </span>{" "}
+                      first.
+                    </p>
                   </div>
 
-                  <p className="capitalize text-[.8rem] text-base-content/70">{`${match.toss.winner.name} won the toss and choose to ${match.toss.decision} first.`}</p>
-
-                  <div
-                    onClick={() => handleDeleteBtn(match.matchId)}
-                    className="flex justify-end cursor-pointer"
-                  >
-                    <MdDelete size={18} />
-                  </div>
-                  <div onClick={() => handleResumeBtn(match.matchId)}>
-                    <button className="btn btn-info">Resume</button>
+                  {/* Resume */}
+                  <div className="px-4 pb-4">
+                    <button
+                      onClick={() => handleResumeBtn(match.matchId)}
+                      className="
+                      btn btn-info
+                      h-10 min-h-10 w-full
+                      rounded-xl
+                      text-sm font-semibold
+                      shadow-none
+                    "
+                    >
+                      Resume Match
+                    </button>
                   </div>
                 </li>
               );
@@ -134,6 +217,7 @@ export const LocalMatchHisory = () => {
           </ul>
         )}
       </div>
+
       {deleteMatchModal && (
         <DeleteMatchHistoryModal
           onClose={() => setDeleteMatchModal(false)}
