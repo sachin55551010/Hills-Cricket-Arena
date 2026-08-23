@@ -268,7 +268,7 @@ export const SideMenuBar = () => {
                 "
                 >
                   <GiCricketBat size={21} />
-                  <span>Lets Play</span>
+                  <span>Start Scoring</span>
                 </div>
               </NavLink>
             </li>
