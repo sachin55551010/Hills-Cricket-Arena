@@ -1,8 +1,17 @@
 import { useState } from "react";
+import { OutModal } from "./OutModal";
 
-export const ExtraRunCountModal = ({ extraType, onClose, onConfirm }) => {
+export const ExtraRunCountModal = ({
+  extraType,
+  onClose,
+  onConfirm,
+  showOutModal,
+  setShowOutModal,
+}) => {
   const [runs, setRuns] = useState("");
   const [isWicket, setIsWicket] = useState(false);
+
+  const [pendingData, setPendingData] = useState(null);
 
   const extraConfig = {
     WD: {
@@ -10,14 +19,12 @@ export const ExtraRunCountModal = ({ extraType, onClose, onConfirm }) => {
       description: "Any bye runs?",
       min: 0,
       max: 7,
-      isLegalDelivery: false,
     },
     NB: {
       label: "No Ball",
       description: "Any extra runs on no ball?",
       min: 0,
       max: 7,
-      isLegalDelivery: false,
     },
     BYE: {
       label: "Bye",
@@ -32,6 +39,7 @@ export const ExtraRunCountModal = ({ extraType, onClose, onConfirm }) => {
       max: 7,
     },
   };
+  console.log(showOutModal);
 
   const config = extraConfig[extraType];
 
@@ -43,13 +51,17 @@ export const ExtraRunCountModal = ({ extraType, onClose, onConfirm }) => {
   );
 
   const handleConfirm = () => {
-    console.log("config", config.label);
-
-    onConfirm({
+    const data = {
       type: extraType,
       runs,
       wicket: isWicket,
-    });
+    };
+    if (isWicket) {
+      setPendingData(data);
+      setShowOutModal(true);
+      return;
+    }
+    onConfirm(data);
   };
 
   return (
@@ -137,10 +149,22 @@ export const ExtraRunCountModal = ({ extraType, onClose, onConfirm }) => {
           </button>
 
           <button onClick={handleConfirm} className="btn btn-primary flex-1">
-            Add {extraType}
+            {isWicket ? "Continue" : "Submit"}
           </button>
         </div>
       </div>
+      {showOutModal && (
+        <OutModal
+          pendingData={pendingData}
+          onClose={() => setShowOutModal(false)}
+          onSubmit={(outData) => {
+            onConfirm({
+              ...pendingData,
+              ...outData,
+            });
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
-import { ExtraRunCountModal } from "../components/ExtraRunCountModal";
+import { ExtraRunCountModal } from "../components/modals/ExtraRunCountModal";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { OutModal } from "../components/modals/OutModal";
 
 export const ScoringPage = () => {
   const matchData = JSON.parse(localStorage.getItem("currentMatch")) || {};
@@ -12,7 +13,7 @@ export const ScoringPage = () => {
   });
   const [isExtraModalOpen, setIsExtraModalOpen] = useState(false);
   const [extraType, setExtraType] = useState("");
-
+  const [showOutModal, setShowOutModal] = useState(false);
   const scoringButton = [
     "0",
     "1",
@@ -32,17 +33,46 @@ export const ScoringPage = () => {
   ];
 
   const onConfirm = (data) => {
-    console.log(data);
-    console.log("onconfirm run");
+    setExtraType(data);
+    console.log("onConfirm");
   };
 
   const handleScoreBtnClick = (val) => {
-    if (["WD", "NB", "LB", "BYE"].includes(val)) {
+    if (["0", "1", "2", "3", "4", "6"].includes(val)) {
+      const numRuns = Number(val);
+      setCurrentMatchData((prev) => ({
+        ...prev,
+        innings: prev.innings.map((inning, index) =>
+          index === prev.innings.length - 1
+            ? {
+                ...inning,
+                runs: inning.runs + numRuns,
+                legalBalls: legalBalls + 1,
+              }
+            : inning,
+        ),
+      }));
+    } else if (["WD", "NB", "LB", "BYE"].includes(val)) {
       setIsExtraModalOpen(true);
       setExtraType(val);
       console.log(val);
+    } else if (val === "OUT") {
+      setShowOutModal(true);
+      // console.log(extraType);
+    } else if (val === "SWAP") {
+      setCurrentMatchData((prev) => ({
+        ...prev,
+        currentPlayers: {
+          ...prev.currentPlayers,
+          striker: prev.currentPlayers.nonStriker,
+          nonStriker: prev.currentPlayers.striker,
+        },
+      }));
+      console.log(currentMatchData);
     }
   };
+
+  console.log(currentMatchData);
 
   const navigate = useNavigate();
 
@@ -91,8 +121,8 @@ export const ScoringPage = () => {
   const currentInning = currentMatchData.innings.length - 1;
 
   const totalRuns = currentMatchData.innings[currentInning].runs;
-  const legalBalls = currentMatchData.innings[0].legalBalls;
-
+  const legalBalls = currentMatchData.innings[currentInning].legalBalls;
+  const wicketsOut = currentMatchData.innings[currentInning].wickets;
   const currentRunRate = legalBalls > 0 ? (totalRuns / legalBalls) * 6 : 0;
 
   return (
@@ -124,8 +154,12 @@ export const ScoringPage = () => {
                 <p>1st Inning</p>
               </div>
               <div className="flex items-center gap-1">
-                <div className="text-3xl font-semibold">{totalRuns}-0</div>
-                <div>{legalBalls}</div>
+                <div className="text-3xl font-semibold">
+                  {totalRuns}-{wicketsOut}
+                </div>
+                <div>
+                  {Math.floor(legalBalls / 6)}.{legalBalls % 6}
+                </div>
               </div>
             </div>
           </div>
@@ -152,45 +186,45 @@ export const ScoringPage = () => {
             </thead>
 
             <tbody className="border-b border-base-content/15">
-              <tr className="">
+              <tr className="text-blue-500">
                 <td className="text-left px-3 py-2">
-                  {matchData.currentPlayers.striker.name}
+                  {currentMatchData.currentPlayers.striker.name}*
                 </td>
                 <td className="text-center px-3 py-2">
-                  {matchData.currentPlayers.striker.Runs}
+                  {currentMatchData.currentPlayers.striker.Runs}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {matchData.currentPlayers.striker.Balls}
+                  {currentMatchData.currentPlayers.striker.Balls}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {matchData.currentPlayers.striker.Four}
+                  {currentMatchData.currentPlayers.striker.Four}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {matchData.currentPlayers.striker.Six}
+                  {currentMatchData.currentPlayers.striker.Six}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {matchData.currentPlayers.striker.StrikeRate}
+                  {currentMatchData.currentPlayers.striker.StrikeRate}
                 </td>
               </tr>
 
               <tr className="">
                 <td className="text-left px-3 py-2">
-                  {matchData.currentPlayers.nonStriker.name}
+                  {currentMatchData.currentPlayers.nonStriker.name}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {matchData.currentPlayers.nonStriker.Runs}
+                  {currentMatchData.currentPlayers.nonStriker.Runs}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {matchData.currentPlayers.nonStriker.Balls}
+                  {currentMatchData.currentPlayers.nonStriker.Balls}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {matchData.currentPlayers.nonStriker.Four}
+                  {currentMatchData.currentPlayers.nonStriker.Four}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {matchData.currentPlayers.nonStriker.Six}
+                  {currentMatchData.currentPlayers.nonStriker.Six}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {matchData.currentPlayers.nonStriker.StrikeRate}
+                  {currentMatchData.currentPlayers.nonStriker.StrikeRate}
                 </td>
               </tr>
             </tbody>
@@ -207,23 +241,23 @@ export const ScoringPage = () => {
             <tbody className="">
               <tr className="">
                 <td className="text-left px-3 py-2">
-                  {matchData.currentPlayers.bowler.name}
+                  {currentMatchData.currentPlayers.bowler.name}
                 </td>
                 <td className="text-center px-3 py-2">
                   {Math.floor(matchData.currentPlayers.bowler.Balls / 6)}.
-                  {matchData.currentPlayers.bowler.Balls % 6}
+                  {currentMatchData.currentPlayers.bowler.Balls % 6}
                 </td>
                 <td className="text-center px-3 py-2">
                   {matchData.currentPlayers.bowler.Maidens}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {matchData.currentPlayers.bowler.Runs}
+                  {currentMatchData.currentPlayers.bowler.Runs}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {matchData.currentPlayers.bowler.wicket}
+                  {currentMatchData.currentPlayers.bowler.wicket}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {matchData.currentPlayers.bowler.Economy}
+                  {currentMatchData.currentPlayers.bowler.Economy}
                 </td>
               </tr>
             </tbody>
@@ -271,8 +305,11 @@ export const ScoringPage = () => {
           extraType={extraType}
           onClose={() => setIsExtraModalOpen(false)}
           onConfirm={onConfirm}
+          showOutModal={showOutModal}
+          setShowOutModal={setShowOutModal}
         />
       )}
+      {showOutModal && <OutModal onClose={() => setShowOutModal(false)} />}
     </div>
   );
 };
