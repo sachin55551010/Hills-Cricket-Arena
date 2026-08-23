@@ -32,10 +32,26 @@ export const ScoringPage = () => {
     "OUT",
   ];
 
+  const [matchHistory, setMatchHistory] = useState([]);
+
   const onConfirm = (data) => {
     setExtraType(data);
     console.log("onConfirm");
   };
+
+  // swap batsman
+  function swapBatsman(val) {
+    if (["1", "3"].includes(val)) {
+      setCurrentMatchData((prev) => ({
+        ...prev,
+        currentPlayers: {
+          ...prev.currentPlayers,
+          striker: prev.currentPlayers.nonStriker,
+          nonStriker: prev.currentPlayers.striker,
+        },
+      }));
+    }
+  }
 
   const handleScoreBtnClick = (val) => {
     if (["0", "1", "2", "3", "4", "6"].includes(val)) {
@@ -51,7 +67,28 @@ export const ScoringPage = () => {
               }
             : inning,
         ),
+        currentPlayers: {
+          ...prev.currentPlayers,
+          striker: {
+            ...prev.currentPlayers.striker,
+            Balls: prev.currentPlayers.striker.Balls + 1,
+            Runs: prev.currentPlayers.striker.Runs + numRuns,
+            Four:
+              val === "4"
+                ? prev.currentPlayers.striker.Four + 1
+                : prev.currentPlayers.striker.Four,
+            Six:
+              val === "6"
+                ? prev.currentPlayers.striker.Six + 1
+                : prev.currentPlayers.striker.Six,
+            StrikeRate:
+              ((prev.currentPlayers.striker.Runs + numRuns) /
+                (prev.currentPlayers.striker.Balls + 1)) *
+              100,
+          },
+        },
       }));
+      setMatchHistory((prevHistory) => [...prevHistory, currentMatchData]);
     } else if (["WD", "NB", "LB", "BYE"].includes(val)) {
       setIsExtraModalOpen(true);
       setExtraType(val);
@@ -68,11 +105,29 @@ export const ScoringPage = () => {
           nonStriker: prev.currentPlayers.striker,
         },
       }));
-      console.log(currentMatchData);
+    } else if (val === "UNDO") {
+      handleUndo();
+      return;
     }
+    swapBatsman(val);
+    console.log(matchHistory);
   };
 
-  console.log(currentMatchData);
+  // handle undo button
+  const handleUndo = () => {
+    setMatchHistory((prevHistory) => {
+      if (prevHistory.length <= 1) return prevHistory;
+
+      const newHistory = prevHistory.slice(0, -1);
+      const previousState = newHistory[newHistory.length - 1];
+
+      setCurrentMatchData(previousState);
+
+      return newHistory;
+    });
+  };
+
+  // console.log(currentMatchData);
 
   const navigate = useNavigate();
 
@@ -167,7 +222,7 @@ export const ScoringPage = () => {
           {/* runrate */}
           <div className="flex-1 p-2 text-sm">
             <p>CRR</p>
-            <p>{currentRunRate > 0 ? currentRunRate : "00.00"}</p>
+            <p>{currentRunRate > 0 ? currentRunRate.toFixed(1) : "0.0"}</p>
           </div>
         </div>
 
@@ -203,7 +258,9 @@ export const ScoringPage = () => {
                   {currentMatchData.currentPlayers.striker.Six}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData.currentPlayers.striker.StrikeRate}
+                  {currentMatchData.currentPlayers.striker.StrikeRate.toFixed(
+                    1,
+                  )}
                 </td>
               </tr>
 
@@ -224,7 +281,9 @@ export const ScoringPage = () => {
                   {currentMatchData.currentPlayers.nonStriker.Six}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData.currentPlayers.nonStriker.StrikeRate}
+                  {currentMatchData.currentPlayers.nonStriker.StrikeRate.toFixed(
+                    1,
+                  )}
                 </td>
               </tr>
             </tbody>

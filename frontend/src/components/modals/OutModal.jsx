@@ -1,6 +1,14 @@
 import { useState } from "react";
+import {
+  ArrowLeft,
+  CircleUserRound,
+  UserRound,
+  ShieldCheck,
+  Trophy,
+  UsersRound,
+  PersonStanding,
+} from "lucide-react";
 
-import { ArrowLeft } from "lucide-react";
 export const OutModal = ({ pendingData, onClose, onSubmit }) => {
   console.log(pendingData);
   //   console.log(onClose);
@@ -28,164 +36,255 @@ export const OutModal = ({ pendingData, onClose, onSubmit }) => {
     selectedWicketType === "Run Out" || selectedWicketType === "Cought";
 
   return (
-    <div className="inset-0 z-[9999999] fixed w-screen bg-base-100 flex flex-col items-center overflow-y-auto h-dvh">
-      <header className="flex items-center gap-2 px-2 py-4 fixed w-full bg-base-100">
-        <div onClick={onClose}>
-          <ArrowLeft size={30} strokeWidth={3} />
-        </div>
+    <div className="fixed inset-0 z-[9999999] h-dvh w-screen overflow-y-auto bg-base-100">
+      {/* Header */}
+      <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-base-content/10 bg-base-100/95 px-4 backdrop-blur">
+        <button
+          onClick={onClose}
+          className="flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-base-content/10 active:scale-95"
+        >
+          <ArrowLeft size={22} />
+        </button>
 
-        <h1>Record your wicket</h1>
+        <div>
+          <h1 className="text-base font-semibold">Record wicket</h1>
+          <p className="text-xs text-base-content/50">
+            Enter the dismissal details
+          </p>
+        </div>
       </header>
-      {/* wicket record */}
-      <div className="w-full p-2 lg:w-[60%] pt-15">
-        <h1>How was the batsman out?</h1>
-        <div className="grid grid-cols-2 gap-2 mt-4">
-          {wicketType.map((wicket) => {
-            return (
-              <button
-                onClick={() => handleWicketTypeBtn(wicket.type)}
-                className={`py-4 rounded-md ${selectedWicketType === wicket.type ? "bg-blue-600 font-bold" : "border border-base-content/15"}`}
-                key={wicket.type}
-              >
-                {wicket.type}
-              </button>
-            );
-          })}
-        </div>
 
-        {/* input fields */}
-        <section className="mt-4 flex flex-col gap-4">
-          {/* for run out */}
-          {selectedWicketType === "Run Out" && (
-            // no ball extra inputs
-            <div className="flex flex-col gap-4">
-              {/* which player got out */}
-              <div>
-                <label
-                  htmlFor="
-                    "
-                  className="flex flex-col gap-2"
+      {/* Content */}
+      <main className="mx-auto w-full max-w-2xl px-4 pb-10 pt-5">
+        {/* Wicket type */}
+        <section>
+          <div className="mb-3">
+            <h2 className="text-sm font-semibold">How was the batsman out?</h2>
+            <p className="mt-1 text-xs text-base-content/50">
+              Select the type of dismissal
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {wicketType.map((wicket) => {
+              const isSelected = selectedWicketType === wicket.type;
+
+              return (
+                <button
+                  key={wicket.type}
+                  onClick={() => handleWicketTypeBtn(wicket.type)}
+                  className={`
+                  flex min-h-16 items-center justify-between rounded-xl
+                  border px-4 text-left transition-all
+                  active:scale-[0.98]
+                  ${
+                    isSelected
+                      ? "border-blue-500 bg-blue-500 text-white shadow-sm"
+                      : "border-base-content/10 bg-base-200/40 hover:border-base-content/20 hover:bg-base-200"
+                  }
+                `}
                 >
-                  Which player got out?
+                  <span
+                    className={`text-sm ${
+                      isSelected ? "font-semibold" : "font-medium"
+                    }`}
+                  >
+                    {wicket.type}
+                  </span>
+
+                  {isSelected && <ShieldCheck size={18} strokeWidth={2.5} />}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Input fields */}
+        <section className="mt-6 space-y-4">
+          {/* Run Out */}
+          {selectedWicketType === "Run Out" && (
+            <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
+              <div className="mb-4 flex items-center gap-2">
+                <PersonStanding size={18} />
+                <div>
+                  <h3 className="text-sm font-semibold">Run out details</h3>
+                  <p className="text-xs text-base-content/50">
+                    Enter the details of the run out
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {/* Which player got out */}
+                <div>
+                  <label
+                    htmlFor="playerOut"
+                    className="mb-2 flex items-center gap-2 text-sm font-medium"
+                  >
+                    <UserRound size={16} className="opacity-60" />
+                    Which player got out?
+                  </label>
+
                   <select
                     name=""
-                    id=""
-                    className="w-full h-10 rounded-md border border-base-content/15 bg-base-100 outline-0"
+                    id="playerOut"
+                    className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none transition focus:border-blue-500"
                   >
                     <option value="">
                       {matchData?.currentPlayers?.striker?.name}
                     </option>
+
                     <option value="">
                       {matchData?.currentPlayers?.nonStriker?.name}
                     </option>
                   </select>
-                </label>
-              </div>
+                </div>
 
-              {/* who took runout */}
-              <div>
-                <label htmlFor="runOut" className="flex flex-col gap-2">
-                  Who took the run-out?
+                {/* Who took run out */}
+                <div>
+                  <label
+                    htmlFor="runOut"
+                    className="mb-2 flex items-center gap-2 text-sm font-medium"
+                  >
+                    <UsersRound size={16} className="opacity-60" />
+                    Who took the run-out?
+                  </label>
+
                   <input
                     id="runOut"
                     type="text"
-                    className="border border-base-content/15 h-10 rounded-md pl-2 outline-0"
-                    placeholder="Who took the run-out?"
+                    className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none transition placeholder:text-base-content/30 focus:border-blue-500"
+                    placeholder="Enter fielder name"
                   />
-                </label>
-              </div>
+                </div>
 
-              {/* runs fields */}
-              {!pendingData && (
-                <div>
-                  <label htmlFor="cought" className="flex flex-col gap-2">
-                    How many runs did the batsman score in the run-out?
+                {/* Runs */}
+                {!pendingData && (
+                  <div>
+                    <label
+                      htmlFor="cought"
+                      className="mb-2 flex items-center gap-2 text-sm font-medium"
+                    >
+                      <Trophy size={16} className="opacity-60" />
+                      Runs completed
+                    </label>
+
                     <input
                       id="cought"
                       type="text"
-                      className="border border-base-content/15 h-10 rounded-md pl-2 outline-0"
+                      className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none transition placeholder:text-base-content/30 focus:border-blue-500"
                       placeholder="0"
                     />
-                  </label>
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
-          {/* for catch out */}
-          {selectedWicketType === "Cought" && (
-            <div>
-              <label htmlFor="cought" className="flex flex-col gap-2">
-                Who cought the ball?
+
+          {/* Caught */}
+          {selectedWicketType === "Caught" && (
+            <>
+              <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
+                <label
+                  htmlFor="cought"
+                  className="mb-2 flex items-center gap-2 text-sm font-medium"
+                >
+                  <CircleUserRound size={16} className="opacity-60" />
+                  Who caught the ball?
+                </label>
+
                 <input
                   id="cought"
                   type="text"
-                  className="border border-base-content/15 h-10 rounded-md pl-2 outline-0"
-                  placeholder="Who is the new batsman"
+                  className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none transition placeholder:text-base-content/30 focus:border-blue-500"
+                  placeholder="Enter fielder name"
                 />
-              </label>
-            </div>
-          )}
+              </div>
 
-          {/* count run if catch out */}
-          {selectedWicketType === "Cought" && (
-            <div>
-              <label htmlFor="runs" className="flex flex-col gap-2">
-                How many runs they completed before cought?
+              <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
+                <label
+                  htmlFor="runs"
+                  className="mb-2 flex items-center gap-2 text-sm font-medium"
+                >
+                  <Trophy size={16} className="opacity-60" />
+                  Runs completed before catch
+                </label>
+
                 <input
                   id="runs"
                   type="text"
-                  className="border border-base-content/15 h-10 rounded-md pl-2 outline-0"
+                  className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none transition placeholder:text-base-content/30 focus:border-blue-500"
                   placeholder="0"
                 />
-              </label>
-            </div>
+              </div>
+            </>
           )}
 
+          {/* Stumped */}
           {selectedWicketType === "Stumped" && (
-            <div>
-              <label htmlFor="stumped" className="flex flex-col gap-2">
+            <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
+              <label
+                htmlFor="stumped"
+                className="mb-2 flex items-center gap-2 text-sm font-medium"
+              >
+                <CircleUserRound size={16} className="opacity-60" />
                 Who stumped?
-                <input
-                  id="stumped"
-                  type="text"
-                  className="border border-base-content/15 h-10 rounded-md pl-2 outline-0"
-                  placeholder="Who stumped"
-                />
               </label>
+
+              <input
+                id="stumped"
+                type="text"
+                className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none transition placeholder:text-base-content/30 focus:border-blue-500"
+                placeholder="Enter wicketkeeper name"
+              />
             </div>
           )}
 
-          {/* new batsman input */}
-          <div>
-            <label htmlFor="newBatsman" className="flex flex-col gap-2">
+          {/* New batsman */}
+          <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
+            <label
+              htmlFor="newBatsman"
+              className="mb-2 flex items-center gap-2 text-sm font-medium"
+            >
+              <UserRound size={16} className="opacity-60" />
               Who is the new batsman?
-              <input
-                id="newBatsman"
-                type="text"
-                className="border border-base-content/15 h-10 rounded-md pl-2 outline-0"
-                placeholder="Who is the new batsman"
-              />
             </label>
+
+            <input
+              id="newBatsman"
+              type="text"
+              className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none transition placeholder:text-base-content/30 focus:border-blue-500"
+              placeholder="Enter batsman name"
+            />
           </div>
 
-          {/* if runout or cought */}
+          {/* Strike / Non-striker */}
           {strikeNonStrikerInput && (
-            <div>
-              <label htmlFor="" className="flex flex-col gap-2">
-                Will the new player be the striker or non-striker?
-                <select
-                  name=""
-                  id=""
-                  className="w-full h-10 rounded-md border border-base-content/15 bg-base-100 outline-0"
-                >
-                  <option value="">Striker</option>
-                  <option value="">Non-Striker</option>
-                </select>
+            <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
+              <label
+                htmlFor="strikePosition"
+                className="mb-2 flex items-center gap-2 text-sm font-medium"
+              >
+                <UsersRound size={16} className="opacity-60" />
+                New player's position
               </label>
+
+              <p className="mb-3 text-xs text-base-content/50">
+                Will the new player be on strike?
+              </p>
+
+              <select
+                name=""
+                id="strikePosition"
+                className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none transition focus:border-blue-500"
+              >
+                <option value="">Striker</option>
+                <option value="">Non-Striker</option>
+              </select>
             </div>
           )}
         </section>
-      </div>
+      </main>
     </div>
   );
 };

@@ -39,7 +39,6 @@ export const ExtraRunCountModal = ({
       max: 7,
     },
   };
-  console.log(showOutModal);
 
   const config = extraConfig[extraType];
 
