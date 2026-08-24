@@ -69,22 +69,28 @@ export const ChangeRoleModal = ({
     setChangeRoleModal(false);
   };
   return (
-    <div className="fixed z-[999] inset-0 h-dvh w-auto flex items-center justify-center backdrop-blur-md">
-      <div className="border border-base-content/40 rounded-md w-[90%] flex flex-col items-center md:w-[60%]">
-        {/* header */}
-        <header className="border-b-1 py-4 w-full  flex items-center justify-between px-4 bg-base-content/10 rounded-t-md">
-          <h1 className="font-bold text-2xl">Choose Role</h1>
-          {/* close button */}
-          <div
-            onClick={handleCloseModal}
-            className="cursor-pointer hover:bg-base-content/30 p-2 rounded-md"
-          >
-            <X strokeWidth={4} />
+    <div className="fixed inset-0 z-[99999] flex h-dvh w-full items-center justify-center bg-base-content/20 p-4 backdrop-blur-sm">
+      <div className="flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-base-content/10 bg-base-100 shadow-2xl">
+        {/* Header */}
+        <header className="flex items-center justify-between border-b border-base-content/10 px-5 py-4">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight">Choose Role</h1>
+            <p className="mt-0.5 text-sm text-base-content/50">
+              Select the role for this player
+            </p>
           </div>
+
+          {/* Close button */}
+          <button
+            onClick={handleCloseModal}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-base-content/60 transition-all hover:bg-base-content/10 hover:text-base-content active:scale-95"
+          >
+            <X size={20} strokeWidth={2.5} />
+          </button>
         </header>
 
-        {/* role options */}
-        <ul className="w-full flex flex-col gap-6 mt-4 p-4">
+        {/* Role options */}
+        <ul className="flex w-full flex-col gap-3 p-5">
           {ROLE.map((role) => {
             const Icon = role.icon;
 
@@ -93,37 +99,61 @@ export const ChangeRoleModal = ({
                 disabled={selectedRole.includes(role.conflictWith)}
                 onClick={() => handleOnCLick(role.id)}
                 key={role.id}
-                className={`${
+                className={`
+                group flex w-full items-center justify-between rounded-xl
+                border p-3.5 text-left
+                transition-all duration-200
+
+                ${
                   !selectedRole.includes(role.id)
-                    ? "border-2 border-base-content/30"
-                    : "border-2 border-base-content bg-base-content/20"
-                } py-3 px-2 rounded-md flex justify-between items-center ${
+                    ? "border-base-content/10 bg-base-100/30 hover:-translate-y-[1px] hover:border-base-content/20 hover:bg-base-content/5 hover:shadow-md"
+                    : "border-info/40 bg-info/10 shadow-sm"
+                }
+
+                ${
                   selectedRole.includes(role.conflictWith)
-                    ? "opacity-40 cursor-not-allowed"
-                    : "hover:cursor-pointer "
-                }`}
+                    ? "cursor-not-allowed opacity-40"
+                    : "cursor-pointer"
+                }
+              `}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <div
-                    className={`bg-gradient-to-br ${role.gradient} p-2 rounded-md flex items-center justify-center`}
+                    className={`
+                    flex h-11 w-11 shrink-0 items-center justify-center
+                    rounded-xl bg-gradient-to-br ${role.gradient}
+                    shadow-sm
+                    transition-transform duration-200
+                    group-hover:scale-105
+                  `}
                   >
                     <Icon size={20} />
                   </div>
 
-                  <h4 className="font-bold text-md">{role.name}</h4>
+                  <div>
+                    <h4 className="font-semibold">{role.name}</h4>
+
+                    {selectedRole.includes(role.id) && (
+                      <p className="mt-0.5 text-xs text-info">Selected</p>
+                    )}
+                  </div>
                 </div>
 
+                {/* Checkbox */}
                 <span
-                  className={`h-5 w-5  rounded-md flex items-center justify-center ${
+                  className={`
+                  flex h-6 w-6 items-center justify-center rounded-full
+                  transition-all duration-200
+
+                  ${
                     selectedRole.includes(role.id)
-                      ? "bg-info border-2 border-base-content"
-                      : "border-2 border-base-content/30"
-                  }`}
+                      ? "bg-info text-info-content shadow-sm"
+                      : "border border-base-content/20 bg-base-100"
+                  }
+                `}
                 >
-                  {selectedRole.includes(role.id) ? (
-                    <Check strokeWidth={4} />
-                  ) : (
-                    ""
+                  {selectedRole.includes(role.id) && (
+                    <Check size={15} strokeWidth={3} />
                   )}
                 </span>
               </button>
@@ -131,42 +161,47 @@ export const ChangeRoleModal = ({
           })}
         </ul>
 
-        {/* close and confirm button */}
-        <div className="flex flex-col gap-2 mt-4 w-full mb-4 px-4">
-          <div className="flex rounded-md hover:cursor-pointer gap-3">
+        {/* Footer */}
+        <div className="border-t border-base-content/10 bg-base-200/20 px-5 py-4">
+          <div className="flex gap-3">
             {loggedInUserId === checkTeamAdmin && (
               <button
                 onClick={handlePlayerRemoveBtn}
-                className="flex-1 btn btn-error"
+                className="btn btn-error flex-1 rounded-xl"
                 disabled={isRoleUpdating || isPlayerRemoving}
               >
                 {isPlayerRemoving ? (
-                  <span className="loading loading-dots loading-xl"></span>
+                  <span className="loading loading-dots loading-md"></span>
                 ) : (
                   "Remove"
                 )}
               </button>
             )}
+
             <Link
               aria-disabled={isPlayerRemoving || isRoleUpdating}
               onClick={(e) =>
                 isPlayerRemoving || (isRoleUpdating && e.preventDefault())
               }
               to={`/profile/${selectPlayerId}`}
-              className="flex-1 btn btn-success"
+              className="flex-1"
             >
-              <button disabled={isRoleUpdating || isPlayerRemoving}>
+              <button
+                disabled={isRoleUpdating || isPlayerRemoving}
+                className="btn btn-success w-full rounded-xl"
+              >
                 Profile
               </button>
             </Link>
           </div>
+
           <button
             onClick={handleConfirmBtn}
-            className={`btn btn-info rounded-md hover:cursor-pointer`}
+            className="btn btn-info mt-3 w-full rounded-xl shadow-sm transition-all hover:shadow-md"
             disabled={isRoleUpdating || isPlayerRemoving}
           >
             {isRoleUpdating ? (
-              <span className="loading loading-dots loading-xl"></span>
+              <span className="loading loading-dots loading-md"></span>
             ) : (
               "Confirm"
             )}
