@@ -1,10 +1,11 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ExtraRunCountModal } from "../components/modals/ExtraRunCountModal";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { OutModal } from "../components/modals/OutModal";
 import { MoreOptionScoringModal } from "../components/modals/MoreOptionScoringModal";
+import { AddNewBowlerModal } from "../components/modals/AddNewBowlerModal";
 
 export const ScoringPage = () => {
   const matchData = JSON.parse(localStorage.getItem("currentMatch")) || {};
@@ -33,9 +34,16 @@ export const ScoringPage = () => {
     "OUT",
   ];
 
+  const [openAddBowlerModal, setOpenAddBowlerModal] = useState(false);
   const [openMoreMotionModal, setOpenMoreOptionModal] = useState(false);
-  const [matchHistory, setMatchHistory] = useState([]);
+  const [matchHistory, setMatchHistory] = useState(() => []);
 
+  const currentInning = currentMatchData.innings.length - 1;
+
+  const totalRuns = currentMatchData.innings[currentInning].runs;
+  const legalBalls = currentMatchData.innings[currentInning].legalBalls;
+  const wicketsOut = currentMatchData.innings[currentInning].wickets;
+  const currentRunRate = legalBalls > 0 ? (totalRuns / legalBalls) * 6 : 0;
   const onConfirm = (data) => {
     setExtraType(data);
     console.log("onConfirm");
@@ -43,7 +51,7 @@ export const ScoringPage = () => {
 
   // swap batsman
   function swapBatsman(val) {
-    if (["1", "3"].includes(val)) {
+    if (["1", "3", "SWAP"].includes(val)) {
       setCurrentMatchData((prev) => ({
         ...prev,
         currentPlayers: {
@@ -54,82 +62,127 @@ export const ScoringPage = () => {
       }));
     }
   }
-
+  // handle update score function
   const handleScoreBtnClick = (val) => {
     if (["0", "1", "2", "3", "4", "6"].includes(val)) {
       const numRuns = Number(val);
-      setCurrentMatchData((prev) => ({
-        ...prev,
-        innings: prev.innings.map((inning, index) =>
-          index === prev.innings.length - 1
-            ? {
-                ...inning,
-                runs: inning.runs + numRuns,
-                legalBalls: legalBalls + 1,
-              }
-            : inning,
-        ),
-        currentPlayers: {
-          ...prev.currentPlayers,
-          striker: {
-            ...prev.currentPlayers.striker,
-            Balls: prev.currentPlayers.striker.Balls + 1,
-            Runs: prev.currentPlayers.striker.Runs + numRuns,
-            Four:
-              val === "4"
-                ? prev.currentPlayers.striker.Four + 1
-                : prev.currentPlayers.striker.Four,
-            Six:
-              val === "6"
-                ? prev.currentPlayers.striker.Six + 1
-                : prev.currentPlayers.striker.Six,
-            StrikeRate:
-              ((prev.currentPlayers.striker.Runs + numRuns) /
-                (prev.currentPlayers.striker.Balls + 1)) *
-              100,
+
+      // Save the CURRENT state before this action
+      setMatchHistory((prevHistory) => [
+        ...prevHistory,
+        structuredClone(currentMatchData),
+      ]);
+
+      setCurrentMatchData((prev) => {
+        const updatedMatchData = {
+          ...prev,
+
+          innings: prev.innings.map((inning, index) =>
+            index === prev.innings.length - 1
+              ? {
+                  ...inning,
+                  runs: inning.runs + numRuns,
+                  legalBalls: inning.legalBalls + 1,
+                }
+              : inning,
+          ),
+
+          currentPlayers: {
+            ...prev.currentPlayers,
+
+            striker: {
+              ...prev.currentPlayers.striker,
+
+              Runs: prev.currentPlayers.striker.Runs + numRuns,
+
+              Balls: prev.currentPlayers.striker.Balls + 1,
+
+              Six:
+                val === "6"
+                  ? prev.currentPlayers.striker.Six + 1
+                  : prev.currentPlayers.striker.Six,
+
+              Four:
+                val === "4"
+                  ? prev.currentPlayers.striker.Four + 1
+                  : prev.currentPlayers.striker.Four,
+
+              StrikeRate:
+                ((prev.currentPlayers.striker.Runs + numRuns) /
+                  (prev.currentPlayers.striker.Balls + 1)) *
+                100,
+            },
+
+            bowler: {
+              ...prev.currentPlayers.bowler,
+
+              Balls: prev.currentPlayers.bowler.Balls + 1,
+
+              Runs: prev.currentPlayers.bowler.Runs + numRuns,
+
+              Four:
+                val === "4"
+                  ? prev.currentPlayers.bowler.Four + 1
+                  : prev.currentPlayers.bowler.Four,
+
+              Six:
+                val === "6"
+                  ? prev.currentPlayers.bowler.Six + 1
+                  : prev.currentPlayers.bowler.Six,
+
+              wicket: prev.currentPlayers.bowler.wicket,
+
+              Economy:
+                (prev.currentPlayers.bowler.Runs + numRuns) /
+                ((prev.currentPlayers.bowler.Balls + 1) / 6),
+            },
           },
-        },
-      }));
-      setMatchHistory((prevHistory) => [...prevHistory, currentMatchData]);
+        };
+
+        return updatedMatchData;
+      });
+      swapBatsman(val);
+    } else if (val === "OUT") {
+      setShowOutModal(true);
     } else if (["WD", "NB", "LB", "BYE"].includes(val)) {
       setIsExtraModalOpen(true);
       setExtraType(val);
-    } else if (val === "OUT") {
-      setShowOutModal(true);
-      // console.log(extraType);
     } else if (val === "SWAP") {
-      setCurrentMatchData((prev) => ({
-        ...prev,
-        currentPlayers: {
-          ...prev.currentPlayers,
-          striker: prev.currentPlayers.nonStriker,
-          nonStriker: prev.currentPlayers.striker,
-        },
-      }));
-    } else if (val === "UNDO") {
-      handleUndo();
-      return;
+      swapBatsman(val);
     } else if (val === "MORE") {
       setOpenMoreOptionModal(true);
+    } else if (val === "UNDO") {
+      handleUndo();
     }
-    swapBatsman(val);
-    console.log(currentMatchData);
   };
 
-  // handle undo button
-  const handleUndo = () => {
+  const isUndoRef = useRef(false);
+
+  function handleUndo() {
     setMatchHistory((prevHistory) => {
-      if (prevHistory.length <= 1) return prevHistory;
+      if (prevHistory.length === 0) {
+        return prevHistory;
+      }
 
-      const newHistory = prevHistory.slice(0, -1);
-      const previousState = newHistory[newHistory.length - 1];
-
+      const previousState = prevHistory[prevHistory.length - 1];
+      // Tell useEffect this change came from UNDO
+      isUndoRef.current = true;
       setCurrentMatchData(previousState);
 
-      return newHistory;
+      return prevHistory.slice(0, -1);
     });
-  };
+  }
+  // handle add new bowler modal
 
+  useEffect(() => {
+    if (isUndoRef.current) {
+      isUndoRef.current = false;
+      return;
+    }
+    if (legalBalls > 0 && legalBalls % 6 === 0) {
+      setOpenAddBowlerModal(true);
+    }
+  }, [legalBalls]);
   // console.log(currentMatchData);
 
   const navigate = useNavigate();
@@ -175,13 +228,6 @@ export const ScoringPage = () => {
     BYE: "border-3 border-blue-600 text-blue-600 text-[.8rem]",
     OUT: "border-3 border-red-600 text-red-600 text-[.8rem]",
   };
-
-  const currentInning = currentMatchData.innings.length - 1;
-
-  const totalRuns = currentMatchData.innings[currentInning].runs;
-  const legalBalls = currentMatchData.innings[currentInning].legalBalls;
-  const wicketsOut = currentMatchData.innings[currentInning].wickets;
-  const currentRunRate = legalBalls > 0 ? (totalRuns / legalBalls) * 6 : 0;
 
   return (
     <div className="h-dvh w-screen pt-12 flex justify-center">
@@ -321,7 +367,7 @@ export const ScoringPage = () => {
                   {currentMatchData.currentPlayers.bowler.wicket}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData.currentPlayers.bowler.Economy}
+                  {currentMatchData.currentPlayers.bowler.Economy.toFixed(1)}
                 </td>
               </tr>
             </tbody>
@@ -379,6 +425,13 @@ export const ScoringPage = () => {
 
       {openMoreMotionModal && (
         <MoreOptionScoringModal onClose={() => setOpenMoreOptionModal(false)} />
+      )}
+      {openAddBowlerModal && (
+        <AddNewBowlerModal
+          onClose={() => {
+            setOpenAddBowlerModal(false);
+          }}
+        />
       )}
     </div>
   );
