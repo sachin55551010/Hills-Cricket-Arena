@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "motion/react";
+
 import {
   X,
   UserRound,
@@ -151,13 +151,7 @@ export const MoreOptionScoringModal = ({ onClose }) => {
   );
 
   return (
-    <motion.div
-      className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center backdrop-blur-md p-0 sm:p-4"
-      initial={{ opacity: 0, y: "100%" }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: "100%" }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-    >
+    <div className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center backdrop-blur-md p-0 sm:p-4">
       <div className="w-full sm:max-w-md bg-base-100 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-base-300/70">
@@ -220,6 +214,6 @@ export const MoreOptionScoringModal = ({ onClose }) => {
           {activeOption === "replace" && renderReplacement()}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };

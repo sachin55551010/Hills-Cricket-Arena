@@ -5,8 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { OutModal } from "../components/modals/OutModal";
 import { MoreOptionScoringModal } from "../components/modals/MoreOptionScoringModal";
-// eslint-disable-next-line no-unused-vars
-import { AnimatePresence, motion } from "motion/react";
 
 export const ScoringPage = () => {
   const matchData = JSON.parse(localStorage.getItem("currentMatch")) || {};
@@ -96,7 +94,6 @@ export const ScoringPage = () => {
     } else if (["WD", "NB", "LB", "BYE"].includes(val)) {
       setIsExtraModalOpen(true);
       setExtraType(val);
-      console.log(val);
     } else if (val === "OUT") {
       setShowOutModal(true);
       // console.log(extraType);
@@ -116,7 +113,7 @@ export const ScoringPage = () => {
       setOpenMoreOptionModal(true);
     }
     swapBatsman(val);
-    console.log(matchHistory);
+    console.log(currentMatchData);
   };
 
   // handle undo button
@@ -215,20 +212,22 @@ export const ScoringPage = () => {
                 <p>1st Inning</p>
               </div>
               <div className="flex items-center gap-1">
-                <div className="text-3xl font-semibold">
+                <div className="text-4xl font-semibold">
                   {totalRuns}-{wicketsOut}
                 </div>
-                <div>
-                  {Math.floor(legalBalls / 6)}.{legalBalls % 6}
+                <div className="text-lg">
+                  ({Math.floor(legalBalls / 6)}.{legalBalls % 6})
                 </div>
               </div>
             </div>
           </div>
 
           {/* runrate */}
-          <div className="flex-1 p-2 text-sm">
-            <p>CRR</p>
-            <p>{currentRunRate > 0 ? currentRunRate.toFixed(1) : "0.0"}</p>
+          <div className="flex-1 p-2 text-sm flex flex-col items-end">
+            <p className="font-semibold">CRR</p>
+            <p className="">
+              {currentRunRate > 0 ? currentRunRate.toFixed(1) : "0.0"}
+            </p>
           </div>
         </div>
 
@@ -355,7 +354,7 @@ export const ScoringPage = () => {
               return (
                 <button
                   onClick={() => handleScoreBtnClick(btn)}
-                  className={`border-base-content/40 w-15 h-15 rounded-full font-semibold ${buttonColors[btn]} cursor-pointer border-2 shadow-[inset_0px_0px_5px_rgba(0,0,0,1)]`}
+                  className={`border-base-content/40 w-15 h-15 rounded-full font-semibold ${buttonColors[btn]} cursor-pointer border-2`}
                   key={btn}
                 >
                   {btn}
@@ -366,26 +365,21 @@ export const ScoringPage = () => {
         </div>
       </div>
 
-      <AnimatePresence>
-        {isExtraModalOpen && (
-          <ExtraRunCountModal
-            extraType={extraType}
-            onClose={() => setIsExtraModalOpen(false)}
-            onConfirm={onConfirm}
-            showOutModal={showOutModal}
-            setShowOutModal={setShowOutModal}
-          />
-        )}
-      </AnimatePresence>
+      {isExtraModalOpen && (
+        <ExtraRunCountModal
+          extraType={extraType}
+          onClose={() => setIsExtraModalOpen(false)}
+          onConfirm={onConfirm}
+          showOutModal={showOutModal}
+          setShowOutModal={setShowOutModal}
+        />
+      )}
 
       {showOutModal && <OutModal onClose={() => setShowOutModal(false)} />}
-      <AnimatePresence>
-        {openMoreMotionModal && (
-          <MoreOptionScoringModal
-            onClose={() => setOpenMoreOptionModal(false)}
-          />
-        )}
-      </AnimatePresence>
+
+      {openMoreMotionModal && (
+        <MoreOptionScoringModal onClose={() => setOpenMoreOptionModal(false)} />
+      )}
     </div>
   );
 };

@@ -17,46 +17,73 @@ export const PlayerSetupPage = () => {
   const [errorData, setErrorData] = useState({});
 
   //   zod player schema to handle errors
-  const playerSchema = z.object({
-    striker: z
-      .string()
-      .min(3, "Striker name must be at least 3 characters")
-      .max(17, "Striker name must be less than 18 characters")
-      .regex(/^\S.*$/, "Name cannot start with a space")
-      .refine((value) => /[a-zA-Z]/.test(value), {
-        message: "Name cannot contain only numbers",
-      }),
+  const playerSchema = z
+    .object({
+      striker: z
+        .string()
+        .min(3, "Striker name must be at least 3 characters")
+        .max(17, "Striker name must be less than 18 characters")
+        .regex(/^\S.*$/, "Name cannot start with a space")
+        .refine((value) => /[a-zA-Z]/.test(value), {
+          message: "Name cannot contain only numbers",
+        }),
 
-    nonStriker: z
-      .string()
-      .min(3, "Non-striker name must be at least 3 characters")
-      .max(17, "Non-striker name must be less than 18 characters")
-      .regex(/^\S.*$/, "Name cannot start with a space")
-      .refine((value) => /[a-zA-Z]/.test(value), {
-        message: "Name cannot contain only numbers",
-      }),
+      nonStriker: z
+        .string()
+        .min(3, "Non-striker name must be at least 3 characters")
+        .max(17, "Non-striker name must be less than 18 characters")
+        .regex(/^\S.*$/, "Name cannot start with a space")
+        .refine((value) => /[a-zA-Z]/.test(value), {
+          message: "Name cannot contain only numbers",
+        }),
 
-    bowler: z
-      .string()
-      .min(3, "Bowler name must be at least 3 characters")
-      .max(17, "Bowler name must be less than 18 characters")
-      .regex(/^\S.*$/, "Name cannot start with a space")
-      .refine((value) => /[a-zA-Z]/.test(value), {
-        message: "Name cannot contain only numbers",
-      }),
-  });
+      bowler: z
+        .string()
+        .min(3, "Bowler name must be at least 3 characters")
+        .max(17, "Bowler name must be less than 18 characters")
+        .regex(/^\S.*$/, "Name cannot start with a space")
+        .refine((value) => /[a-zA-Z]/.test(value), {
+          message: "Name cannot contain only numbers",
+        }),
+    })
+    .refine(
+      (data) =>
+        data.striker.trim().toLowerCase() !==
+        data.nonStriker.trim().toLowerCase(),
+      {
+        message: "Striker and non-striker must have different names",
+        path: ["nonStriker"],
+      },
+    );
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
+
+    const updatedFormData = {
+      ...formData,
       [name]: value,
-    }));
-    // Remove error when user starts correcting the field
+    };
+
+    setFormData(updatedFormData);
+
+    // Remove current field error
     setErrorData((prev) => ({
       ...prev,
       [name]: "",
     }));
+
+    // Check striker and non-striker
+    if (
+      updatedFormData.striker.trim() &&
+      updatedFormData.nonStriker.trim() &&
+      updatedFormData.striker.trim().toLowerCase() ===
+        updatedFormData.nonStriker.trim().toLowerCase()
+    ) {
+      setErrorData((prev) => ({
+        ...prev,
+        nonStriker: "Striker and non-striker must have different names",
+      }));
+    }
   };
 
   const handleStartMatch = (e) => {
@@ -107,6 +134,8 @@ export const PlayerSetupPage = () => {
         Economy: 0,
         Maidens: 0,
         wicket: 0,
+        wideBallRun: 0,
+        noBallRun: 0,
       },
     };
 
@@ -196,6 +225,11 @@ export const PlayerSetupPage = () => {
     navigate("/local-match/scoring");
   };
 
+  console.log(errorData);
+
+  const checkValidation = playerSchema.safeParse(formData);
+  const isBtnDisabled = checkValidation.success;
+
   return (
     <div className="min-h-screen bg-base-200 p-4">
       <Header data="Hills Cricket Scorer" />
@@ -272,7 +306,11 @@ export const PlayerSetupPage = () => {
             </div>
 
             {/* Start Match */}
-            <button type="submit" className="btn btn-primary w-full">
+            <button
+              disabled={!isBtnDisabled}
+              type="submit"
+              className="btn btn-info w-full"
+            >
               Start Match
             </button>
           </form>
