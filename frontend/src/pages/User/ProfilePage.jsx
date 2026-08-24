@@ -91,7 +91,7 @@ export const ProfilePage = () => {
         }`}
       >
         {/* top gradient div */}
-        <section className="relative w-full flex-shrink-0 h-85 md:w-[95%] lg:w-[85%] shadow-[0px_0px_10px_rgba(0,0,0,.4)] rounded-xl border border-base-content/20">
+        <section className="relative w-full flex-shrink-0 h-85 md:w-[95%] lg:w-[60%] shadow-[0px_0px_10px_rgba(0,0,0,.4)] rounded-xl border border-base-content/20">
           {/* gredient div */}
           <div className="h-[40%] bg-gradient-to-br from-primary to-secondary rounded-t-xl"></div>
 
@@ -143,7 +143,7 @@ export const ProfilePage = () => {
         </section>
 
         {/* player all basic details gender number playing role etc */}
-        <section className="w-full rounded-xl md:w-[95%] lg:w-[85%] mt-4 mb-6">
+        <section className="w-full rounded-xl md:w-[95%] lg:w-[60%] mt-4 mb-6">
           <ul className=" grid grid-cols-1 gap-3 md:grid-cols-2 mb-6 lg:grid-cols-3">
             {playerDetails.map((player, index) => {
               return (

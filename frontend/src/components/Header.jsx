@@ -8,7 +8,7 @@ export const Header = ({ data, backTo }) => {
   };
   return (
     <div>
-      <header className="fixed top-0 left-0 z-[990] h-[var(--nav-h)] bg-base-100 flex items-center gap-2 px-2 w-dvw">
+      <header className="fixed top-0 left-0 z-[1000] h-[var(--nav-h)] bg-base-100 flex items-center gap-2 px-2 w-dvw">
         <button onClick={handleNavigateBtn}>
           <ArrowLeft size={30} strokeWidth={4} />
         </button>
