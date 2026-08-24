@@ -264,7 +264,7 @@ export const SideMenuBar = () => {
                   hover:text-base-content
                   active:scale-[0.99]
                   lg:gap-2 lg:px-2.5 lg:py-2
-                  lg:hidden
+                  lg:hidden mt-1.5
                 "
                 >
                   <GiCricketBat size={21} />
