@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { OutModal } from "./OutModal";
-
+// eslint-disable-next-line no-unused-vars
+import { motion } from "motion/react";
 export const ExtraRunCountModal = ({
   extraType,
   onClose,
@@ -64,7 +65,13 @@ export const ExtraRunCountModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex h-dvh w-screen items-center justify-center p-4 backdrop-blur-sm">
+    <motion.div
+      className="fixed inset-0 z-50 flex h-dvh w-screen items-center justify-center p-4 backdrop-blur-sm"
+      initial={{ opacity: 0, scale: 0 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-base-content/10 bg-base-100 shadow-2xl">
         {/* Header */}
         <div className="border-b border-base-content/10 px-5 py-4">
@@ -164,6 +171,6 @@ export const ExtraRunCountModal = ({
           }}
         />
       )}
-    </div>
+    </motion.div>
   );
 };

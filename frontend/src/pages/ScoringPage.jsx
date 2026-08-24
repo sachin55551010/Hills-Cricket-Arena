@@ -4,6 +4,9 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { OutModal } from "../components/modals/OutModal";
+import { MoreOptionScoringModal } from "../components/modals/MoreOptionScoringModal";
+// eslint-disable-next-line no-unused-vars
+import { AnimatePresence, motion } from "motion/react";
 
 export const ScoringPage = () => {
   const matchData = JSON.parse(localStorage.getItem("currentMatch")) || {};
@@ -32,6 +35,7 @@ export const ScoringPage = () => {
     "OUT",
   ];
 
+  const [openMoreMotionModal, setOpenMoreOptionModal] = useState(false);
   const [matchHistory, setMatchHistory] = useState([]);
 
   const onConfirm = (data) => {
@@ -108,6 +112,8 @@ export const ScoringPage = () => {
     } else if (val === "UNDO") {
       handleUndo();
       return;
+    } else if (val === "MORE") {
+      setOpenMoreOptionModal(true);
     }
     swapBatsman(val);
     console.log(matchHistory);
@@ -359,16 +365,27 @@ export const ScoringPage = () => {
           </div>
         </div>
       </div>
-      {isExtraModalOpen && (
-        <ExtraRunCountModal
-          extraType={extraType}
-          onClose={() => setIsExtraModalOpen(false)}
-          onConfirm={onConfirm}
-          showOutModal={showOutModal}
-          setShowOutModal={setShowOutModal}
-        />
-      )}
+
+      <AnimatePresence>
+        {isExtraModalOpen && (
+          <ExtraRunCountModal
+            extraType={extraType}
+            onClose={() => setIsExtraModalOpen(false)}
+            onConfirm={onConfirm}
+            showOutModal={showOutModal}
+            setShowOutModal={setShowOutModal}
+          />
+        )}
+      </AnimatePresence>
+
       {showOutModal && <OutModal onClose={() => setShowOutModal(false)} />}
+      <AnimatePresence>
+        {openMoreMotionModal && (
+          <MoreOptionScoringModal
+            onClose={() => setOpenMoreOptionModal(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
