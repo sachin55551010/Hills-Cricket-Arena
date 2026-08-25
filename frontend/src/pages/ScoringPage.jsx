@@ -44,10 +44,107 @@ export const ScoringPage = () => {
   const legalBalls = currentMatchData.innings[currentInning].legalBalls;
   const wicketsOut = currentMatchData.innings[currentInning].wickets;
   const currentRunRate = legalBalls > 0 ? (totalRuns / legalBalls) * 6 : 0;
+  const noBallRuns = currentMatchData.noBallRun;
+  const wideBallRuns = currentMatchData.wideBallRun;
+
   const onConfirm = (data) => {
-    setExtraType(data);
-    console.log("onConfirm");
+    console.log("Data", data);
+
+    const extraType = data.type;
+    const extraRuns = Number(data.runs);
+    const runType = data.runType; // BAT | BYE | LB
+    setMatchHistory((prevHistory) => [
+      ...prevHistory,
+      structuredClone(currentMatchData),
+    ]);
+    setCurrentMatchData((prev) => {
+      const lastInningIndex = prev.innings.length - 1;
+
+      return {
+        ...prev,
+
+        // UPDATE INNINGS
+
+        innings: prev.innings.map((inning, index) =>
+          index === lastInningIndex
+            ? {
+                ...inning,
+
+                // Total innings/team runs
+                runs:
+                  inning.runs +
+                  (extraType === "WD"
+                    ? wideBallRuns + extraRuns
+                    : extraType === "NB"
+                      ? noBallRuns + extraRuns
+                      : extraRuns),
+
+                // =========================
+                // UPDATE EXTRAS
+                // =========================
+                extras: {
+                  ...inning.extras,
+
+                  // Wide
+                  ...(extraType === "WD" && {
+                    wideBallRun:
+                      inning.extras.wideBallRun + wideBallRuns + extraRuns,
+                  }),
+
+                  // No Ball
+                  ...(extraType === "NB" && {
+                    noBallRun: inning.extras.noBallRun + noBallRuns,
+                  }),
+
+                  // Normal Bye
+                  ...(extraType === "BYE" && {
+                    byes: inning.extras.byes + extraRuns,
+                  }),
+
+                  // Normal Leg Bye
+                  ...(extraType === "LB" && {
+                    legByes: inning.extras.legByes + extraRuns,
+                  }),
+
+                  // No Ball + Bye
+                  ...(extraType === "NB" &&
+                    runType === "BYE" && {
+                      byes: inning.extras.byes + extraRuns,
+                    }),
+
+                  // No Ball + Leg Bye
+                  ...(extraType === "NB" &&
+                    runType === "LB" && {
+                      legByes: inning.extras.legByes + extraRuns,
+                    }),
+                },
+              }
+            : inning,
+        ),
+
+        // UPDATE CURRENT PLAYERS
+
+        currentPlayers:
+          extraType === "NB" && runType === "BAT"
+            ? {
+                ...prev.currentPlayers,
+
+                striker: {
+                  ...prev.currentPlayers.striker,
+
+                  // No-ball runs from bat go to striker
+                  Runs: prev.currentPlayers.striker.Runs + extraRuns,
+
+                  // No ball is NOT a legal delivery
+                  Balls: prev.currentPlayers.striker.Balls,
+                },
+              }
+            : prev.currentPlayers,
+      };
+    });
   };
+  // console.log("extra type data", extraTypeData);
+  // console.log(currentMatchData);
 
   // swap batsman
   function swapBatsman(val) {
@@ -145,8 +242,8 @@ export const ScoringPage = () => {
     } else if (val === "OUT") {
       setShowOutModal(true);
     } else if (["WD", "NB", "LB", "BYE"].includes(val)) {
-      setIsExtraModalOpen(true);
       setExtraType(val);
+      setIsExtraModalOpen(true);
     } else if (val === "SWAP") {
       swapBatsman(val);
     } else if (val === "MORE") {
@@ -155,7 +252,7 @@ export const ScoringPage = () => {
       handleUndo();
     }
   };
-
+  // variable to prevent open bolwer screen again when user press undo
   const isUndoRef = useRef(false);
 
   function handleUndo() {
@@ -184,6 +281,11 @@ export const ScoringPage = () => {
     }
   }, [legalBalls]);
   // console.log(currentMatchData);
+
+  //  function to update new bolwer
+  function updateNewBolwer(name) {
+    console.log(name);
+  }
 
   const navigate = useNavigate();
 
@@ -431,6 +533,7 @@ export const ScoringPage = () => {
           onClose={() => {
             setOpenAddBowlerModal(false);
           }}
+          updateNewbowler={updateNewBolwer}
         />
       )}
     </div>

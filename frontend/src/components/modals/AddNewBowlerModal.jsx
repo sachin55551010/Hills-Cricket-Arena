@@ -9,7 +9,7 @@ const bowlers = [
   { id: 4, name: "Ravindra Jadeja", team: "India" },
 ];
 
-export const AddNewBowlerModal = ({ onClose }) => {
+export const AddNewBowlerModal = ({ onClose, updateNewBowler }) => {
   const [showAddBowler, setShowAddBowler] = useState(false);
   const [selectedBowler, setSelectedBowler] = useState(null);
   const [search, setSearch] = useState("");
@@ -18,6 +18,8 @@ export const AddNewBowlerModal = ({ onClose }) => {
   const filteredBowlers = bowlers.filter((bowler) =>
     bowler.name.toLowerCase().includes(search.toLowerCase()),
   );
+
+  console.log(updateNewBowler);
 
   const handleAddBowler = () => {
     if (!newBowlerName.trim()) return;

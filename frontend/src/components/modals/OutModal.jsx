@@ -19,7 +19,7 @@ export const OutModal = ({ pendingData, onClose, onSubmit }) => {
   const [selectedWicketType, setSelectedWicketType] = useState("Bowled");
   const wicketType = [
     { type: "Bowled" },
-    { type: "Cought" },
+    { type: "Caught" },
     { type: "Run Out" },
     { type: "LBW" },
     { type: "Stumped" },
@@ -284,7 +284,22 @@ export const OutModal = ({ pendingData, onClose, onSubmit }) => {
             </div>
           )}
         </section>
+        <div className="flex mt-4 w-full justify-center">
+          <button className="btn btn-info w-50 h-12">Submit</button>
+        </div>
       </main>
     </div>
   );
 };
+
+/**
+ * in my out modal there are different type of data could be send like for bolwed who is new batsman name and also add nanoid id for it
+
+if caught out who caught the ball name and nanoid id, who is new batsman name and id, will the player be striker or non striker end
+
+for runout which player got out who took the runout, how many runs batsman score in the run out,who is the new batsman, will player be on strike on non strike,
+
+for stumped, who stumped and new batsman,
+
+for other option only who is the new batsman is available
+ */

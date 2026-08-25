@@ -12,6 +12,7 @@ export const ExtraRunCountModal = ({
   const [isWicket, setIsWicket] = useState(false);
 
   const [pendingData, setPendingData] = useState(null);
+  const [nbRunType, setNbRunType] = useState("BAT");
 
   const extraConfig = {
     WD: {
@@ -52,15 +53,25 @@ export const ExtraRunCountModal = ({
   const handleConfirm = () => {
     const data = {
       type: extraType,
-      runs,
+      runs: Number(runs),
       wicket: isWicket,
+      // Only relevant for no-ball
+      ...(extraType === "NB" && {
+        runType: nbRunType,
+      }),
     };
     if (isWicket) {
       setPendingData(data);
       setShowOutModal(true);
       return;
     }
-    onConfirm(data);
+    if (pendingData) {
+      const updatedData = { ...pendingData, ...updatedData };
+      onConfirm(updatedData);
+    } else {
+      onConfirm(data);
+      onClose();
+    }
   };
 
   return (
@@ -91,17 +102,40 @@ export const ExtraRunCountModal = ({
 
             {extraType === "NB" && (
               <div className="mb-4 flex justify-between">
-                <label htmlFor="" className="flex flex-col w-fit gap-2">
+                <label className="flex w-fit flex-col gap-2">
                   From Bat
-                  <input type="radio" className="h-4 w-4" name="radio" />
+                  <input
+                    type="radio"
+                    name="nbRunType"
+                    value="BAT"
+                    checked={nbRunType === "BAT"}
+                    onChange={(e) => setNbRunType(e.target.value)}
+                    className="h-4 w-4"
+                  />
                 </label>
-                <label htmlFor="" className="flex flex-col w-fit gap-2">
+
+                <label className="flex w-fit flex-col gap-2">
                   Bye
-                  <input name="radio" type="radio" className="h-4 w-4" />
+                  <input
+                    type="radio"
+                    name="nbRunType"
+                    value="BYE"
+                    checked={nbRunType === "BYE"}
+                    onChange={(e) => setNbRunType(e.target.value)}
+                    className="h-4 w-4"
+                  />
                 </label>
-                <label htmlFor="" className="flex flex-col w-fit gap-2">
+
+                <label className="flex w-fit flex-col gap-2">
                   Leg Bye
-                  <input name="radio" type="radio" className="h-4 w-4" />
+                  <input
+                    type="radio"
+                    name="nbRunType"
+                    value="LB"
+                    checked={nbRunType === "LB"}
+                    onChange={(e) => setNbRunType(e.target.value)}
+                    className="h-4 w-4"
+                  />
                 </label>
               </div>
             )}
