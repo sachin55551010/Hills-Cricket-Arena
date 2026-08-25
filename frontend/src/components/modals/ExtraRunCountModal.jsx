@@ -95,48 +95,52 @@ export const ExtraRunCountModal = ({
 
         {/* Runs */}
         <div className="p-5">
-          <div>
+          <div className="mb-4">
             <p className="text-sm text-base-content/60 mb-4">
               {config.description}
             </p>
 
             {extraType === "NB" && (
-              <div className="mb-4 flex justify-between">
-                <label className="flex w-fit flex-col gap-2">
-                  From Bat
-                  <input
-                    type="radio"
-                    name="nbRunType"
-                    value="BAT"
-                    checked={nbRunType === "BAT"}
-                    onChange={(e) => setNbRunType(e.target.value)}
-                    className="h-4 w-4"
-                  />
-                </label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { value: "BAT", label: "From Bat" },
+                  { value: "BYE", label: "Bye" },
+                  { value: "LB", label: "Leg Bye" },
+                ].map((option) => {
+                  const isSelected = nbRunType === option.value;
 
-                <label className="flex w-fit flex-col gap-2">
-                  Bye
-                  <input
-                    type="radio"
-                    name="nbRunType"
-                    value="BYE"
-                    checked={nbRunType === "BYE"}
-                    onChange={(e) => setNbRunType(e.target.value)}
-                    className="h-4 w-4"
-                  />
-                </label>
+                  return (
+                    <label
+                      key={option.value}
+                      className={`
+              relative flex cursor-pointer items-center justify-center
+              rounded-lg border px-3 py-3
+              text-sm font-medium
+              transition-all duration-200
+              ${
+                isSelected
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-base-300 bg-base-100 text-base-content/60 hover:border-primary/40 hover:bg-base-200/40"
+              }
+            `}
+                    >
+                      <input
+                        type="radio"
+                        name="nbRunType"
+                        value={option.value}
+                        checked={isSelected}
+                        onChange={(e) => setNbRunType(e.target.value)}
+                        className="sr-only"
+                      />
 
-                <label className="flex w-fit flex-col gap-2">
-                  Leg Bye
-                  <input
-                    type="radio"
-                    name="nbRunType"
-                    value="LB"
-                    checked={nbRunType === "LB"}
-                    onChange={(e) => setNbRunType(e.target.value)}
-                    className="h-4 w-4"
-                  />
-                </label>
+                      {option.label}
+
+                      {isSelected && (
+                        <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary" />
+                      )}
+                    </label>
+                  );
+                })}
               </div>
             )}
           </div>
