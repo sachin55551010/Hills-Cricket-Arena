@@ -1,6 +1,5 @@
 export const DeleteMatchHistoryModal = ({ onClose, matchId, matchList }) => {
-  const currentMatch = JSON.parse(localStorage.getItem("currentMatch"));
-  console.log(currentMatch.matchId);
+  const currentMatch = JSON.parse(localStorage.getItem("currentMatch")) || [];
 
   const deleteTeam = () => {
     const updatedMatch = matchList.filter((match) => match.matchId !== matchId);
