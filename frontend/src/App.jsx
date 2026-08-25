@@ -48,6 +48,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { ScoringPage } from "./pages/ScoringPage";
 import { LocalTeamList } from "./pages/Local Match Page/LocalTeamList";
 import { LocalMatchHisory } from "./pages/Local Match Page/LocalMatchHisory";
+import { AddLocalTeamPlayer } from "./pages/Local Match Page/AddLocalTeamPlayer";
 function App() {
   const { authUser } = useSelector((state) => state.auth);
   const { isLoading } = useCheckAuthUserQuery();
@@ -276,6 +277,12 @@ function App() {
 
           {/* local match pages */}
           <Route path="/local-match/teams" element={<LocalTeamList />} />
+
+          {/* add players in team */}
+          <Route
+            path="/local-match/teams/:teamId/add-players"
+            element={<AddLocalTeamPlayer />}
+          />
           <Route
             path="/local-match/local-match-history"
             element={<LocalMatchHisory />}

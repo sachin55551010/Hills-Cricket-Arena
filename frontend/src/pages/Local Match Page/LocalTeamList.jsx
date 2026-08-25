@@ -6,21 +6,30 @@ import { MdDelete } from "react-icons/md";
 import { useState } from "react";
 import { LocalTeamNameUpdateModal } from "../../components/modals/LocalTeamNameUpdateModal";
 import { LocalTeamDeleteModal } from "../../components/modals/LocalTeamDeleteModal";
+import { useNavigate } from "react-router-dom";
 export const LocalTeamList = () => {
   const [openEditNameModal, setOpenEditNameModal] = useState(false);
   const [openDeleteTeamModal, setOpenDeleteTeamModal] = useState(false);
   const [teamId, setTeamId] = useState("");
   const localTeams = JSON.parse(localStorage.getItem("localTeams")) || [];
-  const handleEditBtn = (teamId) => {
+  const handleEditBtn = (e, teamId) => {
+    e.stopPropagation();
     setOpenEditNameModal(true);
     setTeamId(teamId);
   };
+  const navigate = useNavigate();
 
-  const handleDeletebtn = (teamId) => {
+  const handleDeletebtn = (e, teamId) => {
+    e.stopPropagation();
     console.log(teamId);
 
     setOpenDeleteTeamModal(true);
     setTeamId(teamId);
+  };
+
+  const handleClickBtn = (team) => {
+    const teamId = team.teamId;
+    navigate(`${teamId}/add-players`);
   };
 
   return (
@@ -40,6 +49,7 @@ export const LocalTeamList = () => {
             {localTeams.map((team) => {
               return (
                 <li
+                  onClick={() => handleClickBtn(team)}
                   key={team.teamId}
                   className="flex justify-between items-center border border-base-content/15 rounded-md p-4"
                 >
@@ -53,14 +63,14 @@ export const LocalTeamList = () => {
                   <div className="flex gap-2 items-center">
                     {/* edit button */}
                     <div
-                      onClick={() => handleEditBtn(team.teamId)}
+                      onClick={(e) => handleEditBtn(e, team.teamId)}
                       className="text-base-content cursor-pointer"
                     >
                       <MdEdit size={22} />
                     </div>
                     {/* delete button */}
                     <div
-                      onClick={() => handleDeletebtn(team.teamId)}
+                      onClick={(e) => handleDeletebtn(e, team.teamId)}
                       className="text-base-content cursor-pointer"
                     >
                       <MdDelete size={22} />

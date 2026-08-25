@@ -17,7 +17,23 @@ export const MatchSetupPage = () => {
     overs: "",
     status: "setup",
   });
+  const getOrCreateTeam = (teamName, localTeams) => {
+    const normalizedName = teamName.trim().toLowerCase();
 
+    const existingTeam = localTeams.find(
+      (team) => team.name.trim().toLowerCase() === normalizedName,
+    );
+
+    if (existingTeam) {
+      return existingTeam;
+    }
+
+    return {
+      teamId: nanoid(),
+      name: teamName.trim(),
+      players: [],
+    };
+  };
   const [errors, setErrors] = useState({});
 
   const [advanceData, setAdvanceData] = useState({
@@ -107,8 +123,7 @@ export const MatchSetupPage = () => {
   // Submit
   const handleSubmitBtn = (e) => {
     e.preventDefault();
-    const firstTeamId = nanoid();
-    const secondTeamId = nanoid();
+
     const result = matchSchema.safeParse(formData);
     const errorFields = {};
 
@@ -125,48 +140,77 @@ export const MatchSetupPage = () => {
       return;
     }
 
+    // Get existing teams
+    const localTeams = JSON.parse(localStorage.getItem("localTeams") || "[]");
+
+    // Find existing team or create new one
+    const firstTeam = getOrCreateTeam(formData.firstTeamName, localTeams);
+
+    const secondTeam = getOrCreateTeam(formData.secondTeamName, localTeams);
+
     const matchData = {
       matchId,
+
       firstTeam: {
-        teamId: firstTeamId,
-        name: formData.firstTeamName,
-        players: [],
+        ...firstTeam,
+        players: [...firstTeam.players],
       },
+
       secondTeam: {
-        teamId: secondTeamId,
-        name: formData.secondTeamName,
-        players: [],
+        ...secondTeam,
+        players: [...secondTeam.players],
       },
+
       toss: {
         winner:
-          formData.tossWinner === formData.firstTeamName
-            ? { name: formData.firstTeamName, teamId: firstTeamId }
-            : { name: formData.secondTeamName, teamId: secondTeamId },
+          formData.tossWinner.trim().toLowerCase() ===
+          firstTeam.name.trim().toLowerCase()
+            ? {
+                name: firstTeam.name,
+                teamId: firstTeam.teamId,
+              }
+            : {
+                name: secondTeam.name,
+                teamId: secondTeam.teamId,
+              },
+
         decision: formData.tossDecision,
       },
+
       status: "players",
+
       overs: Number(formData.overs),
+
       firstTeamTotalPlayer: Number(advanceData.firstTeamPlayers),
+
       secondTeamTotalPlayer: Number(advanceData.secondTeamPlayers),
+
       noBallRun: Number(advanceData.noBallRuns),
+
       wideBallRun: Number(advanceData.wideBallRuns),
+
       createdAt: new Date().toISOString(),
     };
 
-    setFormData(matchData);
-    setErrors({});
-    navigate(`/local-match/players`);
+    // Update localTeams without duplicates
+    const updatedTeams = [...localTeams];
 
-    const getLocalTeams = JSON.parse(localStorage.getItem("localTeams")) || [];
-    const updatedTeams = [
-      ...getLocalTeams,
-      matchData.firstTeam,
-      matchData.secondTeam,
-    ];
+    if (!updatedTeams.some((team) => team.teamId === firstTeam.teamId)) {
+      updatedTeams.push(firstTeam);
+    }
+
+    if (!updatedTeams.some((team) => team.teamId === secondTeam.teamId)) {
+      updatedTeams.push(secondTeam);
+    }
 
     localStorage.setItem("localTeams", JSON.stringify(updatedTeams));
 
+    // Store current match
     localStorage.setItem("currentMatch", JSON.stringify(matchData));
+
+    setErrors({});
+
+    navigate("/local-match/players");
   };
 
   const handleBackBtn = () => {
