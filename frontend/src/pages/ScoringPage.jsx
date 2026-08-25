@@ -481,7 +481,7 @@ export const ScoringPage = () => {
           <p className="shrink-0 whitespace-nowrap">This over :</p>
 
           <div className="flex gap-2 overflow-x-auto min-w-0 hide-scrollbar">
-            {Array.from({ length: 6 }).map((_, index) => {
+            {/* {Array.from({ length: 6 }).map((_, index) => {
               return (
                 <div
                   key={index}
@@ -490,7 +490,7 @@ export const ScoringPage = () => {
                   6
                 </div>
               );
-            })}
+            })} */}
           </div>
         </div>
 
