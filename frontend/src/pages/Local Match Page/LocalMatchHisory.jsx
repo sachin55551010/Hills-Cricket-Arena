@@ -21,9 +21,8 @@ export const LocalMatchHisory = () => {
   };
 
   const handleResumeBtn = (id) => {
-    console.log(id);
     const match = matchList.find((match) => match.matchId === id);
-    console.log(match);
+
     localStorage.setItem("currentMatch", JSON.stringify(match));
     navigate("/local-match/scoring");
   };

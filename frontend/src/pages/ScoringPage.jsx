@@ -39,13 +39,13 @@ export const ScoringPage = () => {
   const [matchHistory, setMatchHistory] = useState(() => []);
 
   const currentInning = currentMatchData.innings.length - 1;
-
   const totalRuns = currentMatchData.innings[currentInning].runs;
   const legalBalls = currentMatchData.innings[currentInning].legalBalls;
   const wicketsOut = currentMatchData.innings[currentInning].wickets;
   const currentRunRate = legalBalls > 0 ? (totalRuns / legalBalls) * 6 : 0;
   const noBallRuns = currentMatchData.noBallRun;
   const wideBallRuns = currentMatchData.wideBallRun;
+  const battingTeamName = currentMatchData.innings[currentInning].battingTeam;
 
   const onConfirm = (data) => {
     console.log("Data", data);
@@ -344,9 +344,9 @@ export const ScoringPage = () => {
       <div className="flex flex-col gap-2 w-[97%] lg:w-[60%]">
         {/* header */}
         <div className="flex justify-center gap-2 h-15 items-center">
-          <h1>{currentMatchData.firstTeam.name}</h1>
-          <span>Vs</span>
-          <h2>{currentMatchData.secondTeam.name}</h2>
+          <h1 className="font-bold">{currentMatchData.firstTeam.name}</h1>
+          <span className="font-semibold text-base-content/70">Vs</span>
+          <h2 className="font-bold">{currentMatchData.secondTeam.name}</h2>
         </div>
 
         {/* score display */}
@@ -356,7 +356,7 @@ export const ScoringPage = () => {
             {/* Team name and inning */}
             <div className="flex flex-col gap-2 text-sm">
               <div className="flex gap-2">
-                <p>kandaghat</p>
+                <p>{battingTeamName}</p>
                 <p>1st Inning</p>
               </div>
               <div className="flex items-center gap-1">
@@ -532,6 +532,7 @@ export const ScoringPage = () => {
         <AddNewBowlerModal
           onClose={() => {
             setOpenAddBowlerModal(false);
+            handleUndo();
           }}
           updateNewbowler={updateNewBolwer}
         />

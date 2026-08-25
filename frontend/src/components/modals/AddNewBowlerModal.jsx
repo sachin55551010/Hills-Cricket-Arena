@@ -132,7 +132,9 @@ export const AddNewBowlerModal = ({ onClose, updateNewBowler }) => {
           <div className="flex gap-2">
             {/* Undo */}
             <button
-              onClick={() => setSelectedBowler(null)}
+              onClick={() => {
+                setSelectedBowler(null);
+              }}
               disabled={!selectedBowler}
               className="btn btn-ghost flex-1 rounded-xl"
             >
