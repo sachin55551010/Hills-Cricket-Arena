@@ -9,7 +9,6 @@ import { useNavigate } from "react-router-dom";
 
 export const LocalMatchHisory = () => {
   const matchList = JSON.parse(localStorage.getItem("matchHistory")) || [];
-  console.log(matchList);
 
   const navigate = useNavigate();
 

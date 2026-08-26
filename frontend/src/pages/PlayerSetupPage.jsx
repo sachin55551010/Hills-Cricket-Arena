@@ -6,7 +6,8 @@ import { nanoid } from "nanoid";
 export const PlayerSetupPage = () => {
   const navigate = useNavigate();
   const matchData = JSON.parse(localStorage.getItem("currentMatch")) || {};
-  // console.log(matchData);
+  const teamList = JSON.parse(localStorage.getItem("localTeams"));
+  console.log(teamList);
 
   const [formData, setFormData] = useState({
     striker: "",
@@ -90,118 +91,218 @@ export const PlayerSetupPage = () => {
     e.preventDefault();
 
     const result = playerSchema.safeParse(formData);
+
     const fieldError = {};
 
     if (!result.success) {
-      result.error.issues.forEach((issues) => {
-        const fieldName = issues.path[0];
+      result.error.issues.forEach((issue) => {
+        const fieldName = issue.path[0];
+
         if (!fieldError[fieldName]) {
-          fieldError[fieldName] = issues.message;
+          fieldError[fieldName] = issue.message;
         }
       });
-      setErrorData(fieldError);
 
+      setErrorData(fieldError);
       return;
     }
+
+    // Create current players
+
     const currentPlayers = {
       striker: {
         playerId: nanoid(),
         name: formData.striker,
-        Runs: 0,
-        Balls: 0,
-        Four: 0,
-        Six: 0,
-        StrikeRate: 0,
-        wicket: false,
+        matches: 0,
+        battingStats: {
+          innings: 0,
+          notOut: 0,
+          runs: 0,
+          balls: 0,
+          bestScore: 0,
+          average: 0,
+          strikeRate: 0,
+          thirties: 0,
+          fifties: 0,
+          hundreds: 0,
+          ducks: 0,
+          fours: 0,
+          sixes: 0,
+        },
+        bowlingStats: {
+          innings: 0,
+          balls: 0,
+          runs: 0,
+          wickets: 0,
+          bestBowling: "0/0",
+          average: 0,
+          economy: 0,
+          strikeRate: 0,
+          maidens: 0,
+          threeWickets: 0,
+          fiveWickets: 0,
+          wides: 0,
+          noBalls: 0,
+          dotBalls: 0,
+        },
       },
+
       nonStriker: {
         playerId: nanoid(),
         name: formData.nonStriker,
-        Runs: 0,
-        Balls: 0,
-        Four: 0,
-        Six: 0,
-        StrikeRate: 0,
-        wicket: false,
+        matches: 0,
+        battingStats: {
+          innings: 0,
+          notOut: 0,
+          runs: 0,
+          balls: 0,
+          bestScore: 0,
+          average: 0,
+          strikeRate: 0,
+          thirties: 0,
+          fifties: 0,
+          hundreds: 0,
+          ducks: 0,
+          fours: 0,
+          sixes: 0,
+        },
+        bowlingStats: {
+          innings: 0,
+          balls: 0,
+          runs: 0,
+          wickets: 0,
+          bestBowling: "0/0",
+          average: 0,
+          economy: 0,
+          strikeRate: 0,
+          maidens: 0,
+          threeWickets: 0,
+          fiveWickets: 0,
+          wides: 0,
+          noBalls: 0,
+          dotBalls: 0,
+        },
       },
+
       bowler: {
         playerId: nanoid(),
         name: formData.bowler,
-        Runs: 0,
-        Balls: 0,
-        Four: 0,
-        Six: 0,
-        Economy: 0,
-        Maidens: 0,
-        wicket: 0,
-        wideBallRun: 0,
-        noBallRun: 0,
+        matches: 0,
+        battingStats: {
+          innings: 0,
+          notOut: 0,
+          runs: 0,
+          balls: 0,
+          bestScore: 0,
+          average: 0,
+          strikeRate: 0,
+          thirties: 0,
+          fifties: 0,
+          hundreds: 0,
+          ducks: 0,
+          fours: 0,
+          sixes: 0,
+        },
+        bowlingStats: {
+          innings: 0,
+          balls: 0,
+          runs: 0,
+          wickets: 0,
+          bestBowling: "0/0",
+          average: 0,
+          economy: 0,
+          strikeRate: 0,
+          maidens: 0,
+          threeWickets: 0,
+          fiveWickets: 0,
+          wides: 0,
+          noBalls: 0,
+          dotBalls: 0,
+        },
       },
     };
 
-    let battingTeam, bowlingTeam;
-    // checking for first team if they won toss
-    if (
-      matchData.firstTeam.teamId === matchData.toss.winner.teamId &&
-      matchData.toss.decision === "bat"
-    ) {
-      matchData.firstTeam.players.push(
-        currentPlayers.striker,
-        currentPlayers.nonStriker,
-      );
-      battingTeam = matchData.firstTeam.name;
-      bowlingTeam = matchData.secondTeam.name;
-      matchData.secondTeam.players.push(currentPlayers.bowler);
-    } else if (
-      matchData.firstTeam.teamId === matchData.toss.winner.teamId &&
-      matchData.toss.decision === "bowl"
-    ) {
-      matchData.secondTeam.players.push(
-        currentPlayers.striker,
-        currentPlayers.nonStriker,
-      );
+    // Determine batting & bowling team
 
-      battingTeam = matchData.secondTeam.name;
-      bowlingTeam = matchData.firstTeam.name;
-      matchData.firstTeam.players.push(currentPlayers.bowler);
-    } else if (
-      matchData.secondTeam.teamId === matchData.toss.winner.teamId &&
-      matchData.toss.decision === "bat"
-    ) {
-      matchData.secondTeam.players.push(
-        currentPlayers.striker,
-        currentPlayers.nonStriker,
-      );
+    const tossWinnerId = matchData.toss.winner.teamId;
+    const tossDecision = matchData.toss.decision;
 
-      battingTeam = matchData.secondTeam.name;
-      bowlingTeam = matchData.firstTeam.name;
-      matchData.firstTeam.players.push(currentPlayers.bowler);
-    } else if (
-      matchData.secondTeam.teamId === matchData.toss.winner.teamId &&
-      matchData.toss.decision === "bowl"
-    ) {
-      matchData.firstTeam.players.push(
-        currentPlayers.striker,
-        currentPlayers.nonStriker,
-      );
-      battingTeam = matchData.firstTeam.name;
-      bowlingTeam = matchData.secondTeam.name;
-      matchData.secondTeam.players.push(currentPlayers.bowler);
+    const firstTeam = matchData.firstTeam;
+    const secondTeam = matchData.secondTeam;
+
+    let battingTeam;
+    let bowlingTeam;
+
+    if (tossWinnerId === firstTeam.teamId) {
+      if (tossDecision === "bat") {
+        battingTeam = firstTeam;
+        bowlingTeam = secondTeam;
+      } else {
+        battingTeam = secondTeam;
+        bowlingTeam = firstTeam;
+      }
+    } else {
+      if (tossDecision === "bat") {
+        battingTeam = secondTeam;
+        bowlingTeam = firstTeam;
+      } else {
+        battingTeam = firstTeam;
+        bowlingTeam = secondTeam;
+      }
     }
 
-    // Add currentPlayers and status to the complete matchData
+    // Update localTeams
+
+    const updatedLocalTeams = teamList.map((team) => {
+      // Batting team
+      if (team.teamId === battingTeam.teamId) {
+        return {
+          ...team,
+          players: [
+            ...team.players,
+            currentPlayers.striker,
+            currentPlayers.nonStriker,
+          ],
+        };
+      }
+
+      // Bowling team
+      if (team.teamId === bowlingTeam.teamId) {
+        return {
+          ...team,
+          players: [...team.players, currentPlayers.bowler],
+        };
+      }
+
+      // Other teams remain unchanged
+      return team;
+    });
+
+    // Save updated local teams
+    localStorage.setItem("localTeams", JSON.stringify(updatedLocalTeams));
+
+    // Create updated match data
+
     const updatedData = {
       ...matchData,
+
       currentPlayers,
+
       status: "scoring",
+
       innings: [
         {
           inning: 1,
           runs: 0,
           wickets: 0,
           legalBalls: 0,
-          battingTeam,
-          bowlingTeam,
+
+          battingTeam: battingTeam.name,
+          bowlingTeam: bowlingTeam.name,
+
+          battingTeamId: battingTeam.teamId,
+          bowlingTeamId: bowlingTeam.teamId,
+
           extras: {
             wideBallRun: 0,
             noBallRun: 0,
@@ -209,23 +310,30 @@ export const PlayerSetupPage = () => {
             legByes: 0,
             overthrow: 0,
           },
+
           perBallStat: [],
         },
       ],
+
       matchStatus: "ongoing",
     };
+
+    // Match history
+
     const matchHistory = JSON.parse(localStorage.getItem("matchHistory")) || [];
 
-    const updatedTeamList = [...matchHistory, updatedData];
-    // Save EVERYTHING
-    localStorage.setItem("currentMatch", JSON.stringify(updatedData));
-    localStorage.setItem("matchHistory", JSON.stringify(updatedTeamList));
+    const updatedMatchHistory = [...matchHistory, updatedData];
 
-    // Then navigate
+    // Save everything
+
+    localStorage.setItem("currentMatch", JSON.stringify(updatedData));
+
+    localStorage.setItem("matchHistory", JSON.stringify(updatedMatchHistory));
+
+    // Navigate
+
     navigate("/local-match/scoring");
   };
-
-  console.log(errorData);
 
   const checkValidation = playerSchema.safeParse(formData);
   const isBtnDisabled = checkValidation.success;

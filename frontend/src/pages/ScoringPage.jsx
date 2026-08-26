@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { ExtraRunCountModal } from "../components/modals/ExtraRunCountModal";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 import { OutModal } from "../components/modals/OutModal";
 import { MoreOptionScoringModal } from "../components/modals/MoreOptionScoringModal";
 import { AddNewBowlerModal } from "../components/modals/AddNewBowlerModal";
@@ -53,10 +52,12 @@ export const ScoringPage = () => {
     const extraType = data.type;
     const extraRuns = Number(data.runs);
     const runType = data.runType; // BAT | BYE | LB
+
     setMatchHistory((prevHistory) => [
       ...prevHistory,
       structuredClone(currentMatchData),
     ]);
+
     setCurrentMatchData((prev) => {
       const lastInningIndex = prev.innings.length - 1;
 
@@ -64,7 +65,6 @@ export const ScoringPage = () => {
         ...prev,
 
         // UPDATE INNINGS
-
         innings: prev.innings.map((inning, index) =>
           index === lastInningIndex
             ? {
@@ -79,9 +79,7 @@ export const ScoringPage = () => {
                       ? noBallRuns + extraRuns
                       : extraRuns),
 
-                // =========================
                 // UPDATE EXTRAS
-                // =========================
                 extras: {
                   ...inning.extras,
 
@@ -123,7 +121,6 @@ export const ScoringPage = () => {
         ),
 
         // UPDATE CURRENT PLAYERS
-
         currentPlayers:
           extraType === "NB" && runType === "BAT"
             ? {
@@ -131,15 +128,63 @@ export const ScoringPage = () => {
 
                 striker: {
                   ...prev.currentPlayers.striker,
+                  battingStats: {
+                    ...prev.currentPlayers.striker.battingStats,
 
-                  // No-ball runs from bat go to striker
-                  Runs: prev.currentPlayers.striker.Runs + extraRuns,
+                    // No-ball runs hit by the batsman
+                    runs:
+                      prev.currentPlayers.striker.battingStats.runs + extraRuns,
 
-                  // No ball is NOT a legal delivery
-                  Balls: prev.currentPlayers.striker.Balls,
+                    // No-ball is NOT a legal delivery
+                    balls: prev.currentPlayers.striker.battingStats.balls,
+
+                    strikeRate:
+                      prev.currentPlayers.striker.battingStats.balls > 0
+                        ? ((prev.currentPlayers.striker.battingStats.runs +
+                            extraRuns) /
+                            prev.currentPlayers.striker.battingStats.balls) *
+                          100
+                        : 0,
+                  },
+                },
+
+                // Add NB runs to bowler
+                bowler: {
+                  ...prev.currentPlayers.bowler,
+                  bowlingStats: {
+                    ...prev.currentPlayers.bowler.bowlingStats,
+
+                    runs:
+                      prev.currentPlayers.bowler.bowlingStats.runs +
+                      extraRuns +
+                      noBallRuns,
+
+                    // NB is not a legal delivery
+                    balls: prev.currentPlayers.bowler.bowlingStats.balls,
+                  },
                 },
               }
-            : prev.currentPlayers,
+            : extraType === "WD"
+              ? {
+                  ...prev.currentPlayers,
+
+                  // Add wide runs to bowler
+                  bowler: {
+                    ...prev.currentPlayers.bowler,
+                    bowlingStats: {
+                      ...prev.currentPlayers.bowler.bowlingStats,
+
+                      runs:
+                        prev.currentPlayers.bowler.bowlingStats.runs +
+                        extraRuns +
+                        wideBallRuns,
+
+                      // WD is not a legal delivery
+                      balls: prev.currentPlayers.bowler.bowlingStats.balls,
+                    },
+                  },
+                }
+              : prev.currentPlayers,
       };
     });
   };
@@ -159,7 +204,10 @@ export const ScoringPage = () => {
       }));
     }
   }
+  console.log(currentMatchData);
+
   // handle update score function
+
   const handleScoreBtnClick = (val) => {
     if (["0", "1", "2", "3", "4", "6"].includes(val)) {
       const numRuns = Number(val);
@@ -171,6 +219,17 @@ export const ScoringPage = () => {
       ]);
 
       setCurrentMatchData((prev) => {
+        const striker = prev.currentPlayers.striker;
+        const bowler = prev.currentPlayers.bowler;
+
+        const updatedStrikerRuns = striker.battingStats.runs + numRuns;
+
+        const updatedStrikerBalls = striker.battingStats.balls + 1;
+
+        const updatedBowlerRuns = bowler.bowlingStats.runs + numRuns;
+
+        const updatedBowlerBalls = bowler.bowlingStats.balls + 1;
+
         const updatedMatchData = {
           ...prev,
 
@@ -188,50 +247,56 @@ export const ScoringPage = () => {
             ...prev.currentPlayers,
 
             striker: {
-              ...prev.currentPlayers.striker,
+              ...striker,
+              battingStats: {
+                ...striker.battingStats,
 
-              Runs: prev.currentPlayers.striker.Runs + numRuns,
+                runs: updatedStrikerRuns,
+                balls: updatedStrikerBalls,
 
-              Balls: prev.currentPlayers.striker.Balls + 1,
+                fours:
+                  val === "4"
+                    ? striker.battingStats.fours + 1
+                    : striker.battingStats.fours,
 
-              Six:
-                val === "6"
-                  ? prev.currentPlayers.striker.Six + 1
-                  : prev.currentPlayers.striker.Six,
+                sixes:
+                  val === "6"
+                    ? striker.battingStats.sixes + 1
+                    : striker.battingStats.sixes,
 
-              Four:
-                val === "4"
-                  ? prev.currentPlayers.striker.Four + 1
-                  : prev.currentPlayers.striker.Four,
-
-              StrikeRate:
-                ((prev.currentPlayers.striker.Runs + numRuns) /
-                  (prev.currentPlayers.striker.Balls + 1)) *
-                100,
+                strikeRate:
+                  updatedStrikerBalls > 0
+                    ? (updatedStrikerRuns / updatedStrikerBalls) * 100
+                    : 0,
+              },
             },
 
             bowler: {
-              ...prev.currentPlayers.bowler,
+              ...bowler,
 
-              Balls: prev.currentPlayers.bowler.Balls + 1,
+              bowlingStats: {
+                ...bowler.bowlingStats,
 
-              Runs: prev.currentPlayers.bowler.Runs + numRuns,
+                balls: updatedBowlerBalls,
+                runs: updatedBowlerRuns,
 
-              Four:
-                val === "4"
-                  ? prev.currentPlayers.bowler.Four + 1
-                  : prev.currentPlayers.bowler.Four,
+                fours:
+                  val === "4"
+                    ? bowler.bowlingStats.fours + 1
+                    : bowler.bowlingStats.fours,
 
-              Six:
-                val === "6"
-                  ? prev.currentPlayers.bowler.Six + 1
-                  : prev.currentPlayers.bowler.Six,
+                sixes:
+                  val === "6"
+                    ? bowler.bowlingStats.sixes + 1
+                    : bowler.bowlingStats.sixes,
 
-              wicket: prev.currentPlayers.bowler.wicket,
+                wickets: bowler.bowlingStats.wickets,
 
-              Economy:
-                (prev.currentPlayers.bowler.Runs + numRuns) /
-                ((prev.currentPlayers.bowler.Balls + 1) / 6),
+                economy:
+                  updatedBowlerBalls > 0
+                    ? updatedBowlerRuns / (updatedBowlerBalls / 6)
+                    : 0,
+              },
             },
           },
         };
@@ -289,22 +354,9 @@ export const ScoringPage = () => {
 
   const navigate = useNavigate();
 
-  const lastBackPress = useRef(0);
-
   const handleBackBtn = () => {
-    const now = Date.now();
-
-    if (now - lastBackPress.current < 1500) {
-      navigate("/local-match/setup");
-      return;
-    }
-
-    lastBackPress.current = now;
-
-    toast.dark("Press back twice to leave", {
-      autoClose: 1000,
-      position: "bottom-right",
-    });
+    navigate("/local-match/setup");
+    return;
   };
 
   // const ballColors = {
@@ -399,19 +451,19 @@ export const ScoringPage = () => {
                   {currentMatchData.currentPlayers.striker.name}*
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData.currentPlayers.striker.Runs}
+                  {currentMatchData.currentPlayers.striker.battingStats.runs}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData.currentPlayers.striker.Balls}
+                  {currentMatchData.currentPlayers.striker.battingStats.balls}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData.currentPlayers.striker.Four}
+                  {currentMatchData.currentPlayers.striker.battingStats.fours}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData.currentPlayers.striker.Six}
+                  {currentMatchData.currentPlayers.striker.battingStats.sixes}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData.currentPlayers.striker.StrikeRate.toFixed(
+                  {currentMatchData.currentPlayers.striker.battingStats.strikeRate.toFixed(
                     1,
                   )}
                 </td>
@@ -422,19 +474,28 @@ export const ScoringPage = () => {
                   {currentMatchData.currentPlayers.nonStriker.name}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData.currentPlayers.nonStriker.Runs}
+                  {currentMatchData.currentPlayers.nonStriker.battingStats.runs}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData.currentPlayers.nonStriker.Balls}
+                  {
+                    currentMatchData.currentPlayers.nonStriker.battingStats
+                      .balls
+                  }
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData.currentPlayers.nonStriker.Four}
+                  {
+                    currentMatchData.currentPlayers.nonStriker.battingStats
+                      .fours
+                  }
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData.currentPlayers.nonStriker.Six}
+                  {
+                    currentMatchData.currentPlayers.nonStriker.battingStats
+                      .sixes
+                  }
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData.currentPlayers.nonStriker.StrikeRate.toFixed(
+                  {currentMatchData.currentPlayers.nonStriker.battingStats.strikeRate.toFixed(
                     1,
                   )}
                 </td>
@@ -456,20 +517,26 @@ export const ScoringPage = () => {
                   {currentMatchData.currentPlayers.bowler.name}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {Math.floor(matchData.currentPlayers.bowler.Balls / 6)}.
-                  {currentMatchData.currentPlayers.bowler.Balls % 6}
+                  {Math.floor(
+                    matchData.currentPlayers.bowler.bowlingStats.balls / 6,
+                  )}
+                  .
+                  {currentMatchData.currentPlayers.bowler.bowlingStats.balls %
+                    6}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {matchData.currentPlayers.bowler.Maidens}
+                  {matchData.currentPlayers.bowler.bowlingStats.maidens}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData.currentPlayers.bowler.Runs}
+                  {currentMatchData.currentPlayers.bowler.bowlingStats.runs}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData.currentPlayers.bowler.wicket}
+                  {currentMatchData.currentPlayers.bowler.bowlingStats.wickets}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData.currentPlayers.bowler.Economy.toFixed(1)}
+                  {currentMatchData.currentPlayers.bowler.bowlingStats.economy.toFixed(
+                    1,
+                  )}
                 </td>
               </tr>
             </tbody>
@@ -497,7 +564,9 @@ export const ScoringPage = () => {
         {/* socring button and extra button */}
         <div className=" flex border-base-content/15 rounded-md gap-2">
           {/* scoring button */}
-          <div className="flex-2 border border-base-content/15 py-4 px-2 rounded-md grid gap-y-4 grid-cols-5 place-items-center">
+          <div
+            className={`flex-2 border border-base-content/15 py-4 px-2 rounded-md grid gap-y-4 grid-cols-5 place-items-center`}
+          >
             {scoringButton.map((btn) => {
               return (
                 <button
