@@ -6,6 +6,7 @@ import { OutModal } from "../components/modals/OutModal";
 import { MoreOptionScoringModal } from "../components/modals/MoreOptionScoringModal";
 import { AddNewBowlerModal } from "../components/modals/AddNewBowlerModal";
 
+import { useSelector } from "react-redux";
 export const ScoringPage = () => {
   const matchData = JSON.parse(localStorage.getItem("currentMatch")) || {};
 
@@ -45,6 +46,10 @@ export const ScoringPage = () => {
   const noBallRuns = currentMatchData.noBallRun;
   const wideBallRuns = currentMatchData.wideBallRun;
   const battingTeamName = currentMatchData.innings[currentInning].battingTeam;
+
+  // console.log("currentMatchData", currentMatchData);
+  const { score } = useSelector((state) => state.score);
+  console.log(score);
 
   const onConfirm = (data) => {
     console.log("Data", data);
@@ -204,7 +209,6 @@ export const ScoringPage = () => {
       }));
     }
   }
-  console.log(currentMatchData);
 
   // handle update score function
 

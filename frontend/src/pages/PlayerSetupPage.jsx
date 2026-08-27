@@ -91,7 +91,6 @@ export const PlayerSetupPage = () => {
     e.preventDefault();
 
     const result = playerSchema.safeParse(formData);
-
     const fieldError = {};
 
     if (!result.success) {
@@ -108,12 +107,12 @@ export const PlayerSetupPage = () => {
     }
 
     // Create current players
-
     const currentPlayers = {
       striker: {
         playerId: nanoid(),
         name: formData.striker,
         matches: 0,
+
         battingStats: {
           innings: 0,
           notOut: 0,
@@ -129,6 +128,7 @@ export const PlayerSetupPage = () => {
           fours: 0,
           sixes: 0,
         },
+
         bowlingStats: {
           innings: 0,
           balls: 0,
@@ -151,6 +151,7 @@ export const PlayerSetupPage = () => {
         playerId: nanoid(),
         name: formData.nonStriker,
         matches: 0,
+
         battingStats: {
           innings: 0,
           notOut: 0,
@@ -166,6 +167,7 @@ export const PlayerSetupPage = () => {
           fours: 0,
           sixes: 0,
         },
+
         bowlingStats: {
           innings: 0,
           balls: 0,
@@ -188,6 +190,7 @@ export const PlayerSetupPage = () => {
         playerId: nanoid(),
         name: formData.bowler,
         matches: 0,
+
         battingStats: {
           innings: 0,
           notOut: 0,
@@ -203,6 +206,7 @@ export const PlayerSetupPage = () => {
           fours: 0,
           sixes: 0,
         },
+
         bowlingStats: {
           innings: 0,
           balls: 0,
@@ -223,7 +227,6 @@ export const PlayerSetupPage = () => {
     };
 
     // Determine batting & bowling team
-
     const tossWinnerId = matchData.toss.winner.teamId;
     const tossDecision = matchData.toss.decision;
 
@@ -251,40 +254,60 @@ export const PlayerSetupPage = () => {
       }
     }
 
-    // Update localTeams
+    // UPDATE TEAMS WITH CURRENT PLAYERS
+
+    const updatedFirstTeam = {
+      ...firstTeam,
+
+      players:
+        firstTeam.teamId === battingTeam.teamId
+          ? [
+              ...(firstTeam.players || []),
+              currentPlayers.striker,
+              currentPlayers.nonStriker,
+            ]
+          : [...(firstTeam.players || []), currentPlayers.bowler],
+    };
+
+    const updatedSecondTeam = {
+      ...secondTeam,
+
+      players:
+        secondTeam.teamId === battingTeam.teamId
+          ? [
+              ...(secondTeam.players || []),
+              currentPlayers.striker,
+              currentPlayers.nonStriker,
+            ]
+          : [...(secondTeam.players || []), currentPlayers.bowler],
+    };
+
+    // UPDATE localTeams
 
     const updatedLocalTeams = teamList.map((team) => {
-      // Batting team
-      if (team.teamId === battingTeam.teamId) {
-        return {
-          ...team,
-          players: [
-            ...team.players,
-            currentPlayers.striker,
-            currentPlayers.nonStriker,
-          ],
-        };
+      if (team.teamId === updatedFirstTeam.teamId) {
+        return updatedFirstTeam;
       }
 
-      // Bowling team
-      if (team.teamId === bowlingTeam.teamId) {
-        return {
-          ...team,
-          players: [...team.players, currentPlayers.bowler],
-        };
+      if (team.teamId === updatedSecondTeam.teamId) {
+        return updatedSecondTeam;
       }
 
-      // Other teams remain unchanged
       return team;
     });
 
     // Save updated local teams
     localStorage.setItem("localTeams", JSON.stringify(updatedLocalTeams));
 
-    // Create updated match data
+    // CREATE UPDATED MATCH DATA
 
     const updatedData = {
       ...matchData,
+
+      // IMPORTANT:
+      // Put the updated teams inside currentMatch
+      firstTeam: updatedFirstTeam,
+      secondTeam: updatedSecondTeam,
 
       currentPlayers,
 
@@ -318,20 +341,21 @@ export const PlayerSetupPage = () => {
       matchStatus: "ongoing",
     };
 
-    // Match history
+    // MATCH HISTORY
 
-    const matchHistory = JSON.parse(localStorage.getItem("matchHistory")) || [];
+    const matchHistory = JSON.parse(
+      localStorage.getItem("matchHistory") || "[]",
+    );
 
     const updatedMatchHistory = [...matchHistory, updatedData];
 
-    // Save everything
+    // SAVE EVERYTHING
 
     localStorage.setItem("currentMatch", JSON.stringify(updatedData));
 
     localStorage.setItem("matchHistory", JSON.stringify(updatedMatchHistory));
 
     // Navigate
-
     navigate("/local-match/scoring");
   };
 

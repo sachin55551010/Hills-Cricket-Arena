@@ -6,9 +6,8 @@ import { z } from "zod";
 import { nanoid } from "nanoid";
 import { Header } from "../../components/Header";
 
-// ------------------------------------
 // Player validation schema
-// ------------------------------------
+
 const playerNameSchema = z
   .string()
   .trim()
@@ -30,15 +29,13 @@ export const AddLocalTeamPlayer = () => {
   const [playerName, setPlayerName] = useState("");
   const [error, setError] = useState("");
 
-  // ------------------------------------
   // Find team using teamId
-  // ------------------------------------
+
   const localTeam = localTeams.find((team) => team.teamId === teamId);
   console.log(localTeam);
 
-  // ------------------------------------
   // Open Add Player Modal
-  // ------------------------------------
+
   const handleAddPlayer = () => {
     setPlayerName("");
     setError("");
@@ -46,9 +43,8 @@ export const AddLocalTeamPlayer = () => {
     setModalType("add");
   };
 
-  // ------------------------------------
   // Add Player
-  // ------------------------------------
+
   const handleSavePlayer = () => {
     setError("");
 
@@ -80,6 +76,7 @@ export const AddLocalTeamPlayer = () => {
       playerId: nanoid(),
       name: trimmedName,
       matches: 0,
+
       battingStats: {
         innings: 0,
         notOut: 0,
@@ -95,6 +92,7 @@ export const AddLocalTeamPlayer = () => {
         fours: 0,
         sixes: 0,
       },
+
       bowlingStats: {
         innings: 0,
         balls: 0,
@@ -130,9 +128,8 @@ export const AddLocalTeamPlayer = () => {
     closeModal();
   };
 
-  // ------------------------------------
   // Open Edit Player Modal
-  // ------------------------------------
+
   const handleEditPlayer = (player) => {
     setSelectedPlayer(player);
     setPlayerName(player.name);
@@ -140,9 +137,8 @@ export const AddLocalTeamPlayer = () => {
     setModalType("edit");
   };
 
-  // ------------------------------------
   // Update Player
-  // ------------------------------------
+
   const handleUpdatePlayer = () => {
     setError("");
 
@@ -190,22 +186,20 @@ export const AddLocalTeamPlayer = () => {
     setLocalTeams(updatedTeams);
 
     localStorage.setItem("localTeams", JSON.stringify(updatedTeams));
-
+    localStorage.setItem("currentMatch", JSON.stringify(updatedTeams));
     closeModal();
   };
 
-  // ------------------------------------
   // Open Delete Player Modal
-  // ------------------------------------
+
   const handleDeletePlayer = (player) => {
     setSelectedPlayer(player);
     setError("");
     setModalType("delete");
   };
 
-  // ------------------------------------
   // Delete Player
-  // ------------------------------------
+
   const confirmDeletePlayer = () => {
     if (!selectedPlayer) return;
 
@@ -227,9 +221,8 @@ export const AddLocalTeamPlayer = () => {
     closeModal();
   };
 
-  // ------------------------------------
   // Close Modal
-  // ------------------------------------
+
   const closeModal = () => {
     setModalType(null);
     setSelectedPlayer(null);
@@ -237,9 +230,8 @@ export const AddLocalTeamPlayer = () => {
     setError("");
   };
 
-  // ------------------------------------
   // Submit Add/Edit using Enter
-  // ------------------------------------
+
   const handleSubmit = () => {
     if (modalType === "add") {
       handleSavePlayer();
