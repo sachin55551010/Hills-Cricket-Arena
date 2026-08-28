@@ -78,6 +78,10 @@ export const ScoringPage = () => {
       setShowOutModal(true);
       return;
     }
+    if (val === "MORE") {
+      setOpenMoreOptionModal(true);
+      return;
+    }
     dispatch(addRuns(val));
   };
   console.log(currentMatchData);
