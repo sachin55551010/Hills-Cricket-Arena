@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ExtraRunCountModal } from "../components/modals/ExtraRunCountModal";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -60,6 +60,7 @@ export const ScoringPage = () => {
     console.log("Data", data);
   };
   // console.log("extra type data", extraTypeData);
+
   // console.log(currentMatchData);
 
   // swap batsman
@@ -73,8 +74,20 @@ export const ScoringPage = () => {
       setIsExtraModalOpen(true);
       return;
     }
+    if (val === "OUT") {
+      setShowOutModal(true);
+      return;
+    }
     dispatch(addRuns(val));
   };
+  console.log(currentMatchData);
+
+  useEffect(() => {
+    if (legalBalls > 0 && legalBalls % 6 === 0) {
+      setOpenAddBowlerModal(true);
+      return;
+    }
+  }, [legalBalls]);
   // variable to prevent open bolwer screen again when user press undo
 
   // handle add new bowler modal
