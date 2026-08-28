@@ -160,6 +160,7 @@ export const MatchSetupPage = () => {
         ...secondTeam,
         players: [...secondTeam.players],
       },
+      currentInning: 1,
 
       toss: {
         winner:

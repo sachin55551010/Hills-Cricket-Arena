@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { ExtraRunCountModal } from "../components/modals/ExtraRunCountModal";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -6,13 +6,14 @@ import { OutModal } from "../components/modals/OutModal";
 import { MoreOptionScoringModal } from "../components/modals/MoreOptionScoringModal";
 import { AddNewBowlerModal } from "../components/modals/AddNewBowlerModal";
 
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { addRuns } from "../store/scoreSlice";
 export const ScoringPage = () => {
   const matchData = JSON.parse(localStorage.getItem("currentMatch")) || {};
 
-  const [currentMatchData, setCurrentMatchData] = useState(() => {
-    return JSON.parse(localStorage.getItem("currentMatch"));
-  });
+  const { currentMatchData } = useSelector((state) => state.score);
+  const { matchHistory } = useSelector((state) => state.score);
+
   const [isExtraModalOpen, setIsExtraModalOpen] = useState(false);
   const [extraType, setExtraType] = useState("");
   const [showOutModal, setShowOutModal] = useState(false);
@@ -36,319 +37,48 @@ export const ScoringPage = () => {
 
   const [openAddBowlerModal, setOpenAddBowlerModal] = useState(false);
   const [openMoreMotionModal, setOpenMoreOptionModal] = useState(false);
-  const [matchHistory, setMatchHistory] = useState(() => []);
-
-  const currentInning = currentMatchData.innings.length - 1;
-  const totalRuns = currentMatchData.innings[currentInning].runs;
-  const legalBalls = currentMatchData.innings[currentInning].legalBalls;
-  const wicketsOut = currentMatchData.innings[currentInning].wickets;
-  const currentRunRate = legalBalls > 0 ? (totalRuns / legalBalls) * 6 : 0;
-  const noBallRuns = currentMatchData.noBallRun;
-  const wideBallRuns = currentMatchData.wideBallRun;
-  const battingTeamName = currentMatchData.innings[currentInning].battingTeam;
 
   // console.log("currentMatchData", currentMatchData);
-  const { score } = useSelector((state) => state.score);
-  console.log(score);
+
+  const dispatch = useDispatch();
+  const currentInning =
+    currentMatchData.innings[currentMatchData.currentInning - 1];
+
+  const teamScore = currentInning.runs;
+  const legalBalls = currentInning.legalBalls;
+  const fallOfwickets = currentInning.wickets;
+  const currentRunRate = ((teamScore * 6) / legalBalls).toFixed(1);
+  const bowlerEconomy =
+    currentMatchData?.currentPlayers.bowler.bowlingStats.economy;
+
+  const strikerBatsmanStrikeRate =
+    currentMatchData?.currentPlayers?.striker?.battingStats?.strikeRate;
+  const nonStrikerBatsmanStrikeRate =
+    currentMatchData?.currentPlayers?.nonStriker?.battingStats?.strikeRate;
 
   const onConfirm = (data) => {
     console.log("Data", data);
-
-    const extraType = data.type;
-    const extraRuns = Number(data.runs);
-    const runType = data.runType; // BAT | BYE | LB
-
-    setMatchHistory((prevHistory) => [
-      ...prevHistory,
-      structuredClone(currentMatchData),
-    ]);
-
-    setCurrentMatchData((prev) => {
-      const lastInningIndex = prev.innings.length - 1;
-
-      return {
-        ...prev,
-
-        // UPDATE INNINGS
-        innings: prev.innings.map((inning, index) =>
-          index === lastInningIndex
-            ? {
-                ...inning,
-
-                // Total innings/team runs
-                runs:
-                  inning.runs +
-                  (extraType === "WD"
-                    ? wideBallRuns + extraRuns
-                    : extraType === "NB"
-                      ? noBallRuns + extraRuns
-                      : extraRuns),
-
-                // UPDATE EXTRAS
-                extras: {
-                  ...inning.extras,
-
-                  // Wide
-                  ...(extraType === "WD" && {
-                    wideBallRun:
-                      inning.extras.wideBallRun + wideBallRuns + extraRuns,
-                  }),
-
-                  // No Ball
-                  ...(extraType === "NB" && {
-                    noBallRun: inning.extras.noBallRun + noBallRuns,
-                  }),
-
-                  // Normal Bye
-                  ...(extraType === "BYE" && {
-                    byes: inning.extras.byes + extraRuns,
-                  }),
-
-                  // Normal Leg Bye
-                  ...(extraType === "LB" && {
-                    legByes: inning.extras.legByes + extraRuns,
-                  }),
-
-                  // No Ball + Bye
-                  ...(extraType === "NB" &&
-                    runType === "BYE" && {
-                      byes: inning.extras.byes + extraRuns,
-                    }),
-
-                  // No Ball + Leg Bye
-                  ...(extraType === "NB" &&
-                    runType === "LB" && {
-                      legByes: inning.extras.legByes + extraRuns,
-                    }),
-                },
-              }
-            : inning,
-        ),
-
-        // UPDATE CURRENT PLAYERS
-        currentPlayers:
-          extraType === "NB" && runType === "BAT"
-            ? {
-                ...prev.currentPlayers,
-
-                striker: {
-                  ...prev.currentPlayers.striker,
-                  battingStats: {
-                    ...prev.currentPlayers.striker.battingStats,
-
-                    // No-ball runs hit by the batsman
-                    runs:
-                      prev.currentPlayers.striker.battingStats.runs + extraRuns,
-
-                    // No-ball is NOT a legal delivery
-                    balls: prev.currentPlayers.striker.battingStats.balls,
-
-                    strikeRate:
-                      prev.currentPlayers.striker.battingStats.balls > 0
-                        ? ((prev.currentPlayers.striker.battingStats.runs +
-                            extraRuns) /
-                            prev.currentPlayers.striker.battingStats.balls) *
-                          100
-                        : 0,
-                  },
-                },
-
-                // Add NB runs to bowler
-                bowler: {
-                  ...prev.currentPlayers.bowler,
-                  bowlingStats: {
-                    ...prev.currentPlayers.bowler.bowlingStats,
-
-                    runs:
-                      prev.currentPlayers.bowler.bowlingStats.runs +
-                      extraRuns +
-                      noBallRuns,
-
-                    // NB is not a legal delivery
-                    balls: prev.currentPlayers.bowler.bowlingStats.balls,
-                  },
-                },
-              }
-            : extraType === "WD"
-              ? {
-                  ...prev.currentPlayers,
-
-                  // Add wide runs to bowler
-                  bowler: {
-                    ...prev.currentPlayers.bowler,
-                    bowlingStats: {
-                      ...prev.currentPlayers.bowler.bowlingStats,
-
-                      runs:
-                        prev.currentPlayers.bowler.bowlingStats.runs +
-                        extraRuns +
-                        wideBallRuns,
-
-                      // WD is not a legal delivery
-                      balls: prev.currentPlayers.bowler.bowlingStats.balls,
-                    },
-                  },
-                }
-              : prev.currentPlayers,
-      };
-    });
   };
   // console.log("extra type data", extraTypeData);
   // console.log(currentMatchData);
 
   // swap batsman
-  function swapBatsman(val) {
-    if (["1", "3", "SWAP"].includes(val)) {
-      setCurrentMatchData((prev) => ({
-        ...prev,
-        currentPlayers: {
-          ...prev.currentPlayers,
-          striker: prev.currentPlayers.nonStriker,
-          nonStriker: prev.currentPlayers.striker,
-        },
-      }));
-    }
-  }
 
   // handle update score function
 
   const handleScoreBtnClick = (val) => {
-    if (["0", "1", "2", "3", "4", "6"].includes(val)) {
-      const numRuns = Number(val);
-
-      // Save the CURRENT state before this action
-      setMatchHistory((prevHistory) => [
-        ...prevHistory,
-        structuredClone(currentMatchData),
-      ]);
-
-      setCurrentMatchData((prev) => {
-        const striker = prev.currentPlayers.striker;
-        const bowler = prev.currentPlayers.bowler;
-
-        const updatedStrikerRuns = striker.battingStats.runs + numRuns;
-
-        const updatedStrikerBalls = striker.battingStats.balls + 1;
-
-        const updatedBowlerRuns = bowler.bowlingStats.runs + numRuns;
-
-        const updatedBowlerBalls = bowler.bowlingStats.balls + 1;
-
-        const updatedMatchData = {
-          ...prev,
-
-          innings: prev.innings.map((inning, index) =>
-            index === prev.innings.length - 1
-              ? {
-                  ...inning,
-                  runs: inning.runs + numRuns,
-                  legalBalls: inning.legalBalls + 1,
-                }
-              : inning,
-          ),
-
-          currentPlayers: {
-            ...prev.currentPlayers,
-
-            striker: {
-              ...striker,
-              battingStats: {
-                ...striker.battingStats,
-
-                runs: updatedStrikerRuns,
-                balls: updatedStrikerBalls,
-
-                fours:
-                  val === "4"
-                    ? striker.battingStats.fours + 1
-                    : striker.battingStats.fours,
-
-                sixes:
-                  val === "6"
-                    ? striker.battingStats.sixes + 1
-                    : striker.battingStats.sixes,
-
-                strikeRate:
-                  updatedStrikerBalls > 0
-                    ? (updatedStrikerRuns / updatedStrikerBalls) * 100
-                    : 0,
-              },
-            },
-
-            bowler: {
-              ...bowler,
-
-              bowlingStats: {
-                ...bowler.bowlingStats,
-
-                balls: updatedBowlerBalls,
-                runs: updatedBowlerRuns,
-
-                fours:
-                  val === "4"
-                    ? bowler.bowlingStats.fours + 1
-                    : bowler.bowlingStats.fours,
-
-                sixes:
-                  val === "6"
-                    ? bowler.bowlingStats.sixes + 1
-                    : bowler.bowlingStats.sixes,
-
-                wickets: bowler.bowlingStats.wickets,
-
-                economy:
-                  updatedBowlerBalls > 0
-                    ? updatedBowlerRuns / (updatedBowlerBalls / 6)
-                    : 0,
-              },
-            },
-          },
-        };
-
-        return updatedMatchData;
-      });
-      swapBatsman(val);
-    } else if (val === "OUT") {
-      setShowOutModal(true);
-    } else if (["WD", "NB", "LB", "BYE"].includes(val)) {
+    if (["WD", "NB", "LB", "BYE"].includes(val)) {
+      console.log(val);
       setExtraType(val);
       setIsExtraModalOpen(true);
-    } else if (val === "SWAP") {
-      swapBatsman(val);
-    } else if (val === "MORE") {
-      setOpenMoreOptionModal(true);
-    } else if (val === "UNDO") {
-      handleUndo();
-    }
-  };
-  // variable to prevent open bolwer screen again when user press undo
-  const isUndoRef = useRef(false);
-
-  function handleUndo() {
-    setMatchHistory((prevHistory) => {
-      if (prevHistory.length === 0) {
-        return prevHistory;
-      }
-
-      const previousState = prevHistory[prevHistory.length - 1];
-      // Tell useEffect this change came from UNDO
-      isUndoRef.current = true;
-      setCurrentMatchData(previousState);
-
-      return prevHistory.slice(0, -1);
-    });
-  }
-  // handle add new bowler modal
-
-  useEffect(() => {
-    if (isUndoRef.current) {
-      isUndoRef.current = false;
       return;
     }
-    if (legalBalls > 0 && legalBalls % 6 === 0) {
-      setOpenAddBowlerModal(true);
-    }
-  }, [legalBalls]);
+    dispatch(addRuns(val));
+  };
+  // variable to prevent open bolwer screen again when user press undo
+
+  // handle add new bowler modal
+
   // console.log(currentMatchData);
 
   //  function to update new bolwer
@@ -362,6 +92,8 @@ export const ScoringPage = () => {
     navigate("/local-match/setup");
     return;
   };
+
+  // console.log(currentMatchData);
 
   // const ballColors = {
   //   wicket: "bg-red-500",
@@ -400,9 +132,9 @@ export const ScoringPage = () => {
       <div className="flex flex-col gap-2 w-[97%] lg:w-[60%]">
         {/* header */}
         <div className="flex justify-center gap-2 h-15 items-center">
-          <h1 className="font-bold">{currentMatchData.firstTeam.name}</h1>
+          <h1 className="font-bold">{currentMatchData?.firstTeam?.name}</h1>
           <span className="font-semibold text-base-content/70">Vs</span>
-          <h2 className="font-bold">{currentMatchData.secondTeam.name}</h2>
+          <h2 className="font-bold">{currentMatchData?.secondTeam?.name}</h2>
         </div>
 
         {/* score display */}
@@ -412,12 +144,12 @@ export const ScoringPage = () => {
             {/* Team name and inning */}
             <div className="flex flex-col gap-2 text-sm">
               <div className="flex gap-2">
-                <p>{battingTeamName}</p>
+                {/* <p>{battingTeamName}</p> */}
                 <p>1st Inning</p>
               </div>
               <div className="flex items-center gap-1">
                 <div className="text-4xl font-semibold">
-                  {totalRuns}-{wicketsOut}
+                  {teamScore}-{fallOfwickets}
                 </div>
                 <div className="text-lg">
                   ({Math.floor(legalBalls / 6)}.{legalBalls % 6})
@@ -429,9 +161,7 @@ export const ScoringPage = () => {
           {/* runrate */}
           <div className="flex-1 p-2 text-sm flex flex-col items-end">
             <p className="font-semibold">CRR</p>
-            <p className="">
-              {currentRunRate > 0 ? currentRunRate.toFixed(1) : "0.0"}
-            </p>
+            <p className="">{currentRunRate > 0 ? currentRunRate : "0.0"}</p>
           </div>
         </div>
 
@@ -467,9 +197,7 @@ export const ScoringPage = () => {
                   {currentMatchData.currentPlayers.striker.battingStats.sixes}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData.currentPlayers.striker.battingStats.strikeRate.toFixed(
-                    1,
-                  )}
+                  {strikerBatsmanStrikeRate.toFixed(1)}
                 </td>
               </tr>
 
@@ -499,9 +227,7 @@ export const ScoringPage = () => {
                   }
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData.currentPlayers.nonStriker.battingStats.strikeRate.toFixed(
-                    1,
-                  )}
+                  {nonStrikerBatsmanStrikeRate.toFixed(1)}
                 </td>
               </tr>
             </tbody>
@@ -538,9 +264,7 @@ export const ScoringPage = () => {
                   {currentMatchData.currentPlayers.bowler.bowlingStats.wickets}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData.currentPlayers.bowler.bowlingStats.economy.toFixed(
-                    1,
-                  )}
+                  {bowlerEconomy.toFixed(1)}
                 </td>
               </tr>
             </tbody>
@@ -605,7 +329,6 @@ export const ScoringPage = () => {
         <AddNewBowlerModal
           onClose={() => {
             setOpenAddBowlerModal(false);
-            handleUndo();
           }}
           updateNewbowler={updateNewBolwer}
         />
