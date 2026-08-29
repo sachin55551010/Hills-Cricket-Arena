@@ -1,8 +1,7 @@
 import { Header } from "../../components/Header";
 import noData from "../../../assets/No data-amico.svg";
 import { NoDataFoundPage } from "../../components/NoDataFoundPage";
-import { MdEdit } from "react-icons/md";
-import { MdDelete } from "react-icons/md";
+
 import { useState } from "react";
 import { Pencil, Trash2, X } from "lucide-react";
 import { LocalTeamNameUpdateModal } from "../../components/modals/LocalTeamNameUpdateModal";
@@ -54,6 +53,12 @@ export const LocalTeamList = () => {
       ) : (
         <div className="w-full p-2 lg:w-[60%]">
           <ul className="flex flex-col gap-3">
+            <div className="mt-4 flex items-center gap-2">
+              <h1 className="font-semibold">Total Teams</h1>
+              <p className="font-bold">
+                {localTeams?.length > 1 ? localTeams.length : 0}
+              </p>
+            </div>
             {localTeams.map((team) => {
               return (
                 <li
@@ -79,7 +84,7 @@ export const LocalTeamList = () => {
                     {/* delete button */}
                     <div
                       onClick={(e) => handleDeletebtn(e, team.teamId)}
-                      className="text-red-500 cursor-pointer"
+                      className="text-red-400 cursor-pointer"
                     >
                       <Trash2 size={18} />
                     </div>

@@ -32,7 +32,6 @@ export const AddLocalTeamPlayer = () => {
   // Find team using teamId
 
   const localTeam = localTeams.find((team) => team.teamId === teamId);
-  console.log(localTeam);
 
   // Open Add Player Modal
 
@@ -248,9 +247,18 @@ export const AddLocalTeamPlayer = () => {
 
       <div className="w-[98%] lg:w-[60%] mt-4">
         {/* Team Name */}
-        <h1 className="text-2xl font-bold mb-5">
-          {localTeam?.name || "Team not found"}
-        </h1>
+
+        <div className="flex justify-between items-center px-4">
+          <h1 className="text-2xl font-bold mb-5">
+            {localTeam?.name || "Team not found"}
+          </h1>
+          <div className="flex items-center gap-2 ">
+            <p className="font-semibold text-[.85rem]">Total Players</p>
+            <h6 className="font-bold">
+              {localTeam?.players?.length > 1 ? localTeam?.players?.length : 0}
+            </h6>
+          </div>
+        </div>
 
         {/* Players */}
         <div className="space-y-3">

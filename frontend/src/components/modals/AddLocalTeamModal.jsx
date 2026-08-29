@@ -115,7 +115,7 @@ export const AddLocalTeamModal = ({ localTeams, onClose }) => {
             className={`h-11 w-full rounded-xl border bg-base-100 px-3 text-sm outline-none transition placeholder:text-base-content/30 focus:ring-2 ${
               error
                 ? "border-error focus:border-error focus:ring-error/20"
-                : "border-base-300 focus:border-info focus:ring-info/20"
+                : "border-base-content/15 focus:border-info focus:ring-info/20"
             }`}
           />
 
@@ -125,14 +125,16 @@ export const AddLocalTeamModal = ({ localTeams, onClose }) => {
           )}
         </div>
 
-        {/* Create Button */}
-        <button
-          type="submit"
-          disabled={!teamName.trim()}
-          className="mt-6 h-11 w-full rounded-xl bg-info font-medium text-info-content transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          Create team
-        </button>
+        <div className="flex justify-end">
+          {/* Create Button */}
+          <button
+            type="submit"
+            disabled={!teamName.trim()}
+            className="mt-6 py-3 p-3 rounded-md bg-info font-medium text-info-content transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Create team
+          </button>
+        </div>
       </form>
     </div>
   );
