@@ -9,6 +9,8 @@ export const MatchSetupPage = () => {
   const matchId = nanoid();
   const navigate = useNavigate();
 
+  const localTeams = JSON.parse(localStorage.getItem("localTeams")) || [];
+
   const [isOpen, setIsOpen] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -20,10 +22,87 @@ export const MatchSetupPage = () => {
     status: "setup",
   });
 
-  const getOrCreateTeam = (teamName, localTeams) => {
+  const [errors, setErrors] = useState({});
+
+  const [advanceData, setAdvanceData] = useState({
+    firstTeamPlayers: 11,
+    secondTeamPlayers: 11,
+    noBallRuns: 1,
+    wideBallRuns: 1,
+  });
+
+  // --------------------------------------------------
+  // TEAM SUGGESTIONS
+  // --------------------------------------------------
+
+  const firstTeamNameList = localTeams.filter((team) => {
+    const searchValue = formData.firstTeamName.trim();
+
+    if (!searchValue) return false;
+
+    return team.name.toLowerCase().includes(searchValue.toLowerCase());
+  });
+
+  const secondTeamNameList = localTeams.filter((team) => {
+    const searchValue = formData.secondTeamName.trim();
+
+    if (!searchValue) return false;
+
+    return team.name.toLowerCase().includes(searchValue.toLowerCase());
+  });
+
+  // --------------------------------------------------
+  // CHECK IF TEAM IS ALREADY SELECTED
+  // --------------------------------------------------
+
+  const isTeamSelected = (team) => {
+    const teamName = team.name.trim().toLowerCase();
+
+    return (
+      formData.firstTeamName.trim().toLowerCase() === teamName ||
+      formData.secondTeamName.trim().toLowerCase() === teamName
+    );
+  };
+
+  // --------------------------------------------------
+  // SELECT TEAM FROM SUGGESTION
+  // --------------------------------------------------
+
+  const handleSelectTeam = (fieldName, team) => {
+    // Don't allow the same team to be selected twice
+    if (isTeamSelected(team)) {
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      [fieldName]: team.name,
+
+      // Reset toss winner if changing a team
+      tossWinner:
+        fieldName === "firstTeamName" && prev.tossWinner === prev.firstTeamName
+          ? ""
+          : fieldName === "secondTeamName" &&
+              prev.tossWinner === prev.secondTeamName
+            ? ""
+            : prev.tossWinner,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [fieldName]: "",
+      tossWinner: "",
+    }));
+  };
+
+  // --------------------------------------------------
+  // GET EXISTING TEAM OR CREATE NEW TEAM
+  // --------------------------------------------------
+
+  const getOrCreateTeam = (teamName, teams) => {
     const normalizedName = teamName.trim().toLowerCase();
 
-    const existingTeam = localTeams.find(
+    const existingTeam = teams.find(
       (team) => team.name.trim().toLowerCase() === normalizedName,
     );
 
@@ -38,16 +117,10 @@ export const MatchSetupPage = () => {
     };
   };
 
-  const [errors, setErrors] = useState({});
+  // --------------------------------------------------
+  // ZOD SCHEMA
+  // --------------------------------------------------
 
-  const [advanceData, setAdvanceData] = useState({
-    firstTeamPlayers: 11,
-    secondTeamPlayers: 11,
-    noBallRuns: 1,
-    wideBallRuns: 1,
-  });
-
-  // Zod schema
   const matchSchema = z
     .object({
       firstTeamName: z
@@ -83,7 +156,8 @@ export const MatchSetupPage = () => {
     .refine(
       (data) => {
         return (
-          data.firstTeamName.toLowerCase() !== data.secondTeamName.toLowerCase()
+          data.firstTeamName.trim().toLowerCase() !==
+          data.secondTeamName.trim().toLowerCase()
         );
       },
       {
@@ -92,10 +166,17 @@ export const MatchSetupPage = () => {
       },
     );
 
+  // --------------------------------------------------
+  // FORM STATUS
+  // --------------------------------------------------
+
   const checkStatus = matchSchema.safeParse(formData);
   const isFormField = checkStatus.success;
 
-  // Handle input changes
+  // --------------------------------------------------
+  // HANDLE INPUT CHANGES
+  // --------------------------------------------------
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -104,6 +185,22 @@ export const MatchSetupPage = () => {
       [name]: value,
     };
 
+    // If team name is being manually changed,
+    // reset toss winner because old selection may no longer exist.
+    if (
+      name === "firstTeamName" &&
+      formData.tossWinner === formData.firstTeamName
+    ) {
+      updatedFormData.tossWinner = "";
+    }
+
+    if (
+      name === "secondTeamName" &&
+      formData.tossWinner === formData.secondTeamName
+    ) {
+      updatedFormData.tossWinner = "";
+    }
+
     setFormData(updatedFormData);
 
     setErrors((prev) => ({
@@ -111,6 +208,7 @@ export const MatchSetupPage = () => {
       [name]: "",
     }));
 
+    // Check duplicate team names
     if (
       updatedFormData.firstTeamName.trim() &&
       updatedFormData.secondTeamName.trim() &&
@@ -124,11 +222,15 @@ export const MatchSetupPage = () => {
     }
   };
 
-  // Submit
+  // --------------------------------------------------
+  // SUBMIT
+  // --------------------------------------------------
+
   const handleSubmitBtn = (e) => {
     e.preventDefault();
 
     const result = matchSchema.safeParse(formData);
+
     const errorFields = {};
 
     if (!result.success) {
@@ -144,25 +246,39 @@ export const MatchSetupPage = () => {
       return;
     }
 
-    // Get existing teams
-    const localTeams = JSON.parse(localStorage.getItem("localTeams") || "[]");
+    // --------------------------------------------------
+    // GET TEAMS
+    // --------------------------------------------------
 
-    // Find existing team or create new one
-    const firstTeam = getOrCreateTeam(formData.firstTeamName, localTeams);
+    const currentLocalTeams = JSON.parse(
+      localStorage.getItem("localTeams") || "[]",
+    );
 
-    const secondTeam = getOrCreateTeam(formData.secondTeamName, localTeams);
+    const firstTeam = getOrCreateTeam(
+      formData.firstTeamName,
+      currentLocalTeams,
+    );
+
+    const secondTeam = getOrCreateTeam(
+      formData.secondTeamName,
+      currentLocalTeams,
+    );
+
+    // --------------------------------------------------
+    // MATCH DATA
+    // --------------------------------------------------
 
     const matchData = {
       matchId,
 
       firstTeam: {
         ...firstTeam,
-        players: [...firstTeam.players],
+        players: [...(firstTeam.players || [])],
       },
 
       secondTeam: {
         ...secondTeam,
-        players: [...secondTeam.players],
+        players: [...(secondTeam.players || [])],
       },
 
       currentInning: 1,
@@ -198,20 +314,48 @@ export const MatchSetupPage = () => {
       createdAt: new Date().toISOString(),
     };
 
-    // Update localTeams without duplicates
-    const updatedTeams = [...localTeams];
+    // --------------------------------------------------
+    // UPDATE LOCAL TEAMS WITHOUT DUPLICATES
+    // --------------------------------------------------
 
-    if (!updatedTeams.some((team) => team.teamId === firstTeam.teamId)) {
+    const updatedTeams = [...currentLocalTeams];
+
+    const firstTeamIndex = updatedTeams.findIndex(
+      (team) => team.teamId === firstTeam.teamId,
+    );
+
+    if (firstTeamIndex === -1) {
       updatedTeams.push(firstTeam);
+    } else {
+      // Keep the existing team and its players
+      updatedTeams[firstTeamIndex] = {
+        ...updatedTeams[firstTeamIndex],
+        ...firstTeam,
+        players: [...(updatedTeams[firstTeamIndex].players || [])],
+      };
     }
 
-    if (!updatedTeams.some((team) => team.teamId === secondTeam.teamId)) {
+    const secondTeamIndex = updatedTeams.findIndex(
+      (team) => team.teamId === secondTeam.teamId,
+    );
+
+    if (secondTeamIndex === -1) {
       updatedTeams.push(secondTeam);
+    } else {
+      // Keep the existing team and its players
+      updatedTeams[secondTeamIndex] = {
+        ...updatedTeams[secondTeamIndex],
+        ...secondTeam,
+        players: [...(updatedTeams[secondTeamIndex].players || [])],
+      };
     }
 
     localStorage.setItem("localTeams", JSON.stringify(updatedTeams));
 
-    // Store current match
+    // --------------------------------------------------
+    // SAVE CURRENT MATCH
+    // --------------------------------------------------
+
     localStorage.setItem("currentMatch", JSON.stringify(matchData));
 
     setErrors({});
@@ -219,19 +363,56 @@ export const MatchSetupPage = () => {
     navigate("/local-match/players");
   };
 
+  // --------------------------------------------------
+  // BACK
+  // --------------------------------------------------
+
   const handleBackBtn = () => {
     navigate("/");
   };
 
-  // Navigate to team management page
+  // --------------------------------------------------
+  // ADD PLAYERS
+  // --------------------------------------------------
+
   const handleAddPlayers = () => {
     navigate("/local-match/teams");
   };
 
+  // --------------------------------------------------
+  // TEAM SUGGESTION COMPONENT
+  // --------------------------------------------------
+
+  const renderTeamSuggestion = (team, fieldName) => {
+    const selected = isTeamSelected(team);
+
+    return (
+      <li
+        key={team.teamId}
+        onClick={() => !selected && handleSelectTeam(fieldName, team)}
+        className={`rounded-lg px-3 py-2 transition ${
+          selected
+            ? "cursor-not-allowed opacity-40"
+            : "cursor-pointer hover:bg-base-200"
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <span>{team.name}</span>
+
+          {selected && <span className="text-xs opacity-60">Selected</span>}
+        </div>
+      </li>
+    );
+  };
+
+  // --------------------------------------------------
+  // UI
+  // --------------------------------------------------
+
   return (
     <div className="min-h-dvh bg-base-200 pt-20 pb-24">
       {/* Header */}
-      <header className="fixed top-0 left-0 z-[999] h-[var(--nav-h)] bg-base-100 flex items-center gap-2 px-2 w-dvw">
+      <header className="fixed top-0 left-0 z-[999] flex h-[var(--nav-h)] w-dvw items-center gap-2 bg-base-100 px-2">
         <div className="flex items-center gap-2">
           <ArrowLeft
             size={30}
@@ -244,7 +425,7 @@ export const MatchSetupPage = () => {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-2xl mb-10 px-4">
+      <main className="mx-auto mb-10 w-full max-w-2xl px-4">
         {/* Page heading */}
         <div className="mb-6">
           <p className="text-sm font-medium text-base-content/50">
@@ -277,12 +458,10 @@ export const MatchSetupPage = () => {
             {/* Add players information card */}
             <div className="mb-5 rounded-2xl border border-primary/20 bg-primary/5 p-4">
               <div className="flex items-start gap-3">
-                {/* Icon */}
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <Users size={20} />
                 </div>
 
-                {/* Content */}
                 <div className="flex-1">
                   <h3 className="text-sm font-semibold">
                     Add players before the match
@@ -307,8 +486,8 @@ export const MatchSetupPage = () => {
 
             {/* Team inputs */}
             <div className="grid gap-4 sm:grid-cols-2">
-              {/* First team */}
-              <div>
+              {/* FIRST TEAM */}
+              <div className="relative">
                 <label
                   htmlFor="firstTeamName"
                   className="mb-1.5 block text-sm font-medium"
@@ -323,6 +502,7 @@ export const MatchSetupPage = () => {
                   value={formData.firstTeamName}
                   onChange={handleChange}
                   placeholder="e.g. Hills XI"
+                  autoComplete="off"
                   className={`input w-full ${
                     errors.firstTeamName ? "input-error" : ""
                   } outline-0`}
@@ -333,10 +513,25 @@ export const MatchSetupPage = () => {
                     {errors.firstTeamName}
                   </p>
                 )}
+
+                {/* FIRST TEAM SUGGESTIONS */}
+                {formData.firstTeamName.trim() && (
+                  <ul className="mt-1 rounded-lg border border-base-content/15 bg-base-100 p-2 shadow-sm">
+                    {firstTeamNameList.length > 0 ? (
+                      firstTeamNameList.map((team) =>
+                        renderTeamSuggestion(team, "firstTeamName"),
+                      )
+                    ) : (
+                      <li className="px-3 py-2 text-sm opacity-60">
+                        No team found. This name will be created as a new team.
+                      </li>
+                    )}
+                  </ul>
+                )}
               </div>
 
-              {/* Second team */}
-              <div>
+              {/* SECOND TEAM */}
+              <div className="relative">
                 <label
                   htmlFor="secondTeamName"
                   className="mb-1.5 block text-sm font-medium"
@@ -351,6 +546,7 @@ export const MatchSetupPage = () => {
                   value={formData.secondTeamName}
                   onChange={handleChange}
                   placeholder="e.g. Shimla Warriors"
+                  autoComplete="off"
                   className={`input w-full ${
                     errors.secondTeamName ? "input-error" : ""
                   } outline-0`}
@@ -360,6 +556,21 @@ export const MatchSetupPage = () => {
                   <p className="mt-1.5 text-xs text-error">
                     {errors.secondTeamName}
                   </p>
+                )}
+
+                {/* SECOND TEAM SUGGESTIONS */}
+                {formData.secondTeamName.trim() && (
+                  <ul className="mt-1 rounded-lg border border-base-content/15 bg-base-100 p-2 shadow-sm">
+                    {secondTeamNameList.length > 0 ? (
+                      secondTeamNameList.map((team) =>
+                        renderTeamSuggestion(team, "secondTeamName"),
+                      )
+                    ) : (
+                      <li className="px-3 py-2 text-sm opacity-60">
+                        No team found. This name will be created as a new team.
+                      </li>
+                    )}
+                  </ul>
                 )}
               </div>
             </div>
@@ -383,7 +594,7 @@ export const MatchSetupPage = () => {
                 <p className="mb-2 text-sm font-medium">Toss won by</p>
 
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {/* First team */}
+                  {/* FIRST TEAM */}
                   <label
                     className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors ${
                       formData.tossWinner === formData.firstTeamName &&
@@ -409,7 +620,7 @@ export const MatchSetupPage = () => {
                     </span>
                   </label>
 
-                  {/* Second team */}
+                  {/* SECOND TEAM */}
                   <label
                     className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors ${
                       formData.tossWinner === formData.secondTeamName &&
@@ -448,7 +659,7 @@ export const MatchSetupPage = () => {
                 <p className="mb-2 text-sm font-medium">Toss Winner Opt to</p>
 
                 <div className="grid grid-cols-2 gap-3">
-                  {/* Bat */}
+                  {/* BAT */}
                   <label
                     className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border p-3 transition-colors ${
                       formData.tossDecision === "bat"
@@ -468,7 +679,7 @@ export const MatchSetupPage = () => {
                     <span className="text-sm font-medium">Bat</span>
                   </label>
 
-                  {/* Bowl */}
+                  {/* BOWL */}
                   <label
                     className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border p-3 transition-colors ${
                       formData.tossDecision === "bowl"

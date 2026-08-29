@@ -23,9 +23,7 @@ export const PlayerSetupPage = () => {
 
   const [errorData, setErrorData] = useState({});
 
-  // --------------------------------------------------
   // DETERMINE BATTING & BOWLING TEAM
-  // --------------------------------------------------
 
   const tossWinnerId = matchData?.toss?.winner?.teamId;
   const tossDecision = matchData?.toss?.decision;
@@ -54,9 +52,7 @@ export const PlayerSetupPage = () => {
     }
   }
 
-  // --------------------------------------------------
   // PLAYER SUGGESTIONS
-  // --------------------------------------------------
 
   const battingTeamPlayers = battingTeam?.players || [];
   const bowlingTeamPlayers = bowlingTeam?.players || [];
@@ -73,9 +69,7 @@ export const PlayerSetupPage = () => {
     player.name.toLowerCase().includes(formData.bowler.toLowerCase()),
   );
 
-  // --------------------------------------------------
   // CHECK WHETHER PLAYER IS ALREADY SELECTED
-  // --------------------------------------------------
 
   const isPlayerSelected = (player) => {
     const playerName = player.name.trim().toLowerCase();
@@ -87,9 +81,7 @@ export const PlayerSetupPage = () => {
     );
   };
 
-  // --------------------------------------------------
   // PLAYER SCHEMA
-  // --------------------------------------------------
 
   const playerSchema = z
     .object({
@@ -130,9 +122,7 @@ export const PlayerSetupPage = () => {
       },
     );
 
-  // --------------------------------------------------
   // HANDLE INPUT CHANGE
-  // --------------------------------------------------
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -164,9 +154,7 @@ export const PlayerSetupPage = () => {
     }
   };
 
-  // --------------------------------------------------
   // SELECT PLAYER FROM SUGGESTION
-  // --------------------------------------------------
 
   const handleSelectPlayer = (fieldName, player) => {
     // Do not allow selecting a player already used
@@ -185,9 +173,7 @@ export const PlayerSetupPage = () => {
     }));
   };
 
-  // --------------------------------------------------
   // CREATE NEW PLAYER OBJECT
-  // --------------------------------------------------
 
   const createPlayer = (name) => {
     return {
@@ -230,9 +216,7 @@ export const PlayerSetupPage = () => {
     };
   };
 
-  // --------------------------------------------------
   // GET EXISTING PLAYER OR CREATE NEW ONE
-  // --------------------------------------------------
 
   const getPlayer = (name, teamPlayers) => {
     const trimmedName = name.trim().toLowerCase();
@@ -256,9 +240,7 @@ export const PlayerSetupPage = () => {
     };
   };
 
-  // --------------------------------------------------
   // START MATCH
-  // --------------------------------------------------
 
   const handleStartMatch = (e) => {
     e.preventDefault();
@@ -280,9 +262,7 @@ export const PlayerSetupPage = () => {
       return;
     }
 
-    // --------------------------------------------------
     // EXTRA DUPLICATE CHECK
-    // --------------------------------------------------
 
     const strikerName = formData.striker.trim().toLowerCase();
     const nonStrikerName = formData.nonStriker.trim().toLowerCase();
@@ -315,9 +295,7 @@ export const PlayerSetupPage = () => {
       return;
     }
 
-    // --------------------------------------------------
     // GET PLAYERS
-    // --------------------------------------------------
 
     const strikerResult = getPlayer(formData.striker, battingTeamPlayers);
 
@@ -329,9 +307,7 @@ export const PlayerSetupPage = () => {
     const nonStriker = nonStrikerResult.player;
     const bowler = bowlerResult.player;
 
-    // --------------------------------------------------
     // CURRENT PLAYERS
-    // --------------------------------------------------
 
     const currentPlayers = {
       striker,
@@ -339,9 +315,7 @@ export const PlayerSetupPage = () => {
       bowler,
     };
 
-    // --------------------------------------------------
     // UPDATE FIRST TEAM
-    // --------------------------------------------------
 
     const updatedFirstTeam = {
       ...firstTeam,
@@ -362,9 +336,7 @@ export const PlayerSetupPage = () => {
             ],
     };
 
-    // --------------------------------------------------
     // UPDATE SECOND TEAM
-    // --------------------------------------------------
 
     const updatedSecondTeam = {
       ...secondTeam,
@@ -385,9 +357,7 @@ export const PlayerSetupPage = () => {
             ],
     };
 
-    // --------------------------------------------------
     // UPDATE LOCAL TEAMS
-    // --------------------------------------------------
 
     const updatedLocalTeams = teamList.map((team) => {
       if (team.teamId === updatedFirstTeam.teamId) {
@@ -403,9 +373,7 @@ export const PlayerSetupPage = () => {
 
     localStorage.setItem("localTeams", JSON.stringify(updatedLocalTeams));
 
-    // --------------------------------------------------
     // CREATE UPDATED MATCH DATA
-    // --------------------------------------------------
 
     const updatedData = {
       ...matchData,
@@ -445,9 +413,7 @@ export const PlayerSetupPage = () => {
       matchStatus: "ongoing",
     };
 
-    // --------------------------------------------------
     // MATCH HISTORY
-    // --------------------------------------------------
 
     const matchHistory = JSON.parse(
       localStorage.getItem("matchHistory") || "[]",
@@ -455,9 +421,7 @@ export const PlayerSetupPage = () => {
 
     const updatedMatchHistory = [...matchHistory, updatedData];
 
-    // --------------------------------------------------
     // SAVE EVERYTHING
-    // --------------------------------------------------
 
     localStorage.setItem("currentMatch", JSON.stringify(updatedData));
 
@@ -465,24 +429,18 @@ export const PlayerSetupPage = () => {
 
     dispatch(setCurrentMatchData(updatedData));
 
-    // --------------------------------------------------
     // NAVIGATE
-    // --------------------------------------------------
 
     navigate("/local-match/scoring");
   };
 
-  // --------------------------------------------------
   // BUTTON VALIDATION
-  // --------------------------------------------------
 
   const checkValidation = playerSchema.safeParse(formData);
 
   const isBtnDisabled = !checkValidation.success;
 
-  // --------------------------------------------------
   // SUGGESTION ITEM COMPONENT
-  // --------------------------------------------------
 
   const renderPlayerSuggestion = (player, fieldName) => {
     const selected = isPlayerSelected(player);
@@ -510,9 +468,7 @@ export const PlayerSetupPage = () => {
     );
   };
 
-  // --------------------------------------------------
   // UI
-  // --------------------------------------------------
 
   return (
     <div className="min-h-screen bg-base-200 p-4">
@@ -527,9 +483,7 @@ export const PlayerSetupPage = () => {
           </p>
 
           <form onSubmit={handleStartMatch} className="space-y-5">
-            {/* ------------------------------------------ */}
             {/* STRIKER */}
-            {/* ------------------------------------------ */}
 
             <div>
               <label className="mb-2 block text-sm font-medium">
@@ -567,9 +521,7 @@ export const PlayerSetupPage = () => {
               )}
             </div>
 
-            {/* ------------------------------------------ */}
             {/* NON STRIKER */}
-            {/* ------------------------------------------ */}
 
             <div>
               <label className="mb-2 block text-sm font-medium">
@@ -607,9 +559,7 @@ export const PlayerSetupPage = () => {
               )}
             </div>
 
-            {/* ------------------------------------------ */}
             {/* BOWLER */}
-            {/* ------------------------------------------ */}
 
             <div>
               <label className="mb-2 block text-sm font-medium">
@@ -647,9 +597,7 @@ export const PlayerSetupPage = () => {
               )}
             </div>
 
-            {/* ------------------------------------------ */}
             {/* START MATCH */}
-            {/* ------------------------------------------ */}
 
             <button
               disabled={isBtnDisabled}

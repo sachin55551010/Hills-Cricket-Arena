@@ -1,7 +1,6 @@
 import { Header } from "../../components/Header";
 import noData from "../../../assets/No data-amico.svg";
 import { NoDataFoundPage } from "../../components/NoDataFoundPage";
-
 import { useState } from "react";
 import { Pencil, Trash2, X } from "lucide-react";
 import { LocalTeamNameUpdateModal } from "../../components/modals/LocalTeamNameUpdateModal";
@@ -21,7 +20,6 @@ export const LocalTeamList = () => {
     setTeamId(teamId);
   };
   const navigate = useNavigate();
-  console.log(localTeams);
 
   const handleDeletebtn = (e, teamId) => {
     e.stopPropagation();
