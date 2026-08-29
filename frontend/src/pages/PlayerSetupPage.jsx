@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { Header } from "../components/Header";
 import { nanoid } from "nanoid";
+import { useDispatch } from "react-redux";
+import { setCurrentMatchData } from "../store/scoreSlice";
 export const PlayerSetupPage = () => {
   const navigate = useNavigate();
   const matchData = JSON.parse(localStorage.getItem("currentMatch")) || {};
   const teamList = JSON.parse(localStorage.getItem("localTeams"));
-  console.log(teamList);
 
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     striker: "",
     nonStriker: "",
@@ -355,6 +357,7 @@ export const PlayerSetupPage = () => {
 
     localStorage.setItem("matchHistory", JSON.stringify(updatedMatchHistory));
 
+    dispatch(setCurrentMatchData(updatedData));
     // Navigate
     navigate("/local-match/scoring");
   };

@@ -1,12 +1,44 @@
-import { MapPin, Share2, Trash2, Users } from "lucide-react";
+import { MapPin, Users, Plus, X } from "lucide-react";
 import { defaultAvatar } from "../utils/noprofilePicHelper";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 export const TeamList = ({ data, tournamentId }) => {
   const navigate = useNavigate();
 
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [teamName, setTeamName] = useState("");
+
   const handleTeamClickBtn = (teamId) => {
     navigate(`/my-tournament/${tournamentId}/tournament-teams/${teamId}`);
+  };
+
+  // CREATE TEAM
+  const handleCreateTeam = () => {
+    const trimmedName = teamName.trim();
+
+    if (!trimmedName) return;
+
+    // 👇 Put your API / dispatch logic here
+    console.log("Creating team:", trimmedName);
+    console.log("Tournament ID:", tournamentId);
+
+    // Example:
+    // dispatch(createTeam({
+    //   tournamentId,
+    //   teamName: trimmedName,
+    // }));
+
+    // Clear input
+    setTeamName("");
+
+    // Close modal
+    setShowCreateModal(false);
+  };
+
+  const handleCloseModal = () => {
+    setTeamName("");
+    setShowCreateModal(false);
   };
 
   const teamList = data?.myTournamentTeams;
@@ -25,9 +57,8 @@ export const TeamList = ({ data, tournamentId }) => {
             <h1 className="text-sm font-bold text-base-content">
               Tournament Teams
             </h1>
-            <p className="text-xs text-base-content/50">
-              Registered teams
-            </p>
+
+            <p className="text-xs text-base-content/50">Registered teams</p>
           </div>
         </div>
 
@@ -39,7 +70,7 @@ export const TeamList = ({ data, tournamentId }) => {
       </div>
 
       {/* Team List */}
-      <ul className="grid grid-cols-1 gap-3 p-3 my-4 md:grid-cols-2 lg:grid-cols-3">
+      <ul className="my-4 grid grid-cols-1 gap-3 p-3 md:grid-cols-2 lg:grid-cols-3">
         {teamList?.map((teams) => {
           return (
             <li
@@ -65,7 +96,7 @@ export const TeamList = ({ data, tournamentId }) => {
                 hover:shadow-md
               "
             >
-              {/* subtle hover accent */}
+              {/* Hover Accent */}
               <div className="absolute inset-y-0 left-0 w-1 bg-success/0 transition-all duration-300 group-hover:bg-success/70" />
 
               {/* Team Logo */}
@@ -130,6 +161,154 @@ export const TeamList = ({ data, tournamentId }) => {
           );
         })}
       </ul>
+
+      {/* ========================================= */}
+      {/* FIXED CREATE TEAM BUTTON */}
+      {/* ========================================= */}
+
+      <button
+        onClick={() => setShowCreateModal(true)}
+        className="
+          fixed
+          bottom-6
+          right-6
+          z-40
+          flex
+          items-center
+          gap-2
+          rounded-2xl
+          bg-success
+          px-5
+          py-3
+          text-sm
+          font-bold
+          text-success-content
+          shadow-lg
+          shadow-success/20
+          transition-all
+          duration-200
+          hover:scale-105
+          hover:shadow-xl
+          active:scale-95
+        "
+      >
+        <Plus size={19} strokeWidth={2.5} />
+        Create Team
+      </button>
+
+      {/* ========================================= */}
+      {/* CREATE TEAM MODAL */}
+      {/* ========================================= */}
+
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+          <div
+            className="
+              relative
+              w-full
+              max-w-md
+              rounded-3xl
+              bg-base-100
+              p-5
+              shadow-2xl
+            "
+          >
+            {/* Close Button */}
+            <button
+              onClick={handleCloseModal}
+              className="
+                absolute
+                right-4
+                top-4
+                flex
+                h-8
+                w-8
+                items-center
+                justify-center
+                rounded-full
+                bg-base-200
+                text-base-content/60
+                transition
+                hover:bg-base-300
+              "
+            >
+              <X size={17} />
+            </button>
+
+            {/* Header */}
+            <div className="mb-5">
+              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-success/10 text-success">
+                <Users size={21} />
+              </div>
+
+              <h2 className="text-lg font-bold text-base-content">
+                Create Team
+              </h2>
+
+              <p className="mt-1 text-xs text-base-content/50">
+                Enter a name for your new team.
+              </p>
+            </div>
+
+            {/* Team Name */}
+            <div className="form-control">
+              <label className="mb-2 text-xs font-semibold text-base-content/70">
+                Team Name
+              </label>
+
+              <input
+                type="text"
+                placeholder="e.g. Warriors"
+                value={teamName}
+                onChange={(e) => setTeamName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleCreateTeam();
+                  }
+                }}
+                autoFocus
+                className="
+                  input
+                  input-bordered
+                  w-full
+                  rounded-xl
+                  bg-base-200
+                  text-sm
+                  outline-none
+                  focus:border-success
+                "
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                onClick={handleCloseModal}
+                className="btn btn-ghost rounded-xl text-sm"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleCreateTeam}
+                disabled={!teamName.trim()}
+                className="
+                  btn
+                  rounded-xl
+                  bg-success
+                  px-5
+                  text-sm
+                  text-success-content
+                  hover:bg-success/90
+                "
+              >
+                <Plus size={17} />
+                Create Team
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

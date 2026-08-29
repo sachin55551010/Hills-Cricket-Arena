@@ -55,23 +55,24 @@ export const ExtraRunCountModal = ({
       type: extraType,
       runs: Number(runs),
       wicket: isWicket,
-      // Only relevant for no-ball
+
       ...(extraType === "NB" && {
         runType: nbRunType,
       }),
     };
+
+    // EXTRA + WICKET
+
     if (isWicket) {
       setPendingData(data);
       setShowOutModal(true);
       return;
     }
-    if (pendingData) {
-      const updatedData = { ...pendingData, ...updatedData };
-      onConfirm(updatedData);
-    } else {
-      onConfirm(data);
-      onClose();
-    }
+
+    // EXTRA WITHOUT WICKET
+
+    onConfirm(data);
+    onClose();
   };
 
   return (
@@ -195,10 +196,17 @@ export const ExtraRunCountModal = ({
           pendingData={pendingData}
           onClose={() => setShowOutModal(false)}
           onSubmit={(outData) => {
-            onConfirm({
+            const finalData = {
               ...pendingData,
               ...outData,
-            });
+            };
+
+            console.log("EXTRA + WICKET:", finalData);
+
+            onConfirm(finalData);
+
+            setShowOutModal(false);
+            onClose();
           }}
         />
       )}

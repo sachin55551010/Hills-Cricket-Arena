@@ -9,15 +9,21 @@ import {
   PersonStanding,
 } from "lucide-react";
 
-export const OutModal = ({ pendingData, onClose, onSubmit }) => {
-  console.log(pendingData);
-  //   console.log(onClose);
-  //   console.log(onSubmit);
-  const matchData = JSON.parse(localStorage.getItem("currentMatch"));
-  //   console.log(matchData);
+export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
+  const matchData = JSON.parse(localStorage.getItem("currentMatch") || "null");
 
   const [selectedWicketType, setSelectedWicketType] = useState("Bowled");
-  const wicketType = [
+
+  const [playerOut, setPlayerOut] = useState(
+    matchData?.currentPlayers?.striker?.id || "",
+  );
+
+  const [fielder, setFielder] = useState("");
+  const [completedRuns, setCompletedRuns] = useState(0);
+  const [newBatsman, setNewBatsman] = useState("");
+  const [newPlayerPosition, setNewPlayerPosition] = useState("STRIKER");
+
+  const wicketTypes = [
     { type: "Bowled" },
     { type: "Caught" },
     { type: "Run Out" },
@@ -25,15 +31,66 @@ export const OutModal = ({ pendingData, onClose, onSubmit }) => {
     { type: "Stumped" },
     { type: "Hit Wicket" },
     { type: "Obstructing Field" },
-    { type: "Hitt Ball Twice" },
+    { type: "Hit Ball Twice" },
   ];
+
+  /*
+   * These are the dismissals where the position of
+   * the new batsman matters.
+   *
+   * You can change this depending on how you want
+   * your scoring app to handle strike.
+   */
+  const needsPosition =
+    selectedWicketType === "Run Out" || selectedWicketType === "Caught";
 
   const handleWicketTypeBtn = (type) => {
     setSelectedWicketType(type);
+
+    // Reset values when changing dismissal type
+    if (type !== "Run Out") {
+      setPlayerOut(matchData?.currentPlayers?.striker?.id || "");
+    }
+
+    if (type !== "Caught") {
+      setFielder("");
+    }
+
+    setCompletedRuns(0);
   };
 
-  const strikeNonStrikerInput =
-    selectedWicketType === "Run Out" || selectedWicketType === "Cought";
+  const handleSubmitBtn = () => {
+    if (!newBatsman.trim()) {
+      alert("Please enter the new batsman.");
+      return;
+    }
+
+    const outData = {
+      wicket: true,
+
+      wicketType: selectedWicketType,
+
+      playerOut,
+
+      fielder: fielder.trim() || null,
+
+      completedRuns: Number(completedRuns) || 0,
+
+      newBatsman: newBatsman.trim(),
+
+      newPlayerPosition,
+
+      isExtraWicket: Boolean(pendingData),
+    };
+
+    onSubmit(outData);
+  };
+
+  /*
+   * Current players
+   */
+  const striker = matchData?.currentPlayers?.striker;
+  const nonStriker = matchData?.currentPlayers?.nonStriker;
 
   return (
     <div className="fixed inset-0 z-[9999999] h-dvh w-screen overflow-y-auto bg-base-100">
@@ -48,6 +105,7 @@ export const OutModal = ({ pendingData, onClose, onSubmit }) => {
 
         <div>
           <h1 className="text-base font-semibold">Record wicket</h1>
+
           <p className="text-xs text-base-content/50">
             Enter the dismissal details
           </p>
@@ -56,17 +114,46 @@ export const OutModal = ({ pendingData, onClose, onSubmit }) => {
 
       {/* Content */}
       <main className="mx-auto w-full max-w-2xl px-4 pb-10 pt-5">
-        {/* Wicket type */}
+        {/* -----------------------------------------
+            EXTRA INFORMATION
+        ------------------------------------------ */}
+
+        {pendingData && (
+          <section className="mb-6 rounded-2xl border border-info/20 bg-info/10 p-4">
+            <h2 className="text-sm font-semibold">Extra + Wicket</h2>
+
+            <div className="mt-2 flex flex-wrap gap-2 text-xs">
+              <span className="badge badge-info">{pendingData.type}</span>
+
+              <span className="badge badge-neutral">
+                {pendingData.runs} run
+                {pendingData.runs !== 1 ? "s" : ""}
+              </span>
+
+              {pendingData.runType && (
+                <span className="badge badge-neutral">
+                  {pendingData.runType}
+                </span>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* -----------------------------------------
+            WICKET TYPE
+        ------------------------------------------ */}
+
         <section>
           <div className="mb-3">
             <h2 className="text-sm font-semibold">How was the batsman out?</h2>
+
             <p className="mt-1 text-xs text-base-content/50">
               Select the type of dismissal
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            {wicketType.map((wicket) => {
+            {wicketTypes.map((wicket) => {
               const isSelected = selectedWicketType === wicket.type;
 
               return (
@@ -74,15 +161,15 @@ export const OutModal = ({ pendingData, onClose, onSubmit }) => {
                   key={wicket.type}
                   onClick={() => handleWicketTypeBtn(wicket.type)}
                   className={`
-                  flex min-h-16 items-center justify-between rounded-xl
-                  border px-4 text-left transition-all
-                  active:scale-[0.98]
-                  ${
-                    isSelected
-                      ? "border-blue-500 bg-blue-500 text-white shadow-sm"
-                      : "border-base-content/10 bg-base-200/40 hover:border-base-content/20 hover:bg-base-200"
-                  }
-                `}
+                    flex min-h-16 items-center justify-between
+                    rounded-xl border px-4 text-left
+                    transition-all active:scale-[0.98]
+                    ${
+                      isSelected
+                        ? "border-blue-500 bg-blue-500 text-white shadow-sm"
+                        : "border-base-content/10 bg-base-200/40 hover:border-base-content/20 hover:bg-base-200"
+                    }
+                  `}
                 >
                   <span
                     className={`text-sm ${
@@ -99,51 +186,63 @@ export const OutModal = ({ pendingData, onClose, onSubmit }) => {
           </div>
         </section>
 
-        {/* Input fields */}
+        {/* -----------------------------------------
+            INPUT FIELDS
+        ------------------------------------------ */}
+
         <section className="mt-6 space-y-4">
-          {/* Run Out */}
+          {/* ---------------------------------------
+              PLAYER OUT
+          ---------------------------------------- */}
+
+          <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
+            <label
+              htmlFor="playerOut"
+              className="mb-2 flex items-center gap-2 text-sm font-medium"
+            >
+              <UserRound size={16} className="opacity-60" />
+              Which player got out?
+            </label>
+
+            <select
+              id="playerOut"
+              value={playerOut}
+              onChange={(e) => setPlayerOut(e.target.value)}
+              className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none focus:border-blue-500"
+            >
+              <option value={striker?.id || "striker"}>
+                {striker?.name || "Striker"}
+              </option>
+
+              <option value={nonStriker?.id || "nonStriker"}>
+                {nonStriker?.name || "Non-Striker"}
+              </option>
+            </select>
+          </div>
+
+          {/* ---------------------------------------
+              RUN OUT DETAILS
+          ---------------------------------------- */}
+
           {selectedWicketType === "Run Out" && (
             <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
               <div className="mb-4 flex items-center gap-2">
                 <PersonStanding size={18} />
+
                 <div>
                   <h3 className="text-sm font-semibold">Run out details</h3>
+
                   <p className="text-xs text-base-content/50">
-                    Enter the details of the run out
+                    Enter run-out information
                   </p>
                 </div>
               </div>
 
               <div className="space-y-4">
-                {/* Which player got out */}
+                {/* Fielder */}
                 <div>
                   <label
-                    htmlFor="playerOut"
-                    className="mb-2 flex items-center gap-2 text-sm font-medium"
-                  >
-                    <UserRound size={16} className="opacity-60" />
-                    Which player got out?
-                  </label>
-
-                  <select
-                    name=""
-                    id="playerOut"
-                    className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none transition focus:border-blue-500"
-                  >
-                    <option value="">
-                      {matchData?.currentPlayers?.striker?.name}
-                    </option>
-
-                    <option value="">
-                      {matchData?.currentPlayers?.nonStriker?.name}
-                    </option>
-                  </select>
-                </div>
-
-                {/* Who took run out */}
-                <div>
-                  <label
-                    htmlFor="runOut"
+                    htmlFor="runOutFielder"
                     className="mb-2 flex items-center gap-2 text-sm font-medium"
                   >
                     <UsersRound size={16} className="opacity-60" />
@@ -151,42 +250,49 @@ export const OutModal = ({ pendingData, onClose, onSubmit }) => {
                   </label>
 
                   <input
-                    id="runOut"
+                    id="runOutFielder"
                     type="text"
-                    className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none transition placeholder:text-base-content/30 focus:border-blue-500"
+                    value={fielder}
+                    onChange={(e) => setFielder(e.target.value)}
+                    className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none placeholder:text-base-content/30 focus:border-blue-500"
                     placeholder="Enter fielder name"
                   />
                 </div>
 
-                {/* Runs */}
-                {!pendingData && (
-                  <div>
-                    <label
-                      htmlFor="cought"
-                      className="mb-2 flex items-center gap-2 text-sm font-medium"
-                    >
-                      <Trophy size={16} className="opacity-60" />
-                      Runs completed
-                    </label>
+                {/* Completed runs */}
+                <div>
+                  <label
+                    htmlFor="completedRuns"
+                    className="mb-2 flex items-center gap-2 text-sm font-medium"
+                  >
+                    <Trophy size={16} className="opacity-60" />
+                    Runs completed
+                  </label>
 
-                    <input
-                      id="cought"
-                      type="text"
-                      className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none transition placeholder:text-base-content/30 focus:border-blue-500"
-                      placeholder="0"
-                    />
-                  </div>
-                )}
+                  <input
+                    id="completedRuns"
+                    type="number"
+                    min="0"
+                    max="7"
+                    value={completedRuns}
+                    onChange={(e) => setCompletedRuns(Number(e.target.value))}
+                    className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none focus:border-blue-500"
+                    placeholder="0"
+                  />
+                </div>
               </div>
             </div>
           )}
 
-          {/* Caught */}
+          {/* ---------------------------------------
+              CAUGHT
+          ---------------------------------------- */}
+
           {selectedWicketType === "Caught" && (
             <>
               <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
                 <label
-                  htmlFor="cought"
+                  htmlFor="caughtBy"
                   className="mb-2 flex items-center gap-2 text-sm font-medium"
                 >
                   <CircleUserRound size={16} className="opacity-60" />
@@ -194,16 +300,18 @@ export const OutModal = ({ pendingData, onClose, onSubmit }) => {
                 </label>
 
                 <input
-                  id="cought"
+                  id="caughtBy"
                   type="text"
-                  className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none transition placeholder:text-base-content/30 focus:border-blue-500"
+                  value={fielder}
+                  onChange={(e) => setFielder(e.target.value)}
+                  className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none placeholder:text-base-content/30 focus:border-blue-500"
                   placeholder="Enter fielder name"
                 />
               </div>
 
               <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
                 <label
-                  htmlFor="runs"
+                  htmlFor="caughtRuns"
                   className="mb-2 flex items-center gap-2 text-sm font-medium"
                 >
                   <Trophy size={16} className="opacity-60" />
@@ -211,20 +319,27 @@ export const OutModal = ({ pendingData, onClose, onSubmit }) => {
                 </label>
 
                 <input
-                  id="runs"
-                  type="text"
-                  className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none transition placeholder:text-base-content/30 focus:border-blue-500"
+                  id="caughtRuns"
+                  type="number"
+                  min="0"
+                  max="7"
+                  value={completedRuns}
+                  onChange={(e) => setCompletedRuns(Number(e.target.value))}
+                  className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none focus:border-blue-500"
                   placeholder="0"
                 />
               </div>
             </>
           )}
 
-          {/* Stumped */}
+          {/* ---------------------------------------
+              STUMPED
+          ---------------------------------------- */}
+
           {selectedWicketType === "Stumped" && (
             <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
               <label
-                htmlFor="stumped"
+                htmlFor="stumpedBy"
                 className="mb-2 flex items-center gap-2 text-sm font-medium"
               >
                 <CircleUserRound size={16} className="opacity-60" />
@@ -232,15 +347,20 @@ export const OutModal = ({ pendingData, onClose, onSubmit }) => {
               </label>
 
               <input
-                id="stumped"
+                id="stumpedBy"
                 type="text"
-                className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none transition placeholder:text-base-content/30 focus:border-blue-500"
+                value={fielder}
+                onChange={(e) => setFielder(e.target.value)}
+                className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none placeholder:text-base-content/30 focus:border-blue-500"
                 placeholder="Enter wicketkeeper name"
               />
             </div>
           )}
 
-          {/* New batsman */}
+          {/* ---------------------------------------
+              NEW BATSMAN
+          ---------------------------------------- */}
+
           <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
             <label
               htmlFor="newBatsman"
@@ -253,13 +373,18 @@ export const OutModal = ({ pendingData, onClose, onSubmit }) => {
             <input
               id="newBatsman"
               type="text"
-              className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none transition placeholder:text-base-content/30 focus:border-blue-500"
+              value={newBatsman}
+              onChange={(e) => setNewBatsman(e.target.value)}
+              className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none placeholder:text-base-content/30 focus:border-blue-500"
               placeholder="Enter batsman name"
             />
           </div>
 
-          {/* Strike / Non-striker */}
-          {strikeNonStrikerInput && (
+          {/* ---------------------------------------
+              NEW BATSMAN POSITION
+          ---------------------------------------- */}
+
+          {needsPosition && (
             <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
               <label
                 htmlFor="strikePosition"
@@ -274,32 +399,32 @@ export const OutModal = ({ pendingData, onClose, onSubmit }) => {
               </p>
 
               <select
-                name=""
                 id="strikePosition"
-                className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none transition focus:border-blue-500"
+                value={newPlayerPosition}
+                onChange={(e) => setNewPlayerPosition(e.target.value)}
+                className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none focus:border-blue-500"
               >
-                <option value="">Striker</option>
-                <option value="">Non-Striker</option>
+                <option value="STRIKER">Striker</option>
+
+                <option value="NON_STRIKER">Non-Striker</option>
               </select>
             </div>
           )}
         </section>
-        <div className="flex mt-4 w-full justify-center">
-          <button className="btn btn-info w-50 h-12">Submit</button>
+
+        {/* -----------------------------------------
+            SUBMIT
+        ------------------------------------------ */}
+
+        <div className="mt-6 flex w-full justify-center">
+          <button
+            onClick={handleSubmitBtn}
+            className="btn btn-info h-12 w-full"
+          >
+            Submit
+          </button>
         </div>
       </main>
     </div>
   );
 };
-
-/**
- * in my out modal there are different type of data could be send like for bolwed who is new batsman name and also add nanoid id for it
-
-if caught out who caught the ball name and nanoid id, who is new batsman name and id, will the player be striker or non striker end
-
-for runout which player got out who took the runout, how many runs batsman score in the run out,who is the new batsman, will player be on strike on non strike,
-
-for stumped, who stumped and new batsman,
-
-for other option only who is the new batsman is available
- */

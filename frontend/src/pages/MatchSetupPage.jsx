@@ -3,12 +3,14 @@ import { z } from "zod";
 import { nanoid } from "nanoid";
 import { AdvanceOptionModal } from "../components/AdvanceOptionModal";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Users } from "lucide-react";
 
 export const MatchSetupPage = () => {
   const matchId = nanoid();
   const navigate = useNavigate();
+
   const [isOpen, setIsOpen] = useState(false);
+
   const [formData, setFormData] = useState({
     firstTeamName: "",
     secondTeamName: "",
@@ -17,6 +19,7 @@ export const MatchSetupPage = () => {
     overs: "",
     status: "setup",
   });
+
   const getOrCreateTeam = (teamName, localTeams) => {
     const normalizedName = teamName.trim().toLowerCase();
 
@@ -34,6 +37,7 @@ export const MatchSetupPage = () => {
       players: [],
     };
   };
+
   const [errors, setErrors] = useState({});
 
   const [advanceData, setAdvanceData] = useState({
@@ -160,6 +164,7 @@ export const MatchSetupPage = () => {
         ...secondTeam,
         players: [...secondTeam.players],
       },
+
       currentInning: 1,
 
       toss: {
@@ -217,13 +222,24 @@ export const MatchSetupPage = () => {
   const handleBackBtn = () => {
     navigate("/");
   };
-  // disable the start match button if any of the required fields are empty or have errors
+
+  // Navigate to team management page
+  const handleAddPlayers = () => {
+    navigate("/local-match/teams");
+  };
 
   return (
-    <div className="min-h-dvh bg-base-200 pt-20 pb-10">
+    <div className="min-h-dvh bg-base-200 pt-20 pb-24">
+      {/* Header */}
       <header className="fixed top-0 left-0 z-[999] h-[var(--nav-h)] bg-base-100 flex items-center gap-2 px-2 w-dvw">
         <div className="flex items-center gap-2">
-          <ArrowLeft size={30} strokeWidth={3} onClick={handleBackBtn} />
+          <ArrowLeft
+            size={30}
+            strokeWidth={3}
+            onClick={handleBackBtn}
+            className="cursor-pointer"
+          />
+
           <h4 className="font-bold">Hills Cricket Scorer</h4>
         </div>
       </header>
@@ -246,7 +262,7 @@ export const MatchSetupPage = () => {
 
         <form
           onSubmit={handleSubmitBtn}
-          className="rounded-2xl border border-base-content/10 bg-base-100 p-5 shadow-sm sm:p-7 "
+          className="rounded-2xl border border-base-content/10 bg-base-100 p-5 shadow-sm sm:p-7"
         >
           {/* Teams */}
           <section>
@@ -258,6 +274,38 @@ export const MatchSetupPage = () => {
               </p>
             </div>
 
+            {/* Add players information card */}
+            <div className="mb-5 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+              <div className="flex items-start gap-3">
+                {/* Icon */}
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Users size={20} />
+                </div>
+
+                {/* Content */}
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold">
+                    Add players before the match
+                  </h3>
+
+                  <p className="mt-1 text-xs leading-5 text-base-content/60">
+                    Have your teams ready before you start scoring. Add players
+                    to your teams now so you won't have to enter them manually
+                    during the match.
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={handleAddPlayers}
+                    className="btn btn-primary btn-sm mt-3"
+                  >
+                    Manage Teams & Players
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Team inputs */}
             <div className="grid gap-4 sm:grid-cols-2">
               {/* First team */}
               <div>
@@ -479,7 +527,9 @@ export const MatchSetupPage = () => {
                 min="1"
                 max="50"
                 placeholder="e.g. 10"
-                className={`input w-full ${errors.overs ? "input-error" : ""} outline-0`}
+                className={`input w-full ${
+                  errors.overs ? "input-error" : ""
+                } outline-0`}
               />
 
               <p className="mt-1.5 text-xs text-base-content/45">
@@ -493,7 +543,7 @@ export const MatchSetupPage = () => {
           </section>
 
           {/* Submit */}
-          <div className="flex justify-between mt-4">
+          <div className="mt-4 flex justify-between">
             <button
               onClick={() => setIsOpen(true)}
               type="button"
@@ -505,33 +555,37 @@ export const MatchSetupPage = () => {
             <button
               disabled={!isFormField}
               type="submit"
-              className={`btn btn-primary px-8  disabled:cursor-not-allowed cursor-pointer`}
+              className="btn btn-primary cursor-pointer px-8 disabled:cursor-not-allowed"
             >
               Start Match
             </button>
           </div>
         </form>
       </main>
-      <div>
-        {isOpen && (
-          <AdvanceOptionModal
-            isOpen={isOpen}
-            onClose={() => setIsOpen(false)}
-            firstTeamName={formData.firstTeamName}
-            secondTeamName={formData.secondTeamName}
-            advanceData={advanceData}
-            setAdvanceData={setAdvanceData}
-          />
-        )}
-      </div>
-      <div className="fixed bottom-2 w-full flex justify-center items-center">
-        <footer className="flex justify-between items-center gap-2 border border-base-content/15 py-4 px-4 rounded-full text-[.8rem] backdrop-blur-md w-[70%] lg:w-[40%] font-semibold">
+
+      {/* Advance Options Modal */}
+      {isOpen && (
+        <AdvanceOptionModal
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+          firstTeamName={formData.firstTeamName}
+          secondTeamName={formData.secondTeamName}
+          advanceData={advanceData}
+          setAdvanceData={setAdvanceData}
+        />
+      )}
+
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-2 flex w-full items-center justify-center">
+        <footer className="flex w-[70%] items-center justify-between gap-2 rounded-full border border-base-content/15 px-4 py-4 text-[.8rem] font-semibold backdrop-blur-md lg:w-[40%]">
           <Link className="cursor-pointer" to="/local-match/setup">
             New Match
           </Link>
+
           <Link className="cursor-pointer" to="/local-match/teams">
             Team
           </Link>
+
           <Link
             className="cursor-pointer"
             to="/local-match/local-match-history"

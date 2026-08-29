@@ -258,7 +258,7 @@ export const AddLocalTeamPlayer = () => {
             localTeam.players.map((player) => (
               <div
                 key={player.playerId}
-                className="p-4 rounded-xl bg-base-200 flex items-center justify-between"
+                className="p-4 rounded-xl border border-base-content/15 flex items-center justify-between"
               >
                 {/* Player Name */}
                 <span className="font-medium">{player.name}</span>

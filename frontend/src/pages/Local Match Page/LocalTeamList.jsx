@@ -4,13 +4,17 @@ import { NoDataFoundPage } from "../../components/NoDataFoundPage";
 import { MdEdit } from "react-icons/md";
 import { MdDelete } from "react-icons/md";
 import { useState } from "react";
+import { Pencil, Trash2, X } from "lucide-react";
 import { LocalTeamNameUpdateModal } from "../../components/modals/LocalTeamNameUpdateModal";
 import { LocalTeamDeleteModal } from "../../components/modals/LocalTeamDeleteModal";
 import { useNavigate } from "react-router-dom";
+import { AddLocalTeamModal } from "../../components/modals/AddLocalTeamModal";
 export const LocalTeamList = () => {
   const [openEditNameModal, setOpenEditNameModal] = useState(false);
   const [openDeleteTeamModal, setOpenDeleteTeamModal] = useState(false);
   const [teamId, setTeamId] = useState("");
+
+  const [addTeam, setAddTeam] = useState(false);
   const localTeams = JSON.parse(localStorage.getItem("localTeams")) || [];
   const handleEditBtn = (e, teamId) => {
     e.stopPropagation();
@@ -18,6 +22,7 @@ export const LocalTeamList = () => {
     setTeamId(teamId);
   };
   const navigate = useNavigate();
+  console.log(localTeams);
 
   const handleDeletebtn = (e, teamId) => {
     e.stopPropagation();
@@ -31,12 +36,15 @@ export const LocalTeamList = () => {
     const teamId = team.teamId;
     navigate(`${teamId}/add-players`);
   };
+  const handleAddTeam = () => {
+    setAddTeam(true);
+  };
 
   return (
-    <div className="pt-12 flex justify-center">
+    <div className="flex justify-center h-dvh relative pt-12">
       <Header data="My Teams" />
       {localTeams.length === 0 ? (
-        <div className="pt-10 w-auto flex flex-col items-center justify-center">
+        <div className="w-auto flex flex-col items-center justify-center">
           <NoDataFoundPage
             image={noData}
             title="No match found"
@@ -66,14 +74,14 @@ export const LocalTeamList = () => {
                       onClick={(e) => handleEditBtn(e, team.teamId)}
                       className="text-base-content cursor-pointer"
                     >
-                      <MdEdit size={22} />
+                      <Pencil size={18} />
                     </div>
                     {/* delete button */}
                     <div
                       onClick={(e) => handleDeletebtn(e, team.teamId)}
-                      className="text-base-content cursor-pointer"
+                      className="text-red-500 cursor-pointer"
                     >
-                      <MdDelete size={22} />
+                      <Trash2 size={18} />
                     </div>
                   </div>
                 </li>
@@ -94,6 +102,16 @@ export const LocalTeamList = () => {
           localTeams={localTeams}
           teamId={teamId}
           onClose={() => setOpenDeleteTeamModal(false)}
+        />
+      )}
+      <div className="absolute bottom-10 right-10 p-3 shadow-[0px_0px_10px_rgba(0,0,0,.4)] rounded-lg text-sm font-semibold">
+        <button onClick={handleAddTeam}>Add Team</button>
+      </div>
+
+      {addTeam && (
+        <AddLocalTeamModal
+          localTeams={localTeams}
+          onClose={() => setAddTeam(false)}
         />
       )}
     </div>
