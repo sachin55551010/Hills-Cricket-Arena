@@ -54,7 +54,7 @@ export const LocalTeamList = () => {
             <div className="mt-4 flex items-center gap-2">
               <h1 className="font-semibold">Total Teams</h1>
               <p className="font-bold">
-                {localTeams?.length > 1 ? localTeams.length : 0}
+                {localTeams?.length >= 1 ? localTeams.length : 0}
               </p>
             </div>
             {localTeams.map((team) => {

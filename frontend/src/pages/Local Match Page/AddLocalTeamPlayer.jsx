@@ -255,7 +255,7 @@ export const AddLocalTeamPlayer = () => {
           <div className="flex items-center gap-2 ">
             <p className="font-semibold text-[.85rem]">Total Players</p>
             <h6 className="font-bold">
-              {localTeam?.players?.length > 1 ? localTeam?.players?.length : 0}
+              {localTeam?.players?.length >= 1 ? localTeam?.players?.length : 0}
             </h6>
           </div>
         </div>
