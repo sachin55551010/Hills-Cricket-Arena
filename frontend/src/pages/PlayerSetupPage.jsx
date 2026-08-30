@@ -3,13 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { Header } from "../components/Header";
 import { nanoid } from "nanoid";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setCurrentMatchData } from "../store/scoreSlice";
 
 export const PlayerSetupPage = () => {
   const navigate = useNavigate();
 
-  const matchData = JSON.parse(localStorage.getItem("currentMatch")) || {};
+  const { currentMatchData } = useSelector((state) => state.score);
 
   const teamList = JSON.parse(localStorage.getItem("localTeams")) || [];
 
@@ -25,11 +25,11 @@ export const PlayerSetupPage = () => {
 
   // DETERMINE BATTING & BOWLING TEAM
 
-  const tossWinnerId = matchData?.toss?.winner?.teamId;
-  const tossDecision = matchData?.toss?.decision;
+  const tossWinnerId = currentMatchData?.toss?.winner?.teamId;
+  const tossDecision = currentMatchData?.toss?.decision;
 
-  const firstTeam = matchData?.firstTeam;
-  const secondTeam = matchData?.secondTeam;
+  const firstTeam = currentMatchData?.firstTeam;
+  const secondTeam = currentMatchData?.secondTeam;
 
   let battingTeam;
   let bowlingTeam;
@@ -70,7 +70,6 @@ export const PlayerSetupPage = () => {
   );
 
   // CHECK WHETHER PLAYER IS ALREADY SELECTED
-
   const isPlayerSelected = (player) => {
     const playerName = player.name.trim().toLowerCase();
 
@@ -155,7 +154,6 @@ export const PlayerSetupPage = () => {
   };
 
   // SELECT PLAYER FROM SUGGESTION
-
   const handleSelectPlayer = (fieldName, player) => {
     // Do not allow selecting a player already used
     if (isPlayerSelected(player)) {
@@ -174,7 +172,6 @@ export const PlayerSetupPage = () => {
   };
 
   // CREATE NEW PLAYER OBJECT
-
   const createPlayer = (name) => {
     return {
       playerId: nanoid(),
@@ -217,7 +214,6 @@ export const PlayerSetupPage = () => {
   };
 
   // GET EXISTING PLAYER OR CREATE NEW ONE
-
   const getPlayer = (name, teamPlayers) => {
     const trimmedName = name.trim().toLowerCase();
 
@@ -316,7 +312,6 @@ export const PlayerSetupPage = () => {
     };
 
     // UPDATE FIRST TEAM
-
     const updatedFirstTeam = {
       ...firstTeam,
 
@@ -337,7 +332,6 @@ export const PlayerSetupPage = () => {
     };
 
     // UPDATE SECOND TEAM
-
     const updatedSecondTeam = {
       ...secondTeam,
 
@@ -376,7 +370,7 @@ export const PlayerSetupPage = () => {
     // CREATE UPDATED MATCH DATA
 
     const updatedData = {
-      ...matchData,
+      ...currentMatchData,
 
       firstTeam: updatedFirstTeam,
       secondTeam: updatedSecondTeam,

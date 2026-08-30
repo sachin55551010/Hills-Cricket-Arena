@@ -11,7 +11,7 @@ import { Header } from "../../components/Header";
 const playerNameSchema = z
   .string()
   .trim()
-  .min(1, "Player name is required")
+  .min(3, "Player name must be at least 3 characters")
   .refine((name) => !/^\d+$/.test(name), {
     message: "Player name cannot contain only numbers",
   });

@@ -8,20 +8,36 @@ import {
   UsersRound,
   PersonStanding,
 } from "lucide-react";
+import { useSelector } from "react-redux";
 
 export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
-  const matchData = JSON.parse(localStorage.getItem("currentMatch") || "null");
+  const { currentMatchData } = useSelector((state) => state.score);
+  console.log(currentMatchData);
 
   const [selectedWicketType, setSelectedWicketType] = useState("Bowled");
 
   const [playerOut, setPlayerOut] = useState(
-    matchData?.currentPlayers?.striker?.id || "",
+    currentMatchData?.currentPlayers?.striker?.id || "",
   );
 
   const [fielder, setFielder] = useState("");
   const [completedRuns, setCompletedRuns] = useState(0);
   const [newBatsman, setNewBatsman] = useState("");
   const [newPlayerPosition, setNewPlayerPosition] = useState("STRIKER");
+
+  // batting team id to get batting team player list
+  const currentInning =
+    currentMatchData?.innings[currentMatchData.currentInning - 1];
+
+  const battingTeamPlayer =
+    currentInning.battingTeamId === currentMatchData.firstTeam.teamId
+      ? currentMatchData.firstTeam.players
+      : currentMatchData.secondTeam.players;
+
+  // const bowlingTeamPlayers =
+  //   currentInning.bowlingTeamId === currentMatchData.firstTeam.teamId
+  //     ? currentMatchData.firstTeam.players
+  //     : currentMatchData.secondTeam.players;
 
   const wicketTypes = [
     { type: "Bowled" },
@@ -33,7 +49,9 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
     { type: "Obstructing Field" },
     { type: "Hit Ball Twice" },
   ];
-
+  const battingTeamPlayerList = battingTeamPlayer.filter((player) =>
+    player.name.toLowerCase().includes(newBatsman.toLowerCase()),
+  );
   /*
    * These are the dismissals where the position of
    * the new batsman matters.
@@ -49,7 +67,7 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
 
     // Reset values when changing dismissal type
     if (type !== "Run Out") {
-      setPlayerOut(matchData?.currentPlayers?.striker?.id || "");
+      setPlayerOut(currentMatchData?.currentPlayers?.striker?.id || "");
     }
 
     if (type !== "Caught") {
@@ -86,11 +104,44 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
     onSubmit(outData);
   };
 
+  const selectedPlayer = (player) => {
+    const playerName = player.name.trim().toLowerCase();
+    console.log("player name", playerName);
+
+    const strikerName = currentMatchData.currentPlayers.striker?.name
+      ?.trim()
+      .toLowerCase();
+
+    const nonStrikerName = currentMatchData.currentPlayers.nonStriker?.name
+      ?.trim()
+      .toLowerCase();
+
+    const bowlerName = currentMatchData.currentPlayers.bowler?.name
+      ?.trim()
+      .toLowerCase();
+
+    return (
+      playerName === strikerName ||
+      playerName === nonStrikerName ||
+      playerName === bowlerName
+    );
+  };
+
+  const renderPlayers = (player) => {
+    const selected = selectedPlayer(player);
+
+    return (
+      <li key={player.playerId} className={selected ? "opacity-50" : ""}>
+        {player.name}
+      </li>
+    );
+  };
+
   /*
    * Current players
    */
-  const striker = matchData?.currentPlayers?.striker;
-  const nonStriker = matchData?.currentPlayers?.nonStriker;
+  const striker = currentMatchData?.currentPlayers?.striker;
+  const nonStriker = currentMatchData?.currentPlayers?.nonStriker;
 
   return (
     <div className="fixed inset-0 z-[9999999] h-dvh w-screen overflow-y-auto bg-base-100">
@@ -378,6 +429,18 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
               className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none placeholder:text-base-content/30 focus:border-blue-500"
               placeholder="Enter batsman name"
             />
+            <ul>
+              {battingTeamPlayerList.length > 0 ? (
+                newBatsman &&
+                battingTeamPlayerList.map((player) => {
+                  return renderPlayers(player);
+                })
+              ) : (
+                <li>
+                  No player found in the list it will save as a new player
+                </li>
+              )}
+            </ul>
           </div>
 
           {/* ---------------------------------------

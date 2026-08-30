@@ -41,10 +41,7 @@ export const ScoringPage = () => {
   const dispatch = useDispatch();
   const currentInningNumber = Number(currentMatchData?.currentInning);
 
-  const currentInning =
-    Number.isFinite(currentInningNumber) && currentInningNumber > 0
-      ? currentMatchData?.innings?.[currentInningNumber - 1]
-      : undefined;
+  const currentInning = currentMatchData?.innings?.[currentInningNumber - 1];
 
   const teamScore = currentInning?.runs;
   const legalBalls = currentInning?.legalBalls;
@@ -57,6 +54,8 @@ export const ScoringPage = () => {
     currentMatchData?.currentPlayers?.striker?.battingStats?.strikeRate;
   const nonStrikerBatsmanStrikeRate =
     currentMatchData?.currentPlayers?.nonStriker?.battingStats?.strikeRate;
+  const battingTeamName =
+    currentMatchData?.innings[currentInningNumber - 1].battingTeam;
 
   const onConfirm = (data) => {
     console.log("Data", data);
@@ -114,7 +113,7 @@ export const ScoringPage = () => {
   //   six: "bg-green-600",
   // };
 
-  console.log(currentMatchData);
+  // console.log(currentMatchData);
 
   const buttonColors = {
     0: "border-3 border-green-600 text-green-600",
@@ -159,7 +158,7 @@ export const ScoringPage = () => {
             {/* Team name and inning */}
             <div className="flex flex-col gap-2 text-sm">
               <div className="flex gap-2">
-                {/* <p>{battingTeamName}</p> */}
+                <p>{battingTeamName}</p>
                 <p>1st Inning</p>
               </div>
               <div className="flex items-center gap-1">
