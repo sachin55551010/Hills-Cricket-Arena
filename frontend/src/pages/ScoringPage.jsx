@@ -10,7 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { addRuns } from "../store/scoreSlice";
 export const ScoringPage = () => {
   const { currentMatchData } = useSelector((state) => state.score);
-
+  // console.log("current match data", currentMatchData);
   const [isExtraModalOpen, setIsExtraModalOpen] = useState(false);
   const [extraType, setExtraType] = useState("");
   const [showNormalOutModal, setShowNormalOutModal] = useState(false);
@@ -36,7 +36,7 @@ export const ScoringPage = () => {
   const [openAddBowlerModal, setOpenAddBowlerModal] = useState(false);
   const [openMoreMotionModal, setOpenMoreOptionModal] = useState(false);
 
-  // console.log("currentMatchData", currentMatchData);
+  console.log("currentMatchData", currentMatchData);
 
   const dispatch = useDispatch();
   const currentInningNumber = Number(currentMatchData?.currentInning);
@@ -360,8 +360,6 @@ export const ScoringPage = () => {
           pendingData={null}
           onClose={() => setShowNormalOutModal(false)}
           onSubmit={(outData) => {
-            console.log("NORMAL WICKET:", outData);
-
             onConfirm(outData);
 
             setShowNormalOutModal(false);

@@ -399,7 +399,7 @@ export const PlayerSetupPage = () => {
             legByes: 0,
             overthrow: 0,
           },
-
+          outPlayers: [],
           perBallStat: [],
         },
       ],

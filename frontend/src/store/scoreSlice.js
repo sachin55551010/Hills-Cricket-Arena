@@ -107,7 +107,8 @@ const scoreSlice = createSlice({
       runs = 0,
       runType,
     } = payload;
-
+    
+    
     const additionalRuns = Number(runs) || 0;
 
     // Save state BEFORE changing it
@@ -117,6 +118,8 @@ const scoreSlice = createSlice({
     // WIDE
     
     if (type === "WD") {
+     
+      
       const wideRun = Number(state.currentMatchData.wideBallRun) || 1;
 
       // Total wide runs
@@ -144,7 +147,17 @@ const scoreSlice = createSlice({
         bowlerStats.balls > 0
           ? (bowlerStats.runs * 6) / bowlerStats.balls
           : 0;
+      if(payload.wicket){
+        payload.newPlayerPosition === "striker" ? state.currentMatchData.currentPlayers.striker = payload.newBatsman :currentMatchData.currentPlayers.nonStriker = payload.newBatsman 
+        console.log("position", payload.newPlayerPosition);
+        
+        const outPlayer = payload.newPlayerPosition ==="striker" ? currentMatchData.currentPlayers.striker : currentMatchData.currentPlayers.striker
 
+        console.log("out player", outPlayer);
+        
+        // state.currentMatchData.currentInning.outPplayers.push()
+        
+      }
      
 
       return;

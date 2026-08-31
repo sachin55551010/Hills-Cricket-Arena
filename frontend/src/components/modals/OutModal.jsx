@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ArrowLeft,
-  CircleUserRound,
   UserRound,
   ShieldCheck,
   Trophy,
@@ -9,10 +8,22 @@ import {
   PersonStanding,
 } from "lucide-react";
 import { useSelector } from "react-redux";
+import { nanoid } from "nanoid";
+import { z } from "zod";
+
+const playerNameSchema = z
+  .string()
+  .trim()
+  .min(1, "Player name is required")
+  .refine((name) => !/^\d+$/.test(name), {
+    message: "Player name cannot contain only numbers",
+  })
+  .refine((name) => (name.match(/[A-Za-z]/g) || []).length >= 3, {
+    message: "Player name must contain at least 3 letters",
+  });
 
 export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
   const { currentMatchData } = useSelector((state) => state.score);
-  console.log(currentMatchData);
 
   const [selectedWicketType, setSelectedWicketType] = useState("Bowled");
 
@@ -23,21 +34,27 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
   const [fielder, setFielder] = useState("");
   const [completedRuns, setCompletedRuns] = useState(0);
   const [newBatsman, setNewBatsman] = useState("");
-  const [newPlayerPosition, setNewPlayerPosition] = useState("STRIKER");
+  const [newPlayerPosition, setNewPlayerPosition] = useState("striker");
+  const [nameError, setNameError] = useState("");
 
-  // batting team id to get batting team player list
   const currentInning =
-    currentMatchData?.innings[currentMatchData.currentInning - 1];
+    currentMatchData?.innings?.[currentMatchData.currentInning - 1];
 
   const battingTeamPlayer =
-    currentInning.battingTeamId === currentMatchData.firstTeam.teamId
-      ? currentMatchData.firstTeam.players
-      : currentMatchData.secondTeam.players;
+    currentInning?.battingTeamId === currentMatchData?.firstTeam?.teamId
+      ? currentMatchData?.firstTeam?.players || []
+      : currentMatchData?.secondTeam?.players || [];
 
-  // const bowlingTeamPlayers =
-  //   currentInning.bowlingTeamId === currentMatchData.firstTeam.teamId
-  //     ? currentMatchData.firstTeam.players
-  //     : currentMatchData.secondTeam.players;
+  const bowlingTeamPlayer =
+    currentInning?.bowlingTeamId === currentMatchData?.firstTeam?.teamId
+      ? currentMatchData?.firstTeam?.players || []
+      : currentMatchData?.secondTeam?.players || [];
+
+  const striker = currentMatchData?.currentPlayers?.striker;
+  const nonStriker = currentMatchData?.currentPlayers?.nonStriker;
+  const bowler = currentMatchData?.currentPlayers?.bowler;
+
+  const getPlayerId = (player) => player?.id ?? player?.playerId ?? "";
 
   const wicketTypes = [
     { type: "Bowled" },
@@ -49,52 +66,275 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
     { type: "Obstructing Field" },
     { type: "Hit Ball Twice" },
   ];
-  const battingTeamPlayerList = battingTeamPlayer.filter((player) =>
-    player.name.toLowerCase().includes(newBatsman.toLowerCase()),
-  );
+
   /*
-   * These are the dismissals where the position of
-   * the new batsman matters.
-   *
-   * You can change this depending on how you want
-   * your scoring app to handle strike.
+   * New batsman suggestions:
+   * - Only batting-team players.
+   * - Current striker and non-striker are disabled/excluded.
+   * - If no matching player exists, the entered name can be saved as a new player.
    */
-  const needsPosition =
-    selectedWicketType === "Run Out" || selectedWicketType === "Caught";
+  const availableBatsmen = useMemo(() => {
+    const strikerId = getPlayerId(striker);
+    const nonStrikerId = getPlayerId(nonStriker);
+
+    return battingTeamPlayer.filter((player) => {
+      const id = getPlayerId(player);
+      return id !== strikerId && id !== nonStrikerId;
+    });
+  }, [battingTeamPlayer, striker, nonStriker]);
+
+  const filteredBatsmen = useMemo(() => {
+    const search = newBatsman.trim().toLowerCase();
+
+    if (!search) return [];
+
+    return availableBatsmen.filter((player) =>
+      player?.name?.toLowerCase().includes(search),
+    );
+  }, [availableBatsmen, newBatsman]);
+
+  /*
+   * Caught / Run Out:
+   * Fielder must be from the bowling team.
+   *
+   * Stumped:
+   * Fielder must be from the bowling team, except the bowler delivering
+   * the current ball.
+   */
+  const bowlingFielders = useMemo(() => {
+    const bowlerId = getPlayerId(bowler);
+
+    return bowlingTeamPlayer.filter((player) => {
+      if (selectedWicketType === "Stumped") {
+        return getPlayerId(player) !== bowlerId;
+      }
+
+      return true;
+    });
+  }, [bowlingTeamPlayer, bowler, selectedWicketType]);
+
+  const filteredFielders = useMemo(() => {
+    const search = fielder.trim().toLowerCase();
+
+    if (!search) return [];
+
+    return bowlingFielders.filter((player) =>
+      player?.name?.toLowerCase().includes(search),
+    );
+  }, [bowlingFielders, fielder]);
+
+  /*
+   * Select an existing player from a suggestion list.
+   * This stores the player's actual id and name.
+   */
+  const selectNewBatsman = (player) => {
+    setNewBatsman(player.name);
+    setNameError("");
+  };
+
+  const selectFielder = (player) => {
+    setFielder(player.name);
+  };
 
   const handleWicketTypeBtn = (type) => {
     setSelectedWicketType(type);
 
-    // Reset values when changing dismissal type
+    // Run out can dismiss either current batsman.
+    // Other dismissals default to the striker.
     if (type !== "Run Out") {
-      setPlayerOut(currentMatchData?.currentPlayers?.striker?.id || "");
+      setPlayerOut(getPlayerId(striker));
     }
 
-    if (type !== "Caught") {
+    if (type !== "Caught" && type !== "Run Out" && type !== "Stumped") {
       setFielder("");
     }
 
     setCompletedRuns(0);
+    setNameError("");
   };
 
   const handleSubmitBtn = () => {
-    if (!newBatsman.trim()) {
-      alert("Please enter the new batsman.");
+    const trimmedName = newBatsman.trim();
+
+    /*
+     * Validate the name only when the user is creating a new player.
+     * An existing suggested player is already valid.
+     */
+    const existingPlayer = availableBatsmen.find(
+      (player) =>
+        player?.name?.trim().toLowerCase() === trimmedName.toLowerCase(),
+    );
+
+    let newPlayer;
+
+    if (existingPlayer) {
+      newPlayer = {
+        id: getPlayerId(existingPlayer),
+        name: existingPlayer.name,
+        matches: 0,
+
+        battingStats: {
+          innings: 0,
+          notOut: 0,
+          runs: 0,
+          balls: 0,
+          bestScore: 0,
+          average: 0,
+          strikeRate: 0,
+          thirties: 0,
+          fifties: 0,
+          hundreds: 0,
+          ducks: 0,
+          fours: 0,
+          sixes: 0,
+        },
+
+        bowlingStats: {
+          innings: 0,
+          balls: 0,
+          runs: 0,
+          wickets: 0,
+          bestBowling: "0/0",
+          average: 0,
+          economy: 0,
+          strikeRate: 0,
+          maidens: 0,
+          threeWickets: 0,
+          fiveWickets: 0,
+          wides: 0,
+          noBalls: 0,
+          dotBalls: 0,
+        },
+      };
+    } else {
+      const result = playerNameSchema.safeParse(trimmedName);
+
+      if (!result.success) {
+        const message =
+          result.error.issues[0]?.message || "Invalid player name";
+        setNameError(message);
+        return;
+      }
+
+      /*
+       * Do not allow a newly-created player to have the same name as ANY
+       * player already in the batting team list.
+       */
+      const duplicateName = battingTeamPlayer.some(
+        (player) =>
+          player?.name?.trim().toLowerCase() === trimmedName.toLowerCase(),
+      );
+
+      if (duplicateName) {
+        setNameError(
+          "A player with this name already exists in the player list",
+        );
+        return;
+      }
+
+      newPlayer = {
+        id: nanoid(),
+        name: trimmedName,
+        matches: 0,
+
+        battingStats: {
+          innings: 0,
+          notOut: 0,
+          runs: 0,
+          balls: 0,
+          bestScore: 0,
+          average: 0,
+          strikeRate: 0,
+          thirties: 0,
+          fifties: 0,
+          hundreds: 0,
+          ducks: 0,
+          fours: 0,
+          sixes: 0,
+        },
+
+        bowlingStats: {
+          innings: 0,
+          balls: 0,
+          runs: 0,
+          wickets: 0,
+          bestBowling: "0/0",
+          average: 0,
+          economy: 0,
+          strikeRate: 0,
+          maidens: 0,
+          threeWickets: 0,
+          fiveWickets: 0,
+          wides: 0,
+          noBalls: 0,
+          dotBalls: 0,
+        },
+      };
+    }
+
+    /*
+     * Validate fielder selection for dismissals that need one.
+     * The fielder must come from the bowling team.
+     */
+    let selectedFielder = null;
+
+    if (
+      selectedWicketType === "Caught" ||
+      selectedWicketType === "Run Out" ||
+      selectedWicketType === "Stumped"
+    ) {
+      const matchingFielder = bowlingFielders.find(
+        (player) =>
+          player?.name?.trim().toLowerCase() === fielder.trim().toLowerCase(),
+      );
+
+      if (!matchingFielder) {
+        setNameError(
+          selectedWicketType === "Stumped"
+            ? "Select a wicketkeeper from the bowling team (except the bowler)"
+            : "Select a fielder from the bowling team",
+        );
+        return;
+      }
+
+      selectedFielder = {
+        id: getPlayerId(matchingFielder),
+        name: matchingFielder.name,
+      };
+    }
+
+    /*
+     * For run out, the user can choose which current batsman got out.
+     */
+    const selectedPlayerOut =
+      battingTeamPlayer.find((player) => getPlayerId(player) === playerOut) ||
+      (getPlayerId(striker) === playerOut ? striker : nonStriker);
+
+    if (!selectedPlayerOut) {
+      setNameError("Please select which batsman got out");
       return;
     }
 
+    // prepare full player
+
     const outData = {
       wicket: true,
-
       wicketType: selectedWicketType,
 
-      playerOut,
+      playerOut: {
+        id: getPlayerId(selectedPlayerOut),
+        name: selectedPlayerOut.name,
+      },
 
-      fielder: fielder.trim() || null,
+      fielder: selectedFielder,
 
       completedRuns: Number(completedRuns) || 0,
 
-      newBatsman: newBatsman.trim(),
+      /*
+       * Existing player => existing id.
+       * New player => nanoid id.
+       */
+      newBatsman: newPlayer,
 
       newPlayerPosition,
 
@@ -104,50 +344,82 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
     onSubmit(outData);
   };
 
-  const selectedPlayer = (player) => {
-    const playerName = player.name.trim().toLowerCase();
-    console.log("player name", playerName);
-
-    const strikerName = currentMatchData.currentPlayers.striker?.name
-      ?.trim()
-      .toLowerCase();
-
-    const nonStrikerName = currentMatchData.currentPlayers.nonStriker?.name
-      ?.trim()
-      .toLowerCase();
-
-    const bowlerName = currentMatchData.currentPlayers.bowler?.name
-      ?.trim()
-      .toLowerCase();
-
-    return (
-      playerName === strikerName ||
-      playerName === nonStrikerName ||
-      playerName === bowlerName
-    );
-  };
-
-  const renderPlayers = (player) => {
-    const selected = selectedPlayer(player);
-
-    return (
-      <li key={player.playerId} className={selected ? "opacity-50" : ""}>
-        {player.name}
-      </li>
-    );
-  };
-
   /*
-   * Current players
+   * Current players are shown in the player-out selector.
+   * For Run Out, either striker or non-striker can be selected.
    */
-  const striker = currentMatchData?.currentPlayers?.striker;
-  const nonStriker = currentMatchData?.currentPlayers?.nonStriker;
+  const renderPlayerOutOptions = () => (
+    <>
+      {striker && (
+        <option value={getPlayerId(striker)}>{striker.name} (Striker)</option>
+      )}
+
+      {nonStriker && (
+        <option value={getPlayerId(nonStriker)}>
+          {nonStriker.name} (Non-Striker)
+        </option>
+      )}
+    </>
+  );
+
+  const renderSuggestionList = ({
+    items,
+    value,
+    onSelect,
+    emptyMessage,
+    disabledIds = [],
+  }) => {
+    if (!value.trim()) return null;
+
+    return (
+      <ul className="mt-2 max-h-48 overflow-y-auto rounded-xl border border-base-content/10 bg-base-100">
+        {items.length > 0 ? (
+          items.map((player) => {
+            const id = getPlayerId(player);
+            const disabled = disabledIds.includes(id);
+
+            return (
+              <li key={id || player.name}>
+                <button
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => onSelect(player)}
+                  className={`flex w-full items-center justify-between px-3 py-3 text-left text-sm transition hover:bg-base-200 ${
+                    disabled ? "cursor-not-allowed opacity-40" : ""
+                  }`}
+                >
+                  <span>{player.name}</span>
+
+                  {disabled && (
+                    <span className="text-xs opacity-60">Already playing</span>
+                  )}
+                </button>
+              </li>
+            );
+          })
+        ) : (
+          <li className="px-3 py-3 text-xs text-base-content/50">
+            {emptyMessage}
+          </li>
+        )}
+      </ul>
+    );
+  };
+
+  const needsPosition =
+    selectedWicketType === "Run Out" || selectedWicketType === "Caught";
+
+  const needsFielder =
+    selectedWicketType === "Caught" ||
+    selectedWicketType === "Run Out" ||
+    selectedWicketType === "Stumped";
 
   return (
     <div className="fixed inset-0 z-[9999999] h-dvh w-screen overflow-y-auto bg-base-100">
       {/* Header */}
       <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-base-content/10 bg-base-100/95 px-4 backdrop-blur">
         <button
+          type="button"
           onClick={onClose}
           className="flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-base-content/10 active:scale-95"
         >
@@ -156,19 +428,14 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
 
         <div>
           <h1 className="text-base font-semibold">Record wicket</h1>
-
           <p className="text-xs text-base-content/50">
             Enter the dismissal details
           </p>
         </div>
       </header>
 
-      {/* Content */}
       <main className="mx-auto w-full max-w-2xl px-4 pb-10 pt-5">
-        {/* -----------------------------------------
-            EXTRA INFORMATION
-        ------------------------------------------ */}
-
+        {/* EXTRA INFORMATION */}
         {pendingData && (
           <section className="mb-6 rounded-2xl border border-info/20 bg-info/10 p-4">
             <h2 className="text-sm font-semibold">Extra + Wicket</h2>
@@ -177,8 +444,7 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
               <span className="badge badge-info">{pendingData.type}</span>
 
               <span className="badge badge-neutral">
-                {pendingData.runs} run
-                {pendingData.runs !== 1 ? "s" : ""}
+                {pendingData.runs} run{pendingData.runs !== 1 ? "s" : ""}
               </span>
 
               {pendingData.runType && (
@@ -190,14 +456,10 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
           </section>
         )}
 
-        {/* -----------------------------------------
-            WICKET TYPE
-        ------------------------------------------ */}
-
+        {/* WICKET TYPE */}
         <section>
           <div className="mb-3">
             <h2 className="text-sm font-semibold">How was the batsman out?</h2>
-
             <p className="mt-1 text-xs text-base-content/50">
               Select the type of dismissal
             </p>
@@ -209,18 +471,14 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
 
               return (
                 <button
+                  type="button"
                   key={wicket.type}
                   onClick={() => handleWicketTypeBtn(wicket.type)}
-                  className={`
-                    flex min-h-16 items-center justify-between
-                    rounded-xl border px-4 text-left
-                    transition-all active:scale-[0.98]
-                    ${
-                      isSelected
-                        ? "border-blue-500 bg-blue-500 text-white shadow-sm"
-                        : "border-base-content/10 bg-base-200/40 hover:border-base-content/20 hover:bg-base-200"
-                    }
-                  `}
+                  className={`flex min-h-16 items-center justify-between rounded-xl border px-4 text-left transition-all active:scale-[0.98] ${
+                    isSelected
+                      ? "border-blue-500 bg-blue-500 text-white shadow-sm"
+                      : "border-base-content/10 bg-base-200/40 hover:border-base-content/20 hover:bg-base-200"
+                  }`}
                 >
                   <span
                     className={`text-sm ${
@@ -237,15 +495,9 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
           </div>
         </section>
 
-        {/* -----------------------------------------
-            INPUT FIELDS
-        ------------------------------------------ */}
-
+        {/* INPUT FIELDS */}
         <section className="mt-6 space-y-4">
-          {/* ---------------------------------------
-              PLAYER OUT
-          ---------------------------------------- */}
-
+          {/* PLAYER OUT */}
           <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
             <label
               htmlFor="playerOut"
@@ -261,157 +513,96 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
               onChange={(e) => setPlayerOut(e.target.value)}
               className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none focus:border-blue-500"
             >
-              <option value={striker?.id || "striker"}>
-                {striker?.name || "Striker"}
-              </option>
-
-              <option value={nonStriker?.id || "nonStriker"}>
-                {nonStriker?.name || "Non-Striker"}
-              </option>
+              {renderPlayerOutOptions()}
             </select>
+
+            {selectedWicketType === "Run Out" && (
+              <p className="mt-2 text-xs text-base-content/50">
+                For a run out, choose either the striker or non-striker who was
+                dismissed.
+              </p>
+            )}
           </div>
 
-          {/* ---------------------------------------
-              RUN OUT DETAILS
-          ---------------------------------------- */}
-
-          {selectedWicketType === "Run Out" && (
+          {/* FIELDER / CAUGHT / RUN OUT / STUMPED */}
+          {needsFielder && (
             <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
               <div className="mb-4 flex items-center gap-2">
                 <PersonStanding size={18} />
 
                 <div>
-                  <h3 className="text-sm font-semibold">Run out details</h3>
+                  <h3 className="text-sm font-semibold">
+                    {selectedWicketType === "Caught"
+                      ? "Who caught the ball?"
+                      : selectedWicketType === "Run Out"
+                        ? "Who took the run-out?"
+                        : "Who stumped?"}
+                  </h3>
 
                   <p className="text-xs text-base-content/50">
-                    Enter run-out information
+                    {selectedWicketType === "Stumped"
+                      ? "Select a bowling-team player except the bowler"
+                      : "Select a player from the bowling team"}
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                {/* Fielder */}
-                <div>
-                  <label
-                    htmlFor="runOutFielder"
-                    className="mb-2 flex items-center gap-2 text-sm font-medium"
-                  >
-                    <UsersRound size={16} className="opacity-60" />
-                    Who took the run-out?
-                  </label>
+              <div className="relative">
+                <input
+                  id="fielder"
+                  type="text"
+                  value={fielder}
+                  onChange={(e) => {
+                    setFielder(e.target.value);
+                    setNameError("");
+                  }}
+                  className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none placeholder:text-base-content/30 focus:border-blue-500"
+                  placeholder={
+                    selectedWicketType === "Stumped"
+                      ? "Search wicketkeeper"
+                      : "Search fielder"
+                  }
+                />
 
-                  <input
-                    id="runOutFielder"
-                    type="text"
-                    value={fielder}
-                    onChange={(e) => setFielder(e.target.value)}
-                    className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none placeholder:text-base-content/30 focus:border-blue-500"
-                    placeholder="Enter fielder name"
-                  />
-                </div>
-
-                {/* Completed runs */}
-                <div>
-                  <label
-                    htmlFor="completedRuns"
-                    className="mb-2 flex items-center gap-2 text-sm font-medium"
-                  >
-                    <Trophy size={16} className="opacity-60" />
-                    Runs completed
-                  </label>
-
-                  <input
-                    id="completedRuns"
-                    type="number"
-                    min="0"
-                    max="7"
-                    value={completedRuns}
-                    onChange={(e) => setCompletedRuns(Number(e.target.value))}
-                    className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none focus:border-blue-500"
-                    placeholder="0"
-                  />
-                </div>
+                {renderSuggestionList({
+                  items: filteredFielders,
+                  value: fielder,
+                  onSelect: selectFielder,
+                  emptyMessage: "No matching bowling-team player found",
+                })}
               </div>
             </div>
           )}
 
-          {/* ---------------------------------------
-              CAUGHT
-          ---------------------------------------- */}
-
-          {selectedWicketType === "Caught" && (
-            <>
-              <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
-                <label
-                  htmlFor="caughtBy"
-                  className="mb-2 flex items-center gap-2 text-sm font-medium"
-                >
-                  <CircleUserRound size={16} className="opacity-60" />
-                  Who caught the ball?
-                </label>
-
-                <input
-                  id="caughtBy"
-                  type="text"
-                  value={fielder}
-                  onChange={(e) => setFielder(e.target.value)}
-                  className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none placeholder:text-base-content/30 focus:border-blue-500"
-                  placeholder="Enter fielder name"
-                />
-              </div>
-
-              <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
-                <label
-                  htmlFor="caughtRuns"
-                  className="mb-2 flex items-center gap-2 text-sm font-medium"
-                >
-                  <Trophy size={16} className="opacity-60" />
-                  Runs completed before catch
-                </label>
-
-                <input
-                  id="caughtRuns"
-                  type="number"
-                  min="0"
-                  max="7"
-                  value={completedRuns}
-                  onChange={(e) => setCompletedRuns(Number(e.target.value))}
-                  className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none focus:border-blue-500"
-                  placeholder="0"
-                />
-              </div>
-            </>
-          )}
-
-          {/* ---------------------------------------
-              STUMPED
-          ---------------------------------------- */}
-
-          {selectedWicketType === "Stumped" && (
+          {/* COMPLETED RUNS */}
+          {(selectedWicketType === "Run Out" ||
+            selectedWicketType === "Caught") && (
             <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
               <label
-                htmlFor="stumpedBy"
+                htmlFor="completedRuns"
                 className="mb-2 flex items-center gap-2 text-sm font-medium"
               >
-                <CircleUserRound size={16} className="opacity-60" />
-                Who stumped?
+                <Trophy size={16} className="opacity-60" />
+
+                {selectedWicketType === "Caught"
+                  ? "Runs completed before catch"
+                  : "Runs completed before run out"}
               </label>
 
               <input
-                id="stumpedBy"
-                type="text"
-                value={fielder}
-                onChange={(e) => setFielder(e.target.value)}
-                className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none placeholder:text-base-content/30 focus:border-blue-500"
-                placeholder="Enter wicketkeeper name"
+                id="completedRuns"
+                type="number"
+                min="0"
+                max="7"
+                value={completedRuns}
+                onChange={(e) => setCompletedRuns(Number(e.target.value))}
+                className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none focus:border-blue-500"
+                placeholder="0"
               />
             </div>
           )}
 
-          {/* ---------------------------------------
-              NEW BATSMAN
-          ---------------------------------------- */}
-
+          {/* NEW BATSMAN */}
           <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
             <label
               htmlFor="newBatsman"
@@ -421,32 +612,44 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
               Who is the new batsman?
             </label>
 
-            <input
-              id="newBatsman"
-              type="text"
-              value={newBatsman}
-              onChange={(e) => setNewBatsman(e.target.value)}
-              className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none placeholder:text-base-content/30 focus:border-blue-500"
-              placeholder="Enter batsman name"
-            />
-            <ul>
-              {battingTeamPlayerList.length > 0 ? (
-                newBatsman &&
-                battingTeamPlayerList.map((player) => {
-                  return renderPlayers(player);
-                })
-              ) : (
-                <li>
-                  No player found in the list it will save as a new player
-                </li>
+            <div className="relative">
+              <input
+                id="newBatsman"
+                type="text"
+                value={newBatsman}
+                onChange={(e) => {
+                  setNewBatsman(e.target.value);
+                  setNameError("");
+                }}
+                className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none placeholder:text-base-content/30 focus:border-blue-500"
+                placeholder="Search player or enter new player name"
+              />
+
+              {renderSuggestionList({
+                items: filteredBatsmen,
+                value: newBatsman,
+                onSelect: selectNewBatsman,
+                emptyMessage:
+                  "No matching player found. This name will be created as a new player.",
+                disabledIds: [getPlayerId(striker), getPlayerId(nonStriker)],
+              })}
+            </div>
+
+            {newBatsman.trim() &&
+              filteredBatsmen.length === 0 &&
+              !nameError && (
+                <p className="mt-2 text-xs text-info">
+                  No existing player matched. A new player will be created
+                  automatically if the name is valid.
+                </p>
               )}
-            </ul>
+
+            {nameError && (
+              <p className="mt-2 text-xs text-error">{nameError}</p>
+            )}
           </div>
 
-          {/* ---------------------------------------
-              NEW BATSMAN POSITION
-          ---------------------------------------- */}
-
+          {/* NEW BATSMAN POSITION */}
           {needsPosition && (
             <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
               <label
@@ -467,20 +670,17 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
                 onChange={(e) => setNewPlayerPosition(e.target.value)}
                 className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none focus:border-blue-500"
               >
-                <option value="STRIKER">Striker</option>
-
-                <option value="NON_STRIKER">Non-Striker</option>
+                <option value="striker">Striker</option>
+                <option value="nonStriker">Non-Striker</option>
               </select>
             </div>
           )}
         </section>
 
-        {/* -----------------------------------------
-            SUBMIT
-        ------------------------------------------ */}
-
+        {/* SUBMIT */}
         <div className="mt-6 flex w-full justify-center">
           <button
+            type="button"
             onClick={handleSubmitBtn}
             className="btn btn-info h-12 w-full"
           >
