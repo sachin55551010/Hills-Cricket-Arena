@@ -148,15 +148,18 @@ const scoreSlice = createSlice({
           ? (bowlerStats.runs * 6) / bowlerStats.balls
           : 0;
       if(payload.wicket){
-        payload.newPlayerPosition === "striker" ? state.currentMatchData.currentPlayers.striker = payload.newBatsman :currentMatchData.currentPlayers.nonStriker = payload.newBatsman 
-        console.log("position", payload.newPlayerPosition);
-        
-        const outPlayer = payload.newPlayerPosition ==="striker" ? currentMatchData.currentPlayers.striker : currentMatchData.currentPlayers.striker
 
-        console.log("out player", outPlayer);
-        
-        // state.currentMatchData.currentInning.outPplayers.push()
-        
+
+
+
+      if (payload.newPlayerPosition === "striker") {
+  state.currentMatchData.currentPlayers.striker = payload.newBatsman;
+} else {
+  state.currentMatchData.currentPlayers.nonStriker = payload.newBatsman;
+}
+console.log(payload.playerOut);
+
+      state.currentMatchData.innings[currentMatchData.currentInning -1].outPlayers.push(payload.playerOut)
       }
      
 

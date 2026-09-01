@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import { useSelector } from "react-redux";
 import { ArrowLeft, Check, Plus, Search, UserRound, X } from "lucide-react";
 
 const bowlers = [
@@ -18,7 +18,8 @@ export const AddNewBowlerModal = ({ onClose, updateNewBowler }) => {
   const filteredBowlers = bowlers.filter((bowler) =>
     bowler.name.toLowerCase().includes(search.toLowerCase()),
   );
-
+  const { currentMatchData } = useSelector((state) => state.score);
+  console.log(currentMatchData);
   console.log(updateNewBowler);
 
   const handleAddBowler = () => {
@@ -29,6 +30,8 @@ export const AddNewBowlerModal = ({ onClose, updateNewBowler }) => {
     setNewBowlerName("");
     setShowAddBowler(false);
   };
+
+  // function selectPlayer() {}
 
   return (
     <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">

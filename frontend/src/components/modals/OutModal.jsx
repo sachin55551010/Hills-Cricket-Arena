@@ -169,7 +169,7 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
 
     if (existingPlayer) {
       newPlayer = {
-        id: getPlayerId(existingPlayer),
+        playerId: getPlayerId(existingPlayer),
         name: existingPlayer.name,
         matches: 0,
 
@@ -298,7 +298,7 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
       }
 
       selectedFielder = {
-        id: getPlayerId(matchingFielder),
+        playerId: getPlayerId(matchingFielder),
         name: matchingFielder.name,
       };
     }
@@ -510,7 +510,17 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
             <select
               id="playerOut"
               value={playerOut}
-              onChange={(e) => setPlayerOut(e.target.value)}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+
+                setPlayerOut(selectedId);
+
+                if (selectedId === getPlayerId(striker)) {
+                  setNewPlayerPosition("striker");
+                } else if (selectedId === getPlayerId(nonStriker)) {
+                  setNewPlayerPosition("nonStriker");
+                }
+              }}
               className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none focus:border-blue-500"
             >
               {renderPlayerOutOptions()}

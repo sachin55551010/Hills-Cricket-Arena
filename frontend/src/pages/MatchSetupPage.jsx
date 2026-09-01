@@ -31,9 +31,7 @@ export const MatchSetupPage = () => {
     wideBallRuns: 1,
   });
 
-  // --------------------------------------------------
   // TEAM SUGGESTIONS
-  // --------------------------------------------------
 
   const firstTeamNameList = localTeams.filter((team) => {
     const searchValue = formData.firstTeamName.trim();
@@ -51,9 +49,7 @@ export const MatchSetupPage = () => {
     return team.name.toLowerCase().includes(searchValue.toLowerCase());
   });
 
-  // --------------------------------------------------
   // CHECK IF TEAM IS ALREADY SELECTED
-  // --------------------------------------------------
 
   const isTeamSelected = (team) => {
     const teamName = team.name.trim().toLowerCase();
@@ -64,9 +60,7 @@ export const MatchSetupPage = () => {
     );
   };
 
-  // --------------------------------------------------
   // SELECT TEAM FROM SUGGESTION
-  // --------------------------------------------------
 
   const handleSelectTeam = (fieldName, team) => {
     // Don't allow the same team to be selected twice
@@ -95,9 +89,7 @@ export const MatchSetupPage = () => {
     }));
   };
 
-  // --------------------------------------------------
   // GET EXISTING TEAM OR CREATE NEW TEAM
-  // --------------------------------------------------
 
   const getOrCreateTeam = (teamName, teams) => {
     const normalizedName = teamName.trim().toLowerCase();
@@ -117,9 +109,7 @@ export const MatchSetupPage = () => {
     };
   };
 
-  // --------------------------------------------------
   // ZOD SCHEMA
-  // --------------------------------------------------
 
   const matchSchema = z
     .object({
@@ -166,16 +156,12 @@ export const MatchSetupPage = () => {
       },
     );
 
-  // --------------------------------------------------
   // FORM STATUS
-  // --------------------------------------------------
 
   const checkStatus = matchSchema.safeParse(formData);
   const isFormField = checkStatus.success;
 
-  // --------------------------------------------------
   // HANDLE INPUT CHANGES
-  // --------------------------------------------------
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -222,9 +208,7 @@ export const MatchSetupPage = () => {
     }
   };
 
-  // --------------------------------------------------
   // SUBMIT
-  // --------------------------------------------------
 
   const handleSubmitBtn = (e) => {
     e.preventDefault();
@@ -246,9 +230,7 @@ export const MatchSetupPage = () => {
       return;
     }
 
-    // --------------------------------------------------
     // GET TEAMS
-    // --------------------------------------------------
 
     const currentLocalTeams = JSON.parse(
       localStorage.getItem("localTeams") || "[]",
@@ -264,9 +246,7 @@ export const MatchSetupPage = () => {
       currentLocalTeams,
     );
 
-    // --------------------------------------------------
     // MATCH DATA
-    // --------------------------------------------------
 
     const matchData = {
       matchId,
@@ -314,9 +294,7 @@ export const MatchSetupPage = () => {
       createdAt: new Date().toISOString(),
     };
 
-    // --------------------------------------------------
     // UPDATE LOCAL TEAMS WITHOUT DUPLICATES
-    // --------------------------------------------------
 
     const updatedTeams = [...currentLocalTeams];
 
@@ -352,9 +330,7 @@ export const MatchSetupPage = () => {
 
     localStorage.setItem("localTeams", JSON.stringify(updatedTeams));
 
-    // --------------------------------------------------
     // SAVE CURRENT MATCH
-    // --------------------------------------------------
 
     localStorage.setItem("currentMatch", JSON.stringify(matchData));
 
@@ -363,25 +339,19 @@ export const MatchSetupPage = () => {
     navigate("/local-match/players");
   };
 
-  // --------------------------------------------------
   // BACK
-  // --------------------------------------------------
 
   const handleBackBtn = () => {
     navigate("/");
   };
 
-  // --------------------------------------------------
   // ADD PLAYERS
-  // --------------------------------------------------
 
   const handleAddPlayers = () => {
     navigate("/local-match/teams");
   };
 
-  // --------------------------------------------------
   // TEAM SUGGESTION COMPONENT
-  // --------------------------------------------------
 
   const renderTeamSuggestion = (team, fieldName) => {
     const selected = isTeamSelected(team);
@@ -405,9 +375,7 @@ export const MatchSetupPage = () => {
     );
   };
 
-  // --------------------------------------------------
   // UI
-  // --------------------------------------------------
 
   return (
     <div className="min-h-dvh bg-base-200 pt-20 pb-24">
