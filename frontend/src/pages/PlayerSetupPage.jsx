@@ -12,6 +12,8 @@ export const PlayerSetupPage = () => {
   const { currentMatchData } = useSelector((state) => state.score);
 
   const teamList = JSON.parse(localStorage.getItem("localTeams")) || [];
+  console.log("team list", teamList);
+  console.log(currentMatchData);
 
   const dispatch = useDispatch();
 
