@@ -12,8 +12,8 @@ export const PlayerSetupPage = () => {
   const { currentMatchData } = useSelector((state) => state.score);
 
   const teamList = JSON.parse(localStorage.getItem("localTeams")) || [];
-  console.log("team list", teamList);
-  console.log(currentMatchData);
+  // console.log("team list", teamList);
+  console.log("current match data", currentMatchData);
 
   const dispatch = useDispatch();
 
@@ -29,7 +29,7 @@ export const PlayerSetupPage = () => {
 
   const tossWinnerId = currentMatchData?.toss?.winner?.teamId;
   const tossDecision = currentMatchData?.toss?.decision;
-
+  console.log("toss winner", tossWinnerId, "toss decision", tossDecision);
   const firstTeam = currentMatchData?.firstTeam;
   const secondTeam = currentMatchData?.secondTeam;
 
@@ -70,6 +70,9 @@ export const PlayerSetupPage = () => {
   const bowlingTeamList = bowlingTeamPlayers.filter((player) =>
     player.name.toLowerCase().includes(formData.bowler.toLowerCase()),
   );
+
+  // console.log("batting team list", battingTeamList);
+  // console.log("bowling team list", bowlingTeamList);
 
   // CHECK WHETHER PLAYER IS ALREADY SELECTED
   const isPlayerSelected = (player) => {

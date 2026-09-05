@@ -4,11 +4,13 @@ import { nanoid } from "nanoid";
 import { AdvanceOptionModal } from "../components/AdvanceOptionModal";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Users } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { setCurrentMatchData } from "../store/scoreSlice";
 
 export const MatchSetupPage = () => {
   const matchId = nanoid();
   const navigate = useNavigate();
-
+  const dispatch = useDispatch();
   const localTeams = JSON.parse(localStorage.getItem("localTeams")) || [];
 
   const [isOpen, setIsOpen] = useState(false);
@@ -333,7 +335,7 @@ export const MatchSetupPage = () => {
     // SAVE CURRENT MATCH
 
     localStorage.setItem("currentMatch", JSON.stringify(matchData));
-
+    dispatch(setCurrentMatchData(matchData));
     setErrors({});
 
     navigate("/local-match/players");

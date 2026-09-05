@@ -12,7 +12,6 @@ const swapStriker = (state) => {
   ];
 };
 
-
 // Save current state to history
 const saveHistory = (state) => {
   const snapshot = JSON.parse(
@@ -35,7 +34,6 @@ const undoMatch = (state) => {
 
   state.currentMatchData = previousState;
 };
-
 
 // Initial match data
 

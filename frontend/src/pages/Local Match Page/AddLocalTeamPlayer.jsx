@@ -22,7 +22,7 @@ export const AddLocalTeamPlayer = () => {
   const [localTeams, setLocalTeams] = useState(() => {
     return JSON.parse(localStorage.getItem("localTeams")) || [];
   });
-
+  
   const [modalType, setModalType] = useState(null);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
 
