@@ -1,8 +1,12 @@
-export const LocalTeamDeleteModal = ({ localTeams, teamId, onClose }) => {
-  //   console.log(localTeams);
+import { useDispatch } from "react-redux";
+import { deleteLocalTeam } from "../../store/localTeamSlice";
 
+export const LocalTeamDeleteModal = ({ teams, teamId, onClose }) => {
+  console.log(teams);
+  const dispatch = useDispatch();
   const deleteTeamBtn = () => {
-    const deleteTeams = localTeams.filter((team) => team.teamId !== teamId);
+    dispatch(deleteLocalTeam(teamId));
+    const deleteTeams = teams.filter((team) => team.teamId !== teamId);
 
     localStorage.setItem("localTeams", JSON.stringify(deleteTeams));
     onClose();

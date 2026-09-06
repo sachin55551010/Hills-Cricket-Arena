@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { z } from "zod";
-export const LocalTeamNameUpdateModal = ({ localTeams, teamId, onClose }) => {
+import { updateLocalTeamName } from "../../store/localTeamSlice";
+export const LocalTeamNameUpdateModal = ({ teams, teamId, onClose }) => {
   const [updatedTeamName, setUpdatedTeamName] = useState("");
   const [error, setError] = useState("");
+  const dispatch = useDispatch();
   const teamNameSchema = z
     .string()
     .trim()
@@ -10,13 +13,13 @@ export const LocalTeamNameUpdateModal = ({ localTeams, teamId, onClose }) => {
     .refine((value) => /[a-zA-Z]/.test(value), {
       message: "Team name must contain at least one letter",
     });
-  const team = localTeams.find((team) => team.teamId === teamId);
+  const team = teams.find((team) => team.teamId === teamId);
 
   useEffect(() => {
     if (!teamId) return;
 
     setUpdatedTeamName(team.name);
-  }, [localTeams, teamId, team]);
+  }, [teams, teamId, team]);
 
   const handleOnChange = (e) => {
     setUpdatedTeamName(e.target.value);
@@ -33,11 +36,12 @@ export const LocalTeamNameUpdateModal = ({ localTeams, teamId, onClose }) => {
       return;
     }
     setError("");
-    const updatedTeams = localTeams.map((team) =>
+    const updatedTeams = teams.map((team) =>
       team.teamId === teamId ? { ...team, name: updatedTeamName } : team,
     );
 
     localStorage.setItem("localTeams", JSON.stringify(updatedTeams));
+    dispatch(updateLocalTeamName({ teamId, name: updatedTeamName }));
     onClose();
   };
 

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { X } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { addLocalTeam } from "../../store/localTeamSlice";
 
 const teamNameSchema = z
   .string()
@@ -16,8 +18,9 @@ const teamNameSchema = z
     message: "Only letters, numbers and spaces are allowed",
   });
 
-export const AddLocalTeamModal = ({ localTeams, onClose }) => {
+export const AddLocalTeamModal = ({ teams, onClose }) => {
   const [teamName, setTeamName] = useState("");
+  const dispatch = useDispatch();
   const [error, setError] = useState("");
 
   const handleOnChange = (e) => {
@@ -44,7 +47,7 @@ export const AddLocalTeamModal = ({ localTeams, onClose }) => {
     const cleanedTeamName = result.data.trim();
 
     // Duplicate team name check
-    const teamAlreadyExists = localTeams.some(
+    const teamAlreadyExists = teams.some(
       (team) => team.name.toLowerCase() === cleanedTeamName.toLowerCase(),
     );
 
@@ -58,8 +61,8 @@ export const AddLocalTeamModal = ({ localTeams, onClose }) => {
       name: cleanedTeamName,
       players: [],
     };
-
-    const updatedTeam = [...localTeams, team];
+    dispatch(addLocalTeam(team));
+    const updatedTeam = [...teams, team];
 
     localStorage.setItem("localTeams", JSON.stringify(updatedTeam));
 

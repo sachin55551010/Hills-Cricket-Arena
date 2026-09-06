@@ -7,13 +7,16 @@ import { LocalTeamNameUpdateModal } from "../../components/modals/LocalTeamNameU
 import { LocalTeamDeleteModal } from "../../components/modals/LocalTeamDeleteModal";
 import { useNavigate } from "react-router-dom";
 import { AddLocalTeamModal } from "../../components/modals/AddLocalTeamModal";
+import { useSelector } from "react-redux";
 export const LocalTeamList = () => {
   const [openEditNameModal, setOpenEditNameModal] = useState(false);
   const [openDeleteTeamModal, setOpenDeleteTeamModal] = useState(false);
   const [teamId, setTeamId] = useState("");
+  const { teams } = useSelector((state) => state.localTeam);
+  console.log(teams);
 
   const [addTeam, setAddTeam] = useState(false);
-  const localTeams = JSON.parse(localStorage.getItem("localTeams")) || [];
+  // const teams = JSON.parse(localStorage.getItem("teams")) || [];
   const handleEditBtn = (e, teamId) => {
     e.stopPropagation();
     setOpenEditNameModal(true);
@@ -40,7 +43,7 @@ export const LocalTeamList = () => {
   return (
     <div className="flex justify-center h-dvh relative pt-12">
       <Header data="My Teams" />
-      {localTeams.length === 0 ? (
+      {teams.length === 0 ? (
         <div className="w-auto flex flex-col items-center justify-center">
           <NoDataFoundPage
             image={noData}
@@ -54,10 +57,10 @@ export const LocalTeamList = () => {
             <div className="mt-4 flex items-center gap-2">
               <h1 className="font-semibold">Total Teams</h1>
               <p className="font-bold">
-                {localTeams?.length >= 1 ? localTeams.length : 0}
+                {teams?.length >= 1 ? teams.length : 0}
               </p>
             </div>
-            {localTeams.map((team) => {
+            {teams.map((team) => {
               return (
                 <li
                   onClick={() => handleClickBtn(team)}
@@ -66,7 +69,7 @@ export const LocalTeamList = () => {
                 >
                   {/* team name and stats */}
                   <div>
-                    <h1>{team.name}</h1>
+                    <h1>{team?.name}</h1>
                     <div></div>
                   </div>
 
@@ -95,14 +98,14 @@ export const LocalTeamList = () => {
       )}
       {openEditNameModal && (
         <LocalTeamNameUpdateModal
-          localTeams={localTeams}
+          teams={teams}
           teamId={teamId}
           onClose={() => setOpenEditNameModal(false)}
         />
       )}
       {openDeleteTeamModal && (
         <LocalTeamDeleteModal
-          localTeams={localTeams}
+          teams={teams}
           teamId={teamId}
           onClose={() => setOpenDeleteTeamModal(false)}
         />
@@ -112,10 +115,7 @@ export const LocalTeamList = () => {
       </div>
 
       {addTeam && (
-        <AddLocalTeamModal
-          localTeams={localTeams}
-          onClose={() => setAddTeam(false)}
-        />
+        <AddLocalTeamModal teams={teams} onClose={() => setAddTeam(false)} />
       )}
     </div>
   );
