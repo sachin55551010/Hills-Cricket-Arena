@@ -14,13 +14,8 @@ export const store = configureStore({
     auth: authReducer,
     theme: themeReducer,
     score: slicerReducer,
-<<<<<<< HEAD
-    
-    
-=======
     localTeam: localTeamReducer,
 
->>>>>>> 60a0015 (added local team players slice in redux store)
     [authApi.reducerPath]: authApi.reducer,
     [tournamentApi.reducerPath]: tournamentApi.reducer,
     [teamApi.reducerPath]: teamApi.reducer,

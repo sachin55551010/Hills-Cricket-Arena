@@ -5,20 +5,15 @@ import { AdvanceOptionModal } from "../components/AdvanceOptionModal";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Users } from "lucide-react";
 import { useDispatch } from "react-redux";
-<<<<<<< HEAD
+
 import { setCurrentMatchData } from "../store/scoreSlice";
-=======
 import { setLocalTeams } from "../store/localTeamSlice";
->>>>>>> 60a0015 (added local team players slice in redux store)
 
 export const MatchSetupPage = () => {
   const matchId = nanoid();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-<<<<<<< HEAD
-=======
 
->>>>>>> 60a0015 (added local team players slice in redux store)
   const localTeams = JSON.parse(localStorage.getItem("localTeams")) || [];
 
   const [isOpen, setIsOpen] = useState(false);
@@ -342,11 +337,11 @@ export const MatchSetupPage = () => {
     // SAVE CURRENT MATCH
 
     localStorage.setItem("currentMatch", JSON.stringify(matchData));
-<<<<<<< HEAD
+
     dispatch(setCurrentMatchData(matchData));
-=======
+
     dispatch(setLocalTeams(updatedTeams));
->>>>>>> 60a0015 (added local team players slice in redux store)
+
     setErrors({});
 
     navigate("/local-match/players");
