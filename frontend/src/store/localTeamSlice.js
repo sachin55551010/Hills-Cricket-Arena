@@ -16,7 +16,6 @@ const persistTeams = (teams) => {
 
 const localTeamSlice = createSlice({
   name: "local_team",
-
   initialState: {
     teams: initialTeams,
     players: [],
@@ -43,14 +42,51 @@ const localTeamSlice = createSlice({
     },
 
     deleteLocalTeam: (state, action) => {
-      
-      console.log("action payload", action);
-      
-      
       state.teams = state.teams.filter(
-        (team) => team.teamId !== action.payload
+        (team) => team.teamId !== action.payload,
       );
       persistTeams(state.teams);
+    },
+    addPlayerToTeam: (state, action) => {
+      const { teamId, player } = action.payload;
+
+      const team = state.teams.find((t) => t.teamId === teamId);
+
+      if (team) {
+        team.players ??= [];
+        team.players.push(player);
+        persistTeams(state.teams);
+      }
+    },
+    updatePlayerInTeam: (state, action) => {
+      const { teamId, playerId, name } = action.payload;
+
+      const team = state.teams.find((team) => team.teamId === teamId);
+
+      if (team?.players) {
+        const player = team.players.find(
+          (player) => player.playerId === playerId,
+        );
+
+        if (player) {
+          player.name = name;
+          persistTeams(state.teams);
+        }
+      }
+    },
+
+    deletePlayerFromTeam: (state, action) => {
+      const { teamId, playerId } = action.payload;
+
+      const team = state.teams.find((team) => team.teamId === teamId);
+
+      if (team?.players) {
+        team.players = team.players.filter(
+          (player) => player.playerId !== playerId,
+        );
+
+        persistTeams(state.teams);
+      }
     },
   },
 });
@@ -60,6 +96,9 @@ export const {
   addLocalTeam,
   updateLocalTeamName,
   deleteLocalTeam,
+  addPlayerToTeam,
+  updatePlayerInTeam,
+  deletePlayerFromTeam,
 } = localTeamSlice.actions;
 
 export default localTeamSlice.reducer;

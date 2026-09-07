@@ -13,7 +13,7 @@ export const LocalTeamList = () => {
   const [openDeleteTeamModal, setOpenDeleteTeamModal] = useState(false);
   const [teamId, setTeamId] = useState("");
   const { teams } = useSelector((state) => state.localTeam);
-  console.log(teams);
+  console.log("local teams", teams[0].players);
 
   const [addTeam, setAddTeam] = useState(false);
   // const teams = JSON.parse(localStorage.getItem("teams")) || [];
