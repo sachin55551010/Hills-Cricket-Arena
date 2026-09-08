@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   ArrowLeft,
   UserRound,
@@ -28,7 +28,9 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
   const [selectedWicketType, setSelectedWicketType] = useState("Bowled");
 
   const [playerOut, setPlayerOut] = useState(
-    currentMatchData?.currentPlayers?.striker?.id || "",
+    currentMatchData?.currentPlayers?.striker?.id ??
+      currentMatchData?.currentPlayers?.striker?.playerId ??
+      "",
   );
 
   const [fielder, setFielder] = useState("");
@@ -73,55 +75,39 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
    * - Current striker and non-striker are disabled/excluded.
    * - If no matching player exists, the entered name can be saved as a new player.
    */
-  const availableBatsmen = useMemo(() => {
-    const strikerId = getPlayerId(striker);
-    const nonStrikerId = getPlayerId(nonStriker);
+  const strikerId = getPlayerId(striker);
+  const nonStrikerId = getPlayerId(nonStriker);
+  const availableBatsmen = battingTeamPlayer.filter((player) => {
+    const playerId = getPlayerId(player);
 
-    return battingTeamPlayer.filter((player) => {
-      const id = getPlayerId(player);
-      return id !== strikerId && id !== nonStrikerId;
-    });
-  }, [battingTeamPlayer, striker, nonStriker]);
+    return playerId !== strikerId && playerId !== nonStrikerId;
+  });
 
-  const filteredBatsmen = useMemo(() => {
-    const search = newBatsman.trim().toLowerCase();
+  const batsmanSearch = newBatsman.trim().toLowerCase();
 
-    if (!search) return [];
+  const filteredBatsmen = batsmanSearch
+    ? availableBatsmen.filter((player) =>
+        player?.name?.toLowerCase().includes(batsmanSearch),
+      )
+    : [];
 
-    return availableBatsmen.filter((player) =>
-      player?.name?.toLowerCase().includes(search),
-    );
-  }, [availableBatsmen, newBatsman]);
+  const bowlerId = getPlayerId(bowler);
 
-  /*
-   * Caught / Run Out:
-   * Fielder must be from the bowling team.
-   *
-   * Stumped:
-   * Fielder must be from the bowling team, except the bowler delivering
-   * the current ball.
-   */
-  const bowlingFielders = useMemo(() => {
-    const bowlerId = getPlayerId(bowler);
+  const bowlingFielders = bowlingTeamPlayer.filter((player) => {
+    if (selectedWicketType === "Stumped") {
+      return getPlayerId(player) !== bowlerId;
+    }
 
-    return bowlingTeamPlayer.filter((player) => {
-      if (selectedWicketType === "Stumped") {
-        return getPlayerId(player) !== bowlerId;
-      }
+    return true;
+  });
 
-      return true;
-    });
-  }, [bowlingTeamPlayer, bowler, selectedWicketType]);
+  const fielderSearch = fielder.trim().toLowerCase();
 
-  const filteredFielders = useMemo(() => {
-    const search = fielder.trim().toLowerCase();
-
-    if (!search) return [];
-
-    return bowlingFielders.filter((player) =>
-      player?.name?.toLowerCase().includes(search),
-    );
-  }, [bowlingFielders, fielder]);
+  const filteredFielders = fielderSearch
+    ? bowlingFielders.filter((player) =>
+        player?.name?.toLowerCase().includes(fielderSearch),
+      )
+    : [];
 
   /*
    * Select an existing player from a suggestion list.
@@ -307,8 +293,11 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
      * For run out, the user can choose which current batsman got out.
      */
     const selectedPlayerOut =
-      battingTeamPlayer.find((player) => getPlayerId(player) === playerOut) ||
-      (getPlayerId(striker) === playerOut ? striker : nonStriker);
+      getPlayerId(striker) === playerOut
+        ? striker
+        : getPlayerId(nonStriker) === playerOut
+          ? nonStriker
+          : null;
 
     if (!selectedPlayerOut) {
       setNameError("Please select which batsman got out");

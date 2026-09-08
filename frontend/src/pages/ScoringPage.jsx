@@ -7,7 +7,7 @@ import { MoreOptionScoringModal } from "../components/modals/MoreOptionScoringMo
 import { AddNewBowlerModal } from "../components/modals/AddNewBowlerModal";
 
 import { useDispatch, useSelector } from "react-redux";
-import { addRuns } from "../store/scoreSlice";
+import { recordDelivery } from "../store/scoreSlice";
 export const ScoringPage = () => {
   const { currentMatchData } = useSelector((state) => state.score);
   // console.log("current match data", currentMatchData);
@@ -36,7 +36,7 @@ export const ScoringPage = () => {
   const [openAddBowlerModal, setOpenAddBowlerModal] = useState(false);
   const [openMoreMotionModal, setOpenMoreOptionModal] = useState(false);
 
-  console.log("currentMatchData", currentMatchData);
+  // console.log("currentMatchData", currentMatchData);
 
   const dispatch = useDispatch();
   const currentInningNumber = Number(currentMatchData?.currentInning);
@@ -59,7 +59,7 @@ export const ScoringPage = () => {
 
   const onConfirm = (data) => {
     console.log("Data", data);
-    dispatch(addRuns(data));
+    dispatch(recordDelivery(data));
   };
 
   const handleScoreBtnClick = (val) => {
@@ -83,7 +83,7 @@ export const ScoringPage = () => {
     }
 
     // Normal runs
-    dispatch(addRuns(val));
+    dispatch(recordDelivery(val));
   };
   // console.log(currentMatchData);
 
@@ -374,7 +374,7 @@ export const ScoringPage = () => {
         <AddNewBowlerModal
           onClose={() => {
             setOpenAddBowlerModal(false);
-            dispatch(addRuns("UNDO"));
+            dispatch(recordDelivery("UNDO"));
           }}
           updateNewbowler={updateNewBolwer}
         />
