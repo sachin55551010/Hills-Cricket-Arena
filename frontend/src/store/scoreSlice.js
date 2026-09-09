@@ -64,7 +64,8 @@ const addRuns = (state, runs) => {
 
   // bowler stats update
   bowler.balls += 1;
-  bowler.runs += runs; // add only once
+  bowler.runs += runs;
+  bowler.economy = bowler.balls > 0 ? (bowler.runs / bowler.balls) * 6 : 0;
 };
 // Slice
 const scoreSlice = createSlice({
