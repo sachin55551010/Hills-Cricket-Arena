@@ -14,7 +14,6 @@ const swapStriker = (state) => {
 // Save current state to history
 const saveHistory = (state) => {
   const snapshot = JSON.parse(JSON.stringify(state.currentMatchData));
-  console.log("state history", state.matchHistory.length);
 
   state.matchHistory.push(snapshot);
 };
@@ -52,9 +51,20 @@ const addRuns = (state, runs) => {
 
   if (!striker || !bowler || !inning) return;
 
-  striker.runs += runs;
-  bowler.runs += runs; // add only once
   inning.runs += runs;
+  inning.legalBalls += 1;
+
+  // batsman stats update
+  striker.runs += runs;
+  striker.balls += 1;
+  striker.fours += runs === 4 ? 1 : 0;
+  striker.sixes += runs === 6 ? 1 : 0;
+  striker.strikeRate =
+    striker.balls > 0 ? (striker.runs / striker.balls) * 100 : 0;
+
+  // bowler stats update
+  bowler.balls += 1;
+  bowler.runs += runs; // add only once
 };
 // Slice
 const scoreSlice = createSlice({
@@ -91,6 +101,9 @@ const scoreSlice = createSlice({
       if (isRuns) {
         const numRuns = Number(payload) || 0;
         addRuns(state, numRuns);
+      }
+      if (["1", "3", "5"].includes(payload)) {
+        swapStriker(state);
       }
     },
   },

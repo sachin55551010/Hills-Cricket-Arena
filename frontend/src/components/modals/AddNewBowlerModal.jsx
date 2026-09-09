@@ -1,13 +1,7 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import { ArrowLeft, Check, Plus, Search, UserRound, X } from "lucide-react";
-
-const bowlers = [
-  { id: 1, name: "Jasprit Bumrah", team: "India" },
-  { id: 2, name: "Mohammed Shami", team: "India" },
-  { id: 3, name: "Kuldeep Yadav", team: "India" },
-  { id: 4, name: "Ravindra Jadeja", team: "India" },
-];
+import { ArrowLeft, Plus, Search, X } from "lucide-react";
+import { nanoid } from "zod";
 
 export const AddNewBowlerModal = ({ onClose, updateNewBowler }) => {
   const [showAddBowler, setShowAddBowler] = useState(false);
@@ -15,12 +9,64 @@ export const AddNewBowlerModal = ({ onClose, updateNewBowler }) => {
   const [search, setSearch] = useState("");
   const [newBowlerName, setNewBowlerName] = useState("");
 
-  const filteredBowlers = bowlers.filter((bowler) =>
-    bowler.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const { teams } = useSelector((state) => state.localTeam);
+
   const { currentMatchData } = useSelector((state) => state.score);
+
+  const bowlingTeamId =
+    currentMatchData?.innings[currentMatchData.currentInning - 1].bowlingTeamId;
+
+  const bowlingTeam = teams.find((team) => team.teamId === bowlingTeamId);
+  const bowlingTeamPlayers = bowlingTeam.players;
+  const filteredBowlersList = bowlingTeamPlayers.filter((player) =>
+    player.name.toLowerCase().includes(search.toLowerCase()),
+  );
+
   console.log(currentMatchData);
-  console.log(updateNewBowler);
+
+  const lastbowler = currentMatchData?.currentPlayers?.bowler;
+
+  // create new player
+  const createPlayer = (name) => {
+    return {
+      playerId: nanoid(),
+      name: name.trim(),
+      matches: 0,
+
+      battingStats: {
+        innings: 0,
+        notOut: 0,
+        runs: 0,
+        balls: 0,
+        bestScore: 0,
+        average: 0,
+        strikeRate: 0,
+        thirties: 0,
+        fifties: 0,
+        hundreds: 0,
+        ducks: 0,
+        fours: 0,
+        sixes: 0,
+      },
+
+      bowlingStats: {
+        innings: 0,
+        balls: 0,
+        runs: 0,
+        wickets: 0,
+        bestBowling: "0/0",
+        average: 0,
+        economy: 0,
+        strikeRate: 0,
+        maidens: 0,
+        threeWickets: 0,
+        fiveWickets: 0,
+        wides: 0,
+        noBalls: 0,
+        dotBalls: 0,
+      },
+    };
+  };
 
   const handleAddBowler = () => {
     if (!newBowlerName.trim()) return;
@@ -31,7 +77,12 @@ export const AddNewBowlerModal = ({ onClose, updateNewBowler }) => {
     setShowAddBowler(false);
   };
 
-  // function selectPlayer() {}
+  const hanleClickPlayerBtn = (player) => {
+    console.log(player);
+    if (!player) {
+      createPlayer(search);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
@@ -63,70 +114,37 @@ export const AddNewBowlerModal = ({ onClose, updateNewBowler }) => {
               className="grow text-sm"
             />
           </label>
-        </div>
 
-        {/* Bowler List */}
-        <div className="max-h-[380px] space-y-2 overflow-y-auto px-5 py-4">
-          {filteredBowlers.length > 0 ? (
-            filteredBowlers.map((bowler) => {
-              const isSelected = selectedBowler?.id === bowler.id;
+          {search && (
+            <ul className="flex flex-col gap-2 mt-2">
+              {filteredBowlersList.map((player) => {
+                const isLastBowler = player.playerId === lastbowler?.playerId;
 
-              return (
-                <button
-                  key={bowler.id}
-                  onClick={() => setSelectedBowler(bowler)}
-                  className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-all ${
-                    isSelected
-                      ? "border-info bg-info/10"
-                      : "border-base-200 hover:border-base-300 hover:bg-base-200/50"
-                  }`}
-                >
-                  {/* Avatar */}
-                  <div
-                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${
-                      isSelected
-                        ? "bg-info text-info-content"
-                        : "bg-base-200 text-base-content/50"
-                    }`}
+                return (
+                  <li
+                    key={player.playerId}
+                    onClick={() => {
+                      if (!isLastBowler) {
+                        hanleClickPlayerBtn(player);
+                      }
+                    }}
+                    className={
+                      isLastBowler
+                        ? "text-base-content/20 cursor-not-allowed"
+                        : "cursor-pointer"
+                    }
                   >
-                    <UserRound size={20} />
-                  </div>
+                    {player.name}
+                  </li>
+                );
+              })}
 
-                  {/* Details */}
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">
-                      {bowler.name}
-                    </p>
-
-                    <p className="text-xs text-base-content/50">
-                      {bowler.team}
-                    </p>
-                  </div>
-
-                  {/* Selected */}
-                  <div
-                    className={`flex h-6 w-6 items-center justify-center rounded-full border ${
-                      isSelected
-                        ? "border-info bg-info text-info-content"
-                        : "border-base-300"
-                    }`}
-                  >
-                    {isSelected && <Check size={14} strokeWidth={3} />}
-                  </div>
-                </button>
-              );
-            })
-          ) : (
-            <div className="flex flex-col items-center justify-center py-10 text-center">
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-base-200">
-                <UserRound size={20} className="text-base-content/40" />
-              </div>
-
-              <p className="text-sm font-medium">No bowler found</p>
-              <p className="mt-1 text-xs text-base-content/50">
-                Try searching another name
-              </p>
-            </div>
+              {filteredBowlersList.length === 0 && (
+                <div className="mt-2">
+                  No player found. This name will be added as a new player.
+                </div>
+              )}
+            </ul>
           )}
         </div>
 
@@ -145,13 +163,16 @@ export const AddNewBowlerModal = ({ onClose, updateNewBowler }) => {
             </button>
 
             {/* Add New */}
-            <button
-              onClick={() => setShowAddBowler(true)}
-              className="btn btn-info flex-1 rounded-xl"
-            >
-              <Plus size={18} />
-              Add New Bowler
-            </button>
+
+            {filteredBowlersList.length === 0 && search && (
+              <button
+                onClick={() => setShowAddBowler(true)}
+                className="btn btn-info flex-1 rounded-xl"
+              >
+                <Plus size={18} />
+                Add New Bowler
+              </button>
+            )}
           </div>
 
           {/* Continue */}
@@ -167,71 +188,6 @@ export const AddNewBowlerModal = ({ onClose, updateNewBowler }) => {
           )}
         </div>
       </div>
-
-      {/* Add New Bowler Popup */}
-
-      {showAddBowler && (
-        <div className="fixed inset-0 z-[1000000] flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]">
-          <div className="w-full max-w-sm rounded-3xl bg-base-100 p-5 shadow-2xl">
-            {/* Popup Header */}
-            <div className="mb-5 flex items-center gap-3">
-              <button
-                onClick={() => setShowAddBowler(false)}
-                className="btn btn-circle btn-ghost btn-sm"
-              >
-                <ArrowLeft size={18} />
-              </button>
-
-              <div>
-                <h3 className="font-semibold">Add New Bowler</h3>
-                <p className="text-xs text-base-content/50">
-                  Add a player to the bowling lineup
-                </p>
-              </div>
-            </div>
-
-            {/* Input */}
-            <div>
-              <label className="mb-2 block text-xs font-medium text-base-content/60">
-                Bowler name
-              </label>
-
-              <input
-                autoFocus
-                type="text"
-                value={newBowlerName}
-                onChange={(e) => setNewBowlerName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleAddBowler();
-                  }
-                }}
-                placeholder="Enter player name"
-                className="input input-bordered w-full rounded-xl"
-              />
-            </div>
-
-            {/* Actions */}
-            <div className="mt-5 flex gap-2">
-              <button
-                onClick={() => setShowAddBowler(false)}
-                className="btn btn-ghost flex-1 rounded-xl"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleAddBowler}
-                disabled={!newBowlerName.trim()}
-                className="btn btn-info flex-1 rounded-xl"
-              >
-                <Plus size={17} />
-                Add Bowler
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
