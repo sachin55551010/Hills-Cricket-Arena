@@ -409,6 +409,7 @@ export const PlayerSetupPage = () => {
             {
               over: 1,
               bowlerId: bowler.playerId,
+              batsmanId: striker.playerId,
               balls: [],
               runs: 0,
               legalBalls: 0,

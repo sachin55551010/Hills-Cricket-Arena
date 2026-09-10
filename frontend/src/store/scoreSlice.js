@@ -82,8 +82,6 @@ const addWideBallRunData = (state, data) => {
 };
 // add no ball runs
 const addNoBallRunData = (state, data) => {
-  console.log(data);
-
   const match = state.currentMatchData;
   const inningIndex = match?.currentInning - 1;
   const inning = match?.innings?.[inningIndex];
@@ -144,13 +142,65 @@ const addNoBallRunData = (state, data) => {
       console.warn("Invalid no-ball run type:", data.type);
   }
 };
-// add no lb runs
+
+// Add leg-bye runs
 const addLBRunData = (state, data) => {
-  console.log(data);
+  const match = state.currentMatchData;
+
+  const inningIndex = match?.currentInning - 1;
+  const inning = match?.innings?.[inningIndex];
+
+  const bowler = match?.currentPlayers?.bowler?.bowlingStats;
+
+  if (!inning || !bowler) {
+    console.warn("Invalid inning or bowler data");
+    return;
+  }
+
+  const runs = data?.runs || 1;
+
+  // 1. Add leg-bye runs to main innings score
+  inning.runs += runs;
+  inning.legalBalls += 1;
+  // 2. Add leg-bye runs to extras
+  inning.extras.legBye += runs;
+
+  bowler.balls += 1;
+
+  // 4. Change strike for 1 or 3 leg-bye runs
+  if (runs === 1 || runs === 3) {
+    swapStriker(state);
+  }
 };
+
 // add bye runs
 const addByeRunData = (state, data) => {
-  console.log(data);
+  const match = state.currentMatchData;
+
+  const inningIndex = match?.currentInning - 1;
+  const inning = match?.innings?.[inningIndex];
+
+  const bowler = match?.currentPlayers?.bowler?.bowlingStats;
+
+  if (!inning || !bowler) {
+    console.warn("Invalid inning or bowler data");
+    return;
+  }
+
+  const runs = data?.runs || 1;
+
+  // 1. Add leg-bye runs to main innings score
+  inning.runs += runs;
+  inning.legalBalls += 1;
+  // 2. Add leg-bye runs to extras
+  inning.extras.byes += runs;
+
+  bowler.balls += 1;
+
+  // 4. Change strike for 1 or 3 leg-bye runs
+  if (runs === 1 || runs === 3) {
+    swapStriker(state);
+  }
 };
 // Slice
 const scoreSlice = createSlice({
