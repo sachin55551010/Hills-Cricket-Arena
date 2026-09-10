@@ -39,16 +39,14 @@ try {
   console.error("Invalid currentMatchData in localStorage:", error);
 }
 
-// function to add runs
+// function to add legal runs
 const addRuns = (state, runs) => {
   console.log(currentMatchData);
-
   const match = state.currentMatchData;
   const striker = match?.currentPlayers?.striker.battingStats;
   const bowler = match?.currentPlayers?.bowler.bowlingStats;
   const inningIndex = match?.currentInning - 1;
   const inning = match?.innings?.[inningIndex];
-
   if (!striker || !bowler || !inning) return;
 
   inning.runs += runs;
@@ -67,6 +65,93 @@ const addRuns = (state, runs) => {
   bowler.runs += runs;
   bowler.economy = bowler.balls > 0 ? (bowler.runs / bowler.balls) * 6 : 0;
 };
+
+// add wide runs
+const addWideBallRunData = (state, data) => {
+  const match = state.currentMatchData;
+  const inningIndex = match?.currentInning - 1;
+  const inning = match?.innings?.[inningIndex];
+  const bowler = match?.currentPlayers?.bowler.bowlingStats;
+  inning.runs += match.wideBallRun + data.runs;
+  inning.extras.wideBallRun += match.wideBallRun;
+  bowler.runs += match.wideBallRun + data.runs;
+  // Change strike for 1 or 3 bat runs
+  if (data.runs === 1 || data.runs === 3) {
+    swapStriker(state);
+  }
+};
+// add no ball runs
+const addNoBallRunData = (state, data) => {
+  console.log(data);
+
+  const match = state.currentMatchData;
+  const inningIndex = match?.currentInning - 1;
+  const inning = match?.innings?.[inningIndex];
+  const striker = match?.currentPlayers?.striker?.battingStats;
+  const bowler = match?.currentPlayers?.bowler?.bowlingStats;
+  // 1 run penalty for every no-ball
+  const noBallRun = match?.noBallRun;
+
+  // Add total runs to innings
+  inning.runs += noBallRun + data.runs;
+
+  // Add no-ball penalty to extras
+  inning.extras.noBallRun += noBallRun;
+
+  // Bowler is charged with no-ball + BAT runs
+  // BYE and LB are not charged to bowler
+  bowler.runs += noBallRun;
+
+  switch (data.runType) {
+    case "BAT":
+      // Runs scored by the batsman
+      console.log(striker.runs);
+      striker.runs += data.runs;
+      striker.fours += data.runs === 4 ? 1 : 0;
+      striker.sixes += data.runs === 6 ? 1 : 0;
+      striker.strikeRate =
+        striker.balls > 0 ? (striker.runs / striker.balls) * 100 : 0;
+
+      // Bat runs are charged to bowler
+      bowler.runs += data.runs;
+      // Change strike for 1 or 3 bat runs
+      if (data.runs === 1 || data.runs === 3) {
+        swapStriker(state);
+      }
+      break;
+
+    case "BYE":
+      // Bye runs
+      inning.extras.bye += data.runs;
+      bowler.runs += data.runs;
+      // Change strike for 1 or 3 bat runs
+      if (data.runs === 1 || data.runs === 3) {
+        swapStriker(state);
+      }
+      break;
+
+    case "LB":
+      // Leg-bye runs
+      inning.extras.legBye += data.runs;
+      bowler.runs += data.runs;
+      // Change strike for 1 or 3 bat runs
+      if (data.runs === 1 || data.runs === 3) {
+        swapStriker(state);
+      }
+      break;
+
+    default:
+      console.warn("Invalid no-ball run type:", data.type);
+  }
+};
+// add no lb runs
+const addLBRunData = (state, data) => {
+  console.log(data);
+};
+// add bye runs
+const addByeRunData = (state, data) => {
+  console.log(data);
+};
 // Slice
 const scoreSlice = createSlice({
   name: "score_slice",
@@ -83,16 +168,16 @@ const scoreSlice = createSlice({
     recordDelivery: (state, action) => {
       const payload = action.payload;
 
-      const isRuns = ["0", "1", "2", "3", "4", "5", "6"].includes(payload);
-
+      // Undo should NEVER save a new history entry
       if (payload === "UNDO") {
         undoMatch(state);
         return;
       }
 
-      if (payload === "SWAP" || isRuns) {
-        saveHistory(state); // snapshot BEFORE the action
-      }
+      // Save the state BEFORE making any changes
+      saveHistory(state);
+
+      const isRuns = ["0", "1", "2", "3", "4", "5", "6"].includes(payload);
 
       if (payload === "SWAP") {
         swapStriker(state);
@@ -101,10 +186,35 @@ const scoreSlice = createSlice({
 
       if (isRuns) {
         const numRuns = Number(payload) || 0;
+
         addRuns(state, numRuns);
+
+        // Change strike for 1, 3, 5
+        if (["1", "3", "5"].includes(payload)) {
+          swapStriker(state);
+        }
+
+        return;
       }
-      if (["1", "3", "5"].includes(payload)) {
-        swapStriker(state);
+
+      if (payload?.type === "WD") {
+        addWideBallRunData(state, payload);
+        return;
+      }
+
+      if (payload?.type === "NB") {
+        addNoBallRunData(state, payload);
+        return;
+      }
+
+      if (payload?.type === "LB") {
+        addLBRunData(state, payload);
+        return;
+      }
+
+      if (payload?.type === "BYE") {
+        addByeRunData(state, payload);
+        return;
       }
     },
   },

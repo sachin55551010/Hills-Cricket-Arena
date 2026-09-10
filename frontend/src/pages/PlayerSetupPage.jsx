@@ -405,7 +405,15 @@ export const PlayerSetupPage = () => {
             overthrow: 0,
           },
           outPlayers: [],
-          perBallStat: [],
+          overHistory: [
+            {
+              over: 1,
+              bowlerId: bowler.playerId,
+              balls: [],
+              runs: 0,
+              legalBalls: 0,
+            },
+          ],
         },
       ],
 

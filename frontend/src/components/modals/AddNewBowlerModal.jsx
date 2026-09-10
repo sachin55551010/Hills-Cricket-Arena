@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import { ArrowLeft, Plus, Search, X } from "lucide-react";
-import { nanoid } from "zod";
+import { Plus, Search, X } from "lucide-react";
+import { nanoid } from "nanoid";
+import { addPlayerToTeam } from "../../store/localTeamSlice";
 
-export const AddNewBowlerModal = ({ onClose, updateNewBowler }) => {
-  const [showAddBowler, setShowAddBowler] = useState(false);
+export const AddNewBowlerModal = ({ onClose }) => {
   const [selectedBowler, setSelectedBowler] = useState(null);
   const [search, setSearch] = useState("");
   const [newBowlerName, setNewBowlerName] = useState("");
@@ -70,11 +70,14 @@ export const AddNewBowlerModal = ({ onClose, updateNewBowler }) => {
 
   const handleAddBowler = () => {
     if (!newBowlerName.trim()) return;
-
+    setNewBowlerName(search.trim());
     console.log("New bowler:", newBowlerName);
-
+    addPlayerToTeam({
+      teamId: bowlingTeamId,
+      player: createPlayer(newBowlerName),
+    });
     setNewBowlerName("");
-    setShowAddBowler(false);
+    // setShowAddBowler(false);
   };
 
   const hanleClickPlayerBtn = (player) => {
@@ -166,7 +169,7 @@ export const AddNewBowlerModal = ({ onClose, updateNewBowler }) => {
 
             {filteredBowlersList.length === 0 && search && (
               <button
-                onClick={() => setShowAddBowler(true)}
+                onClick={handleAddBowler}
                 className="btn btn-info flex-1 rounded-xl"
               >
                 <Plus size={18} />

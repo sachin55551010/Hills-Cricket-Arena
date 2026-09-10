@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { OutModal } from "../components/modals/OutModal";
 import { MoreOptionScoringModal } from "../components/modals/MoreOptionScoringModal";
 import { AddNewBowlerModal } from "../components/modals/AddNewBowlerModal";
-
 import { useDispatch, useSelector } from "react-redux";
 import { recordDelivery } from "../store/scoreSlice";
 export const ScoringPage = () => {
@@ -56,9 +55,9 @@ export const ScoringPage = () => {
     currentMatchData?.currentPlayers?.nonStriker?.battingStats?.strikeRate;
   const battingTeamName =
     currentMatchData?.innings[currentInningNumber - 1].battingTeam;
-
+  console.log(currentMatchData);
   const onConfirm = (data) => {
-    console.log("Data", data);
+    // console.log("Data", data);
     dispatch(recordDelivery(data));
   };
 
@@ -93,10 +92,6 @@ export const ScoringPage = () => {
       return;
     }
   }, [legalBalls]);
-
-  function updateNewBolwer(name) {
-    console.log(name);
-  }
 
   const navigate = useNavigate();
 
@@ -376,7 +371,6 @@ export const ScoringPage = () => {
             setOpenAddBowlerModal(false);
             dispatch(recordDelivery("UNDO"));
           }}
-          updateNewbowler={updateNewBolwer}
         />
       )}
     </div>
