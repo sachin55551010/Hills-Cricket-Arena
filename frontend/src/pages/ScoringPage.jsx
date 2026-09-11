@@ -36,12 +36,11 @@ export const ScoringPage = () => {
   const legalBalls = currentInning?.legalBalls ?? 0;
   const fallOfWickets = currentInning?.wickets ?? 0;
   const totalOvers = currentMatchData?.totalOvers ?? currentMatchData?.overs ?? 0;
-  const maxWickets = currentMatchData?.maxWickets ??
-    (currentInningNumber === 1
-      ? Math.max((currentInning?.battingTeamId === currentMatchData?.firstTeam?.teamId
-          ? (currentMatchData?.firstTeamTotalPlayer ?? currentMatchData?.firstTeam?.players?.length ?? 11)
-          : (currentMatchData?.secondTeamTotalPlayer ?? currentMatchData?.secondTeam?.players?.length ?? 11)) - 1, 1)
-      : 10);
+  const battingSquadSize =
+    currentInning?.battingTeamId === currentMatchData?.firstTeam?.teamId
+      ? (currentMatchData?.firstTeamTotalPlayer ?? currentMatchData?.firstTeam?.players?.length ?? 11)
+      : (currentMatchData?.secondTeamTotalPlayer ?? currentMatchData?.secondTeam?.players?.length ?? 11);
+  const maxWickets = Math.max(Number(battingSquadSize) - 1, 1);
 
   const currentRunRate = legalBalls > 0 ? ((teamScore * 6) / legalBalls).toFixed(1) : "0.0";
   const bowlerEconomy = currentMatchData?.currentPlayers?.bowler?.bowlingStats?.economy;

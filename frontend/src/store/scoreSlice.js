@@ -46,6 +46,15 @@ const recordBallInOver = (state, ballData) => {
   }
 };
 
+// Max wickets = configured squad size - 1, not how many players were added
+const getMaxWicketsForBattingTeam = (match, battingTeamId) => {
+  const isFirstTeam = match?.firstTeam?.teamId === battingTeamId;
+  const squadSize = isFirstTeam
+    ? (match?.firstTeamTotalPlayer ?? match?.firstTeam?.players?.length ?? 11)
+    : (match?.secondTeamTotalPlayer ?? match?.secondTeam?.players?.length ?? 11);
+  return Math.max(Number(squadSize) - 1, 1);
+};
+
 // Check if inning 2 target is chased or match is over
 const checkMatchEnd = (state) => {
   const match = state.currentMatchData;
@@ -58,7 +67,7 @@ const checkMatchEnd = (state) => {
   if (target === undefined || target === null) return;
 
   const totalOvers = match?.totalOvers ?? match?.overs ?? 0;
-  const maxWickets = match?.maxWickets || 10;
+  const maxWickets = getMaxWicketsForBattingTeam(match, inning2.battingTeamId);
   const runs2 = inning2.runs;
   const wickets2 = inning2.wickets;
   const legalBalls2 = inning2.legalBalls;
@@ -728,11 +737,8 @@ const scoreSlice = createSlice({
       // Set players: opening batsmen from the new batting team, new bowler
       match.currentPlayers = { striker, nonStriker, bowler };
 
-      // maxWickets = team size - 1 (10 for 11-a-side)
-      const battingTeam = match.firstTeam?.teamId === newBattingTeamId
-        ? match.firstTeam
-        : match.secondTeam;
-      match.maxWickets = Math.max((battingTeam?.players?.length || 11) - 1, 1);
+      // maxWickets = configured squad size - 1 (not players added to the team)
+      match.maxWickets = getMaxWicketsForBattingTeam(match, newBattingTeamId);
 
       match.matchStatus = "second_inning";
     },
