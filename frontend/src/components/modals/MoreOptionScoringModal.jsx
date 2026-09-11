@@ -201,6 +201,8 @@ export const MoreOptionScoringModal = ({ onClose }) => {
             {filteredPlayers.map((player) => {
               const pid = getPlayerId(player);
               const isSelected = selectedNewPlayer && getPlayerId(selectedNewPlayer) === pid;
+              const runs = player?.battingStats?.runs ?? 0;
+              const balls = player?.battingStats?.balls ?? 0;
 
               return (
                 <li
@@ -214,11 +216,18 @@ export const MoreOptionScoringModal = ({ onClose }) => {
                 >
                   <div className="flex items-center justify-between">
                     <span>{player.name}</span>
-                    {player.isRetiredHurt && (
-                      <span className="text-xs text-warning bg-warning/10 px-2 py-0.5 rounded-full">
-                        Retired Hurt
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {player.isRetiredHurt && (
+                        <span className="text-xs text-warning bg-warning/10 px-2 py-0.5 rounded-full">
+                          Retired Hurt · {runs}({balls})
+                        </span>
+                      )}
+                      {!player.isRetiredHurt && (runs > 0 || balls > 0) && (
+                        <span className="text-xs text-base-content/50">
+                          {runs}({balls})
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </li>
               );

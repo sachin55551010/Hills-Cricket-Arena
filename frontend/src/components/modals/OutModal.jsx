@@ -114,21 +114,32 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
     (p) => p.playerId || p.id || "",
   );
 
+  // Retired hurt players can come back after a wicket
+  const retiredHurtPlayers = (currentInning?.retiredHurtPlayers || []).map((p) => ({
+    ...p,
+    playerId: p.playerId || p.id,
+    isRetiredHurt: true,
+  }));
+  const retiredHurtIds = retiredHurtPlayers.map((p) => p.playerId || p.id || "");
+
   const availableBatsmen = battingTeamPlayer.filter((player) => {
     const playerId = getPlayerId(player);
-
-    // Exclude current striker, non-striker, and already dismissed players
+    // Exclude current striker, non-striker, already dismissed players, and retired hurt (added separately)
     return (
       playerId !== strikerId &&
       playerId !== nonStrikerId &&
-      !outPlayerIds.includes(playerId)
+      !outPlayerIds.includes(playerId) &&
+      !retiredHurtIds.includes(playerId)
     );
   });
+
+  // Retired hurt players first so they appear at the top
+  const allAvailableBatsmen = [...retiredHurtPlayers, ...availableBatsmen];
 
   const batsmanSearch = newBatsman.trim().toLowerCase();
 
   const filteredBatsmen = batsmanSearch
-    ? availableBatsmen.filter((player) =>
+    ? allAvailableBatsmen.filter((player) =>
         player?.name?.toLowerCase().includes(batsmanSearch),
       )
     : [];
@@ -188,7 +199,7 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
      * Validate the name only when the user is creating a new player.
      * An existing suggested player is already valid.
      */
-    const existingPlayer = availableBatsmen.find(
+    const existingPlayer = allAvailableBatsmen.find(
       (player) =>
         player?.name?.trim().toLowerCase() === trimmedName.toLowerCase(),
     );
@@ -196,44 +207,8 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
     let newPlayer;
 
     if (existingPlayer) {
-      newPlayer = {
-        playerId: getPlayerId(existingPlayer),
-        name: existingPlayer.name,
-        matches: 0,
-
-        battingStats: {
-          innings: 0,
-          notOut: 0,
-          runs: 0,
-          balls: 0,
-          bestScore: 0,
-          average: 0,
-          strikeRate: 0,
-          thirties: 0,
-          fifties: 0,
-          hundreds: 0,
-          ducks: 0,
-          fours: 0,
-          sixes: 0,
-        },
-
-        bowlingStats: {
-          innings: 0,
-          balls: 0,
-          runs: 0,
-          wickets: 0,
-          bestBowling: "0/0",
-          average: 0,
-          economy: 0,
-          strikeRate: 0,
-          maidens: 0,
-          threeWickets: 0,
-          fiveWickets: 0,
-          wides: 0,
-          noBalls: 0,
-          dotBalls: 0,
-        },
-      };
+      // Use the full saved player object (preserves battingStats for retired-hurt players)
+      newPlayer = { ...existingPlayer, playerId: getPlayerId(existingPlayer) };
     } else {
       const result = playerNameSchema.safeParse(trimmedName);
 
@@ -399,6 +374,7 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
     onSelect,
     emptyMessage,
     disabledIds = [],
+    showRetiredHurtBadge = false,
   }) => {
     if (!value.trim()) return null;
 
@@ -420,10 +396,16 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
                   }`}
                 >
                   <span>{player.name}</span>
-
-                  {disabled && (
-                    <span className="text-xs opacity-60">Already playing</span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {showRetiredHurtBadge && player.isRetiredHurt && (
+                      <span className="text-xs text-warning bg-warning/10 px-2 py-0.5 rounded-full">
+                        Retired Hurt · {player.battingStats?.runs ?? 0}({player.battingStats?.balls ?? 0})
+                      </span>
+                    )}
+                    {disabled && (
+                      <span className="text-xs opacity-60">Already playing</span>
+                    )}
+                  </div>
                 </button>
               </li>
             );
@@ -673,6 +655,7 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
                 emptyMessage:
                   "No matching player found. This name will be created as a new player.",
                 disabledIds: [getPlayerId(striker), getPlayerId(nonStriker)],
+                showRetiredHurtBadge: true,
               })}
             </div>
 
