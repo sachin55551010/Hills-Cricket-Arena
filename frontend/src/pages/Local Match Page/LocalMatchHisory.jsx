@@ -9,6 +9,52 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setCurrentMatchData } from "../../store/scoreSlice";
 
+const formatOvers = (legalBalls = 0) =>
+  `${Math.floor(legalBalls / 6)}.${legalBalls % 6}`;
+
+const getTeamInning = (match, teamId) =>
+  match?.innings?.find((inning) => inning.battingTeamId === teamId) ?? null;
+
+const TeamScoreRow = ({ teamName, inning }) => (
+  <div className="flex items-center justify-between">
+    <div className="flex min-w-0 items-center gap-3">
+      <div
+        className="
+          flex h-10 w-10 shrink-0 items-center justify-center
+          rounded-full
+          bg-base-content/5
+          text-sm font-semibold
+        "
+      >
+        {defaultAvatar(teamName)}
+      </div>
+
+      <h6 className="truncate text-sm font-semibold">{teamName}</h6>
+    </div>
+
+    <div className="ml-3 flex shrink-0 items-baseline gap-2">
+      {inning ? (
+        <>
+          <div className="flex items-baseline font-bold">
+            <span className="text-lg">{inning.runs ?? 0}</span>
+            <span className="mx-0.5 text-base-content/40">/</span>
+            <span className="text-sm text-base-content/70">
+              {inning.wickets ?? 0}
+            </span>
+          </div>
+          <span className="text-xs text-base-content/50">
+            {formatOvers(inning.legalBalls ?? 0)}
+          </span>
+        </>
+      ) : (
+        <span className="text-xs font-medium text-base-content/40">
+          Yet to bat
+        </span>
+      )}
+    </div>
+  </div>
+);
+
 export const LocalMatchHisory = () => {
   const matchList = JSON.parse(localStorage.getItem("matchHistory")) || [];
 
@@ -23,8 +69,8 @@ export const LocalMatchHisory = () => {
   };
 
   const handleResumeBtn = (id) => {
-    const match = matchList.find((match) => match.matchId === id);
-    if (!match) return;
+    const match = matchList.find((item) => item.matchId === id);
+    if (!match || match.matchStatus === "completed") return;
 
     localStorage.setItem("currentMatch", JSON.stringify(match));
     dispatch(setCurrentMatchData(match));
@@ -47,6 +93,16 @@ export const LocalMatchHisory = () => {
         ) : (
           <ul className="flex flex-col gap-3 px-3 py-4">
             {matchList.map((match) => {
+              const isCompleted = match.matchStatus === "completed";
+              const firstTeamInning = getTeamInning(
+                match,
+                match.firstTeam?.teamId,
+              );
+              const secondTeamInning = getTeamInning(
+                match,
+                match.secondTeam?.teamId,
+              );
+
               return (
                 <li
                   key={match.matchId}
@@ -93,48 +149,11 @@ export const LocalMatchHisory = () => {
 
                   {/* Teams + Scores */}
                   <div className="px-4 py-4">
-                    {/* First Team */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div
-                          className="
-                          flex h-10 w-10 shrink-0 items-center justify-center
-                          rounded-full
-                          bg-base-content/5
-                          text-sm font-semibold
-                        "
-                        >
-                          {defaultAvatar(match.firstTeam.name)}
-                        </div>
+                    <TeamScoreRow
+                      teamName={match.firstTeam.name}
+                      inning={firstTeamInning}
+                    />
 
-                        <h6 className="truncate text-sm font-semibold">
-                          {match.firstTeam.name}
-                        </h6>
-                      </div>
-
-                      <div className="ml-3 flex shrink-0 items-baseline gap-2">
-                        <div className="flex items-baseline font-bold">
-                          <span className="text-lg">
-                            {match.innings[0].runs}
-                          </span>
-
-                          <span className="mx-0.5 text-base-content/40">/</span>
-
-                          <span className="text-sm text-base-content/70">
-                            {match.innings[0].wickets}
-                          </span>
-                        </div>
-
-                        <span className="text-xs text-base-content/50">
-                          {Math.floor(
-                            (match?.innings?.[0]?.legalBalls ?? 0) / 6,
-                          )}
-                          .{(match?.innings?.[0]?.legalBalls ?? 0) % 6}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* VS Divider */}
                     <div className="my-2 flex items-center gap-3">
                       <div className="h-px flex-1 bg-base-content/10" />
                       <span className="text-[9px] font-semibold tracking-wider text-base-content/30">
@@ -143,75 +162,46 @@ export const LocalMatchHisory = () => {
                       <div className="h-px flex-1 bg-base-content/10" />
                     </div>
 
-                    {/* Second Team */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div
-                          className="
-                          flex h-10 w-10 shrink-0 items-center justify-center
-                          rounded-full
-                          bg-base-content/5
-                          text-sm font-semibold
-                        "
-                        >
-                          {defaultAvatar(match.secondTeam.name)}
-                        </div>
-
-                        <h6 className="truncate text-sm font-semibold">
-                          {match.secondTeam.name}
-                        </h6>
-                      </div>
-
-                      <div className="ml-3 flex shrink-0 items-baseline gap-2">
-                        <div className="flex items-baseline font-bold">
-                          <span className="text-lg">
-                            {match.innings[0].runs}
-                          </span>
-
-                          <span className="mx-0.5 text-base-content/40">/</span>
-
-                          <span className="text-sm text-base-content/70">
-                            {match.innings[0].wickets}
-                          </span>
-                        </div>
-
-                        <span className="text-xs text-base-content/50">
-                          {Math.floor(
-                            (match?.innings?.[0]?.legalBalls ?? 0) / 6,
-                          )}
-                          .{(match?.innings?.[0]?.legalBalls ?? 0) % 6}
-                        </span>
-                      </div>
-                    </div>
+                    <TeamScoreRow
+                      teamName={match.secondTeam.name}
+                      inning={secondTeamInning}
+                    />
                   </div>
 
-                  {/* Toss */}
                   <div className="border-t border-base-content/10 px-4 py-3">
-                    <p className="text-[11px] leading-relaxed text-base-content/55">
-                      <span className="font-medium text-base-content/70">
-                        {match.toss.winner.name}
-                      </span>{" "}
-                      won the toss and chose to{" "}
-                      <span className="font-medium text-base-content/70">
-                        {match.toss.decision}
-                      </span>{" "}
-                      first.
-                    </p>
+                    {isCompleted && match.matchResult ? (
+                      <p className="text-[11px] font-semibold leading-relaxed text-primary">
+                        {match.matchResult}
+                      </p>
+                    ) : (
+                      <p className="text-[11px] leading-relaxed text-base-content/55">
+                        <span className="font-medium text-base-content/70">
+                          {match.toss.winner.name}
+                        </span>{" "}
+                        won the toss and chose to{" "}
+                        <span className="font-medium text-base-content/70">
+                          {match.toss.decision}
+                        </span>{" "}
+                        first.
+                      </p>
+                    )}
                   </div>
 
-                  {/* Resume */}
                   <div className="px-4 pb-4">
                     <button
                       onClick={() => handleResumeBtn(match.matchId)}
+                      disabled={isCompleted}
                       className="
                       btn btn-info
                       h-10 min-h-10 w-full
                       rounded-xl
                       text-sm font-semibold
                       shadow-none
+                      disabled:pointer-events-none
+                      disabled:opacity-50
                     "
                     >
-                      Resume Match
+                      {isCompleted ? "Match Completed" : "Resume Match"}
                     </button>
                   </div>
                 </li>
