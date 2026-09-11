@@ -76,7 +76,7 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
   );
 
   const [fielder, setFielder] = useState("");
-  const [completedRuns, setCompletedRuns] = useState(0);
+  const [completedRuns, setCompletedRuns] = useState("");
   const [newBatsman, setNewBatsman] = useState("");
   const [newPlayerPosition, setNewPlayerPosition] = useState("striker");
   const [nameError, setNameError] = useState("");
@@ -188,7 +188,7 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
       setFielder("");
     }
 
-    setCompletedRuns(0);
+    setCompletedRuns("");
     setNameError("");
   };
 
@@ -614,11 +614,20 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
 
               <input
                 id="completedRuns"
-                type="number"
-                min="0"
-                max="7"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={1}
                 value={completedRuns}
-                onChange={(e) => setCompletedRuns(Number(e.target.value))}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, "");
+                  if (digits === "") {
+                    setCompletedRuns("");
+                    return;
+                  }
+                  const num = Math.min(parseInt(digits, 10), 7);
+                  setCompletedRuns(String(num));
+                }}
                 className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none focus:border-blue-500"
                 placeholder="0"
               />
