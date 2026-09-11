@@ -11,6 +11,41 @@ const swapStriker = (state) => {
   ];
 };
 
+// Record ball-by-ball stats into the current over's history
+const recordBallInOver = (state, ballData) => {
+  const match = state.currentMatchData;
+  const inningIndex = match?.currentInning - 1;
+  const inning = match?.innings?.[inningIndex];
+  if (!inning) return;
+
+  const overHistory = inning.overHistory;
+  if (!overHistory || overHistory.length === 0) return;
+
+  const currentOver = overHistory[overHistory.length - 1];
+
+  const ball = {
+    ballNumber: currentOver.balls.length + 1,
+    runs: ballData.runs || 0,
+    batsmanId: match.currentPlayers?.striker?.playerId,
+    batsmanName: match.currentPlayers?.striker?.name,
+    bowlerId: match.currentPlayers?.bowler?.playerId,
+    bowlerName: match.currentPlayers?.bowler?.name,
+    type: ballData.type || "NORMAL",     // NORMAL, WD, NB, LB, BYE, WICKET
+    isLegal: ballData.isLegal ?? true,
+    extras: ballData.extras || 0,
+    totalRuns: ballData.totalRuns ?? ballData.runs ?? 0,
+    timestamp: Date.now(),
+  };
+
+  currentOver.balls.push(ball);
+
+  // Update the over-level aggregates
+  currentOver.runs += ball.totalRuns;
+  if (ball.isLegal) {
+    currentOver.legalBalls += 1;
+  }
+};
+
 // Save current state to history
 const saveHistory = (state) => {
   const snapshot = JSON.parse(JSON.stringify(state.currentMatchData));
@@ -41,7 +76,6 @@ try {
 
 // function to add legal runs
 const addRuns = (state, runs) => {
-  console.log(currentMatchData);
   const match = state.currentMatchData;
   const striker = match?.currentPlayers?.striker.battingStats;
   const bowler = match?.currentPlayers?.bowler.bowlingStats;
@@ -64,6 +98,14 @@ const addRuns = (state, runs) => {
   bowler.balls += 1;
   bowler.runs += runs;
   bowler.economy = bowler.balls > 0 ? (bowler.runs / bowler.balls) * 6 : 0;
+
+  // Record ball in over history
+  recordBallInOver(state, {
+    runs,
+    type: "NORMAL",
+    isLegal: true,
+    totalRuns: runs,
+  });
 };
 
 // add wide runs
@@ -72,9 +114,20 @@ const addWideBallRunData = (state, data) => {
   const inningIndex = match?.currentInning - 1;
   const inning = match?.innings?.[inningIndex];
   const bowler = match?.currentPlayers?.bowler.bowlingStats;
-  inning.runs += match.wideBallRun + data.runs;
+  const totalRuns = match.wideBallRun + data.runs;
+  inning.runs += totalRuns;
   inning.extras.wideBallRun += match.wideBallRun;
-  bowler.runs += match.wideBallRun + data.runs;
+  bowler.runs += totalRuns;
+
+  // Record ball in over history
+  recordBallInOver(state, {
+    runs: data.runs,
+    type: "WD",
+    isLegal: false,
+    extras: match.wideBallRun,
+    totalRuns,
+  });
+
   // Change strike for 1 or 3 bat runs
   if (data.runs === 1 || data.runs === 3) {
     swapStriker(state);
@@ -89,9 +142,10 @@ const addNoBallRunData = (state, data) => {
   const bowler = match?.currentPlayers?.bowler?.bowlingStats;
   // 1 run penalty for every no-ball
   const noBallRun = match?.noBallRun;
+  const totalRuns = noBallRun + data.runs;
 
   // Add total runs to innings
-  inning.runs += noBallRun + data.runs;
+  inning.runs += totalRuns;
 
   // Add no-ball penalty to extras
   inning.extras.noBallRun += noBallRun;
@@ -103,7 +157,6 @@ const addNoBallRunData = (state, data) => {
   switch (data.runType) {
     case "BAT":
       // Runs scored by the batsman
-      console.log(striker.runs);
       striker.runs += data.runs;
       striker.fours += data.runs === 4 ? 1 : 0;
       striker.sixes += data.runs === 6 ? 1 : 0;
@@ -141,6 +194,15 @@ const addNoBallRunData = (state, data) => {
     default:
       console.warn("Invalid no-ball run type:", data.type);
   }
+
+  // Record ball in over history
+  recordBallInOver(state, {
+    runs: data.runs,
+    type: "NB",
+    isLegal: false,
+    extras: noBallRun,
+    totalRuns,
+  });
 };
 
 // Add leg-bye runs
@@ -167,6 +229,15 @@ const addLBRunData = (state, data) => {
 
   bowler.balls += 1;
 
+  // Record ball in over history
+  recordBallInOver(state, {
+    runs,
+    type: "LB",
+    isLegal: true,
+    extras: runs,
+    totalRuns: runs,
+  });
+
   // 4. Change strike for 1 or 3 leg-bye runs
   if (runs === 1 || runs === 3) {
     swapStriker(state);
@@ -189,19 +260,186 @@ const addByeRunData = (state, data) => {
 
   const runs = data?.runs || 1;
 
-  // 1. Add leg-bye runs to main innings score
+  // 1. Add bye runs to main innings score
   inning.runs += runs;
   inning.legalBalls += 1;
-  // 2. Add leg-bye runs to extras
+  // 2. Add bye runs to extras
   inning.extras.byes += runs;
 
   bowler.balls += 1;
 
-  // 4. Change strike for 1 or 3 leg-bye runs
+  // Record ball in over history
+  recordBallInOver(state, {
+    runs,
+    type: "BYE",
+    isLegal: true,
+    extras: runs,
+    totalRuns: runs,
+  });
+
+  // 4. Change strike for 1 or 3 bye runs
   if (runs === 1 || runs === 3) {
     swapStriker(state);
   }
 };
+
+// Handle wicket/out deliveries
+const recordWicketData = (state, data) => {
+  const match = state.currentMatchData;
+  const inningIndex = match?.currentInning - 1;
+  const inning = match?.innings?.[inningIndex];
+  const bowler = match?.currentPlayers?.bowler?.bowlingStats;
+  const striker = match?.currentPlayers?.striker;
+  const nonStriker = match?.currentPlayers?.nonStriker;
+  if (!match || !inning || !bowler) return;
+
+  const wicketType = data.wicketType;
+  const completedRuns = data.completedRuns || 0;
+  const playerOutId = data.playerOut?.id;
+  const newBatsman = data.newBatsman;
+  const newPlayerPosition = data.newPlayerPosition || "striker";
+
+  // Determine if this is a legal delivery (Run Out on a no-ball is not legal)
+  const isExtraWicket = data.isExtraWicket;
+  const isLegalDelivery = !isExtraWicket;
+  const extraType = data.type; // "WD", "NB", "LB", "BYE" or undefined
+
+  // --- Dismissal types where bowler gets credit ---
+  const bowlerGetsCreditTypes = ["Bowled", "Caught", "LBW", "Stumped", "Hit Wicket"];
+  const bowlerGetsCredit = bowlerGetsCreditTypes.includes(wicketType);
+
+  // 1. Update innings wickets
+  inning.wickets += 1;
+
+  // 2. Update innings runs (completed runs before dismissal)
+  inning.runs += completedRuns;
+
+  // 2a. Handle extra penalty runs (wide/no-ball/bye/leg-bye)
+  let extraPenaltyRuns = 0;
+  if (isExtraWicket && extraType) {
+    const extraRuns = data.runs || 0; // bat/bye runs on the extra delivery
+
+    if (extraType === "WD") {
+      const widePenalty = match.wideBallRun || 1;
+      extraPenaltyRuns = widePenalty + extraRuns;
+      inning.runs += extraPenaltyRuns;
+      inning.extras.wideBallRun += widePenalty;
+      bowler.runs += extraPenaltyRuns;
+    } else if (extraType === "NB") {
+      const noBallPenalty = match.noBallRun || 1;
+      extraPenaltyRuns = noBallPenalty + extraRuns;
+      inning.runs += extraPenaltyRuns;
+      inning.extras.noBallRun += noBallPenalty;
+      bowler.runs += noBallPenalty;
+      // Bat runs on NB are charged to bowler, bye/LB on NB are not
+      if (data.runType === "BAT") {
+        bowler.runs += extraRuns;
+      }
+    } else if (extraType === "LB") {
+      extraPenaltyRuns = extraRuns;
+      inning.runs += extraPenaltyRuns;
+      inning.extras.legBye = (inning.extras.legBye || 0) + extraRuns;
+    } else if (extraType === "BYE") {
+      extraPenaltyRuns = extraRuns;
+      inning.runs += extraPenaltyRuns;
+      inning.extras.byes = (inning.extras.byes || 0) + extraRuns;
+    }
+  }
+
+  // 3. Legal ball counting
+  if (isLegalDelivery) {
+    inning.legalBalls += 1;
+    bowler.balls += 1;
+  }
+
+  // 4. Bowler stats
+  if (bowlerGetsCredit) {
+    bowler.wickets += 1;
+  }
+  bowler.runs += completedRuns;
+  bowler.economy = bowler.balls > 0 ? (bowler.runs / bowler.balls) * 6 : 0;
+
+  // 5. Update striker batting stats if they scored completed runs
+  if (completedRuns > 0) {
+    const outPlayerIsStriker = playerOutId === (striker?.playerId || striker?.id);
+    const batsmanStats = outPlayerIsStriker
+      ? striker?.battingStats
+      : nonStriker?.battingStats;
+    if (batsmanStats) {
+      batsmanStats.runs += completedRuns;
+      batsmanStats.fours += completedRuns === 4 ? 1 : 0;
+      batsmanStats.sixes += completedRuns === 6 ? 1 : 0;
+      batsmanStats.strikeRate =
+        batsmanStats.balls > 0 ? (batsmanStats.runs / batsmanStats.balls) * 100 : 0;
+    }
+  }
+
+  // 6. Count the ball faced by striker (if legal and not run out of non-striker)
+  if (isLegalDelivery) {
+    const outPlayerIsStriker = playerOutId === (striker?.playerId || striker?.id);
+    // For most dismissals, striker faces the ball
+    if (striker?.battingStats) {
+      striker.battingStats.balls += 1;
+      striker.battingStats.strikeRate =
+        striker.battingStats.balls > 0
+          ? (striker.battingStats.runs / striker.battingStats.balls) * 100
+          : 0;
+    }
+  }
+
+  // 7. Record ball in over history
+  const ballTotalRuns = completedRuns + extraPenaltyRuns;
+  recordBallInOver(state, {
+    runs: completedRuns,
+    type: "WICKET",
+    isLegal: isLegalDelivery,
+    extras: extraPenaltyRuns,
+    totalRuns: ballTotalRuns,
+  });
+
+  // 8. Add dismissed player to outPlayers list
+  const outPlayerIsStriker = playerOutId === (striker?.playerId || striker?.id);
+  const dismissedPlayer = outPlayerIsStriker ? striker : nonStriker;
+
+  inning.outPlayers.push({
+    playerId: playerOutId,
+    name: dismissedPlayer?.name || data.playerOut?.name,
+    battingStats: { ...(dismissedPlayer?.battingStats || {}) },
+    wicketType,
+    fielder: data.fielder || null,
+    bowlerName: match.currentPlayers?.bowler?.name,
+    bowlerId: match.currentPlayers?.bowler?.playerId,
+  });
+
+  // 9. Replace dismissed player with new batsman
+  if (newBatsman) {
+    if (outPlayerIsStriker) {
+      // Striker got out
+      if (newPlayerPosition === "striker") {
+        match.currentPlayers.striker = newBatsman;
+      } else {
+        // New batsman goes to non-striker, current non-striker becomes striker
+        match.currentPlayers.striker = match.currentPlayers.nonStriker;
+        match.currentPlayers.nonStriker = newBatsman;
+      }
+    } else {
+      // Non-striker got out (run out)
+      if (newPlayerPosition === "nonStriker") {
+        match.currentPlayers.nonStriker = newBatsman;
+      } else {
+        // New batsman takes strike, current striker goes to non-striker
+        match.currentPlayers.nonStriker = match.currentPlayers.striker;
+        match.currentPlayers.striker = newBatsman;
+      }
+    }
+  }
+
+  // 10. Handle strike changes for completed runs (odd runs swap strike)
+  if (completedRuns === 1 || completedRuns === 3 || completedRuns === 5) {
+    swapStriker(state);
+  }
+};
+
 // Slice
 const scoreSlice = createSlice({
   name: "score_slice",
@@ -247,29 +485,162 @@ const scoreSlice = createSlice({
         return;
       }
 
-      if (payload?.type === "WD") {
+      if (payload?.type === "WD" && !payload?.wicket) {
         addWideBallRunData(state, payload);
         return;
       }
 
-      if (payload?.type === "NB") {
+      if (payload?.type === "NB" && !payload?.wicket) {
         addNoBallRunData(state, payload);
         return;
       }
 
-      if (payload?.type === "LB") {
+      if (payload?.type === "LB" && !payload?.wicket) {
         addLBRunData(state, payload);
         return;
       }
 
-      if (payload?.type === "BYE") {
+      if (payload?.type === "BYE" && !payload?.wicket) {
         addByeRunData(state, payload);
         return;
+      }
+
+      // Wicket (normal or extra+wicket)
+      if (payload?.wicket) {
+        recordWicketData(state, payload);
+        return;
+      }
+    },
+    setNewBowler: (state, action) => {
+      const newBowler = action.payload;
+      const match = state.currentMatchData;
+      const inningIndex = match?.currentInning - 1;
+      const inning = match?.innings?.[inningIndex];
+      if (!match || !inning) return;
+
+      // Save history before making changes
+      saveHistory(state);
+
+      // Set the new bowler in currentPlayers
+      match.currentPlayers.bowler = newBowler;
+
+      // Swap striker (batsmen change ends at end of over)
+      swapStriker(state);
+
+      // Create a new over entry in overHistory
+      const newOverNumber = inning.overHistory.length + 1;
+      inning.overHistory.push({
+        over: newOverNumber,
+        bowlerId: newBowler.playerId,
+        batsmanId: match.currentPlayers.striker.playerId,
+        balls: [],
+        runs: 0,
+        legalBalls: 0,
+      });
+    },
+    retireBatsman: (state, action) => {
+      const { retiringPosition, retireType, newBatsman } = action.payload;
+      const match = state.currentMatchData;
+      const inningIndex = match?.currentInning - 1;
+      const inning = match?.innings?.[inningIndex];
+      if (!match || !inning) return;
+
+      saveHistory(state);
+
+      // Deep clone the retiring player to preserve their full stats
+      const retiringPlayer = JSON.parse(
+        JSON.stringify(match.currentPlayers[retiringPosition]),
+      );
+
+      if (retireType === "retired-out") {
+        inning.wickets += 1;
+        inning.outPlayers.push({
+          playerId: retiringPlayer?.playerId || retiringPlayer?.id,
+          name: retiringPlayer?.name,
+          battingStats: { ...(retiringPlayer?.battingStats || {}) },
+          wicketType: "Retired Out",
+          fielder: null,
+          bowlerName: null,
+          bowlerId: null,
+        });
+      } else {
+        // Retire Hurt — save FULL player object so stats are preserved
+        if (!inning.retiredHurtPlayers) {
+          inning.retiredHurtPlayers = [];
+        }
+        inning.retiredHurtPlayers.push(retiringPlayer);
+      }
+
+      // Determine who the actual new batsman is
+      if (newBatsman) {
+        const newBatsmanId = newBatsman.playerId || newBatsman.id;
+
+        // Check if this new batsman is a returning retired-hurt player
+        // If so, use the SAVED version (with match stats) instead of whatever the modal sent
+        let playerToSet = newBatsman;
+        if (inning.retiredHurtPlayers && inning.retiredHurtPlayers.length > 0) {
+          const savedPlayer = inning.retiredHurtPlayers.find(
+            (p) => (p.playerId || p.id) === newBatsmanId,
+          );
+          if (savedPlayer) {
+            // Use the saved player with their accumulated stats
+            playerToSet = JSON.parse(JSON.stringify(savedPlayer));
+          }
+        }
+
+        // Remove the returning player from retiredHurtPlayers
+        if (inning.retiredHurtPlayers) {
+          inning.retiredHurtPlayers = inning.retiredHurtPlayers.filter(
+            (p) => (p.playerId || p.id) !== newBatsmanId,
+          );
+        }
+
+        match.currentPlayers[retiringPosition] = playerToSet;
+      }
+    },
+    replaceBatsman: (state, action) => {
+      const { position, newBatsman } = action.payload;
+      const match = state.currentMatchData;
+      const inningIndex = match?.currentInning - 1;
+      const inning = match?.innings?.[inningIndex];
+      if (!match) return;
+
+      saveHistory(state);
+
+      if (newBatsman) {
+        const newBatsmanId = newBatsman.playerId || newBatsman.id;
+
+        // Check if this new batsman is a returning retired-hurt player
+        // If so, use the SAVED version (with match stats) instead of the roster version
+        let playerToSet = newBatsman;
+        if (inning?.retiredHurtPlayers && inning.retiredHurtPlayers.length > 0) {
+          const savedPlayer = inning.retiredHurtPlayers.find(
+            (p) => (p.playerId || p.id) === newBatsmanId,
+          );
+          if (savedPlayer) {
+            playerToSet = JSON.parse(JSON.stringify(savedPlayer));
+          }
+        }
+
+        // Remove the returning player from retiredHurtPlayers
+        if (inning?.retiredHurtPlayers) {
+          inning.retiredHurtPlayers = inning.retiredHurtPlayers.filter(
+            (p) => (p.playerId || p.id) !== newBatsmanId,
+          );
+        }
+
+        match.currentPlayers[position] = playerToSet;
       }
     },
   },
 });
 
-export const { recordDelivery, setCurrentMatchData } = scoreSlice.actions;
+export const {
+  recordDelivery,
+  setCurrentMatchData,
+  setNewBowler,
+  retireBatsman,
+  replaceBatsman,
+} = scoreSlice.actions;
 
 export default scoreSlice.reducer;

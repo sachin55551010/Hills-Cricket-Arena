@@ -25,7 +25,49 @@ const playerNameSchema = z
 export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
   const { currentMatchData } = useSelector((state) => state.score);
 
-  const [selectedWicketType, setSelectedWicketType] = useState("Bowled");
+  const allWicketTypes = [
+    { type: "Bowled" },
+    { type: "Caught" },
+    { type: "Run Out" },
+    { type: "LBW" },
+    { type: "Stumped" },
+    { type: "Hit Wicket" },
+    { type: "Obstructing Field" },
+    { type: "Hit Ball Twice" },
+  ];
+
+  // Filter wicket types based on the extra delivery type
+  const getValidWicketTypes = () => {
+    if (!pendingData) return allWicketTypes;
+
+    const extraType = pendingData.type;
+    switch (extraType) {
+      case "WD":
+        // On a wide: only Run Out or Stumped
+        return allWicketTypes.filter((w) =>
+          ["Run Out", "Stumped"].includes(w.type),
+        );
+      case "NB":
+        // On a no ball: only Run Out (stumped not possible on NB)
+        return allWicketTypes.filter((w) =>
+          ["Run Out"].includes(w.type),
+        );
+      case "BYE":
+      case "LB":
+        // On bye/leg-bye: only Run Out
+        return allWicketTypes.filter((w) =>
+          ["Run Out"].includes(w.type),
+        );
+      default:
+        return allWicketTypes;
+    }
+  };
+
+  const wicketTypes = getValidWicketTypes();
+
+  const [selectedWicketType, setSelectedWicketType] = useState(
+    wicketTypes[0]?.type || "Bowled",
+  );
 
   const [playerOut, setPlayerOut] = useState(
     currentMatchData?.currentPlayers?.striker?.id ??
@@ -58,17 +100,6 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
 
   const getPlayerId = (player) => player?.id ?? player?.playerId ?? "";
 
-  const wicketTypes = [
-    { type: "Bowled" },
-    { type: "Caught" },
-    { type: "Run Out" },
-    { type: "LBW" },
-    { type: "Stumped" },
-    { type: "Hit Wicket" },
-    { type: "Obstructing Field" },
-    { type: "Hit Ball Twice" },
-  ];
-
   /*
    * New batsman suggestions:
    * - Only batting-team players.
@@ -77,10 +108,21 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
    */
   const strikerId = getPlayerId(striker);
   const nonStrikerId = getPlayerId(nonStriker);
+
+  // Get IDs of players already dismissed
+  const outPlayerIds = (currentInning?.outPlayers || []).map(
+    (p) => p.playerId || p.id || "",
+  );
+
   const availableBatsmen = battingTeamPlayer.filter((player) => {
     const playerId = getPlayerId(player);
 
-    return playerId !== strikerId && playerId !== nonStrikerId;
+    // Exclude current striker, non-striker, and already dismissed players
+    return (
+      playerId !== strikerId &&
+      playerId !== nonStrikerId &&
+      !outPlayerIds.includes(playerId)
+    );
   });
 
   const batsmanSearch = newBatsman.trim().toLowerCase();

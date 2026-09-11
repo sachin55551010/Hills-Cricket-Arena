@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { recordDelivery } from "../store/scoreSlice";
 export const ScoringPage = () => {
   const { currentMatchData } = useSelector((state) => state.score);
-  // console.log("current match data", currentMatchData);
+  console.log("current match data", currentMatchData);
   const [isExtraModalOpen, setIsExtraModalOpen] = useState(false);
   const [extraType, setExtraType] = useState("");
   const [showNormalOutModal, setShowNormalOutModal] = useState(false);
@@ -55,9 +55,43 @@ export const ScoringPage = () => {
     currentMatchData?.currentPlayers?.nonStriker?.battingStats?.strikeRate;
   const battingTeamName =
     currentMatchData?.innings[currentInningNumber - 1].battingTeam;
-  console.log(currentMatchData);
+
+  // Get current over balls from overHistory
+  const overHistory = currentInning?.overHistory || [];
+  const currentOverData = overHistory.length > 0 ? overHistory[overHistory.length - 1] : null;
+  const currentOverBalls = currentOverData?.balls || [];
+
+  // Ball color and label helper
+  const getBallStyle = (ball) => {
+    if (ball.type === "WICKET") {
+      return { bg: "bg-red-500", text: "text-white", label: "W" };
+    }
+    if (ball.type === "WD") {
+      return { bg: "bg-yellow-500", text: "text-black", label: `${ball.totalRuns}WD` };
+    }
+    if (ball.type === "NB") {
+      return { bg: "bg-yellow-500", text: "text-black", label: `${ball.totalRuns}NB` };
+    }
+    if (ball.type === "LB") {
+      return { bg: "bg-purple-500", text: "text-white", label: `${ball.runs}LB` };
+    }
+    if (ball.type === "BYE") {
+      return { bg: "bg-purple-500", text: "text-white", label: `${ball.runs}B` };
+    }
+    // Normal deliveries
+    if (ball.runs === 6) {
+      return { bg: "bg-green-500", text: "text-white", label: "6" };
+    }
+    if (ball.runs === 4) {
+      return { bg: "bg-green-500", text: "text-white", label: "4" };
+    }
+    if (ball.runs === 0) {
+      return { bg: "bg-gray-500", text: "text-white", label: "0" };
+    }
+    return { bg: "bg-blue-500", text: "text-white", label: String(ball.runs) };
+  };
+
   const onConfirm = (data) => {
-    // console.log("Data", data);
     dispatch(recordDelivery(data));
   };
 
@@ -301,21 +335,29 @@ export const ScoringPage = () => {
 
         {/* per ball record */}
         <div className="border border-base-content/15 rounded-md flex items-center text-[.85rem] pl-2 gap-2 py-2">
-          <p className="shrink-0 whitespace-nowrap">This over :</p>
+          <p className="shrink-0 whitespace-nowrap font-semibold">This over :</p>
 
           <div className="flex gap-2 overflow-x-auto min-w-0 hide-scrollbar">
-            {/* {Array.from({ length: 6 }).map((_, index) => {
-              return (
-                <div
-                  key={index}
-                  className="bg-orange-500 h-5 w-5 rounded-full flex items-center justify-center shrink-0"
-                >
-                  6
-                </div>
-              );
-            })} */}
+            {currentOverBalls.length > 0 ? (
+              currentOverBalls.map((ball, index) => {
+                const style = getBallStyle(ball);
+                return (
+                  <div
+                    key={index}
+                    className={`${style.bg} ${style.text} min-w-7 h-7 px-1 rounded-full flex items-center justify-center shrink-0 text-xs font-bold shadow-sm`}
+                  >
+                    {style.label}
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-base-content/40 italic">No balls yet</p>
+            )}
           </div>
         </div>
+
+        {/* Bowler's current over ball-by-ball breakdown */}
+        
 
         {/* socring button and extra button */}
         <div className=" flex border-base-content/15 rounded-md gap-2">
@@ -369,7 +411,6 @@ export const ScoringPage = () => {
         <AddNewBowlerModal
           onClose={() => {
             setOpenAddBowlerModal(false);
-            dispatch(recordDelivery("UNDO"));
           }}
         />
       )}

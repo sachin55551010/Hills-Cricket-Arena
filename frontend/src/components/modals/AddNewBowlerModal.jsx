@@ -1,16 +1,17 @@
 import { useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { Plus, Search, X } from "lucide-react";
 import { nanoid } from "nanoid";
 import { addPlayerToTeam } from "../../store/localTeamSlice";
+import { setNewBowler } from "../../store/scoreSlice";
 
 export const AddNewBowlerModal = ({ onClose }) => {
   const [selectedBowler, setSelectedBowler] = useState(null);
   const [search, setSearch] = useState("");
-  const [newBowlerName, setNewBowlerName] = useState("");
+
+  const dispatch = useDispatch();
 
   const { teams } = useSelector((state) => state.localTeam);
-
   const { currentMatchData } = useSelector((state) => state.score);
 
   const bowlingTeamId =
@@ -22,9 +23,7 @@ export const AddNewBowlerModal = ({ onClose }) => {
     player.name.toLowerCase().includes(search.toLowerCase()),
   );
 
-  console.log(currentMatchData);
-
-  const lastbowler = currentMatchData?.currentPlayers?.bowler;
+  const lastBowler = currentMatchData?.currentPlayers?.bowler;
 
   // create new player
   const createPlayer = (name) => {
@@ -68,23 +67,25 @@ export const AddNewBowlerModal = ({ onClose }) => {
     };
   };
 
-  const handleAddBowler = () => {
-    if (!newBowlerName.trim()) return;
-    setNewBowlerName(search.trim());
-    console.log("New bowler:", newBowlerName);
-    addPlayerToTeam({
-      teamId: bowlingTeamId,
-      player: createPlayer(newBowlerName),
-    });
-    setNewBowlerName("");
-    // setShowAddBowler(false);
+  const handleConfirmBowler = (player) => {
+    if (!player) return;
+    // Dispatch the new bowler to the store
+    dispatch(setNewBowler(player));
+    onClose();
   };
 
-  const hanleClickPlayerBtn = (player) => {
-    console.log(player);
-    if (!player) {
-      createPlayer(search);
-    }
+  const handleAddNewBowler = () => {
+    if (!search.trim()) return;
+    const newPlayer = createPlayer(search);
+    // Add to the team roster
+    dispatch(
+      addPlayerToTeam({
+        teamId: bowlingTeamId,
+        player: newPlayer,
+      }),
+    );
+    // Set as the current bowler
+    handleConfirmBowler(newPlayer);
   };
 
   return (
@@ -95,7 +96,7 @@ export const AddNewBowlerModal = ({ onClose }) => {
           <div>
             <h2 className="text-lg font-semibold">Choose Bowler</h2>
             <p className="mt-0.5 text-xs text-base-content/50">
-              Select the bowler for this over
+              Over completed! Select the bowler for the next over
             </p>
           </div>
 
@@ -117,74 +118,73 @@ export const AddNewBowlerModal = ({ onClose }) => {
               className="grow text-sm"
             />
           </label>
+        </div>
 
-          {search && (
-            <ul className="flex flex-col gap-2 mt-2">
-              {filteredBowlersList.map((player) => {
-                const isLastBowler = player.playerId === lastbowler?.playerId;
+        {/* Player List */}
+        <div className="px-5 py-3 max-h-60 overflow-y-auto">
+          <ul className="flex flex-col gap-1">
+            {filteredBowlersList.map((player) => {
+              const isLastBowler =
+                player.playerId === lastBowler?.playerId;
+              const isSelected =
+                selectedBowler?.playerId === player.playerId;
 
-                return (
-                  <li
-                    key={player.playerId}
-                    onClick={() => {
-                      if (!isLastBowler) {
-                        hanleClickPlayerBtn(player);
-                      }
-                    }}
-                    className={
-                      isLastBowler
-                        ? "text-base-content/20 cursor-not-allowed"
-                        : "cursor-pointer"
+              return (
+                <li
+                  key={player.playerId}
+                  onClick={() => {
+                    if (!isLastBowler) {
+                      setSelectedBowler(player);
                     }
-                  >
-                    {player.name}
-                  </li>
-                );
-              })}
+                  }}
+                  className={`px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
+                    isLastBowler
+                      ? "text-base-content/20 cursor-not-allowed bg-base-200/50"
+                      : isSelected
+                        ? "bg-primary/15 text-primary font-semibold border border-primary/30"
+                        : "hover:bg-base-200"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>{player.name}</span>
+                    {isLastBowler && (
+                      <span className="text-xs text-base-content/30">
+                        Last bowler
+                      </span>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
 
-              {filteredBowlersList.length === 0 && (
-                <div className="mt-2">
-                  No player found. This name will be added as a new player.
-                </div>
-              )}
-            </ul>
-          )}
+            {filteredBowlersList.length === 0 && search && (
+              <div className="mt-2 text-sm text-base-content/50">
+                No player found. You can add "{search}" as a new bowler.
+              </div>
+            )}
+          </ul>
         </div>
 
         {/* Bottom Actions */}
         <div className="border-t border-base-200 bg-base-100 p-4">
           <div className="flex gap-2">
-            {/* Undo */}
-            <button
-              onClick={() => {
-                setSelectedBowler(null);
-              }}
-              disabled={!selectedBowler}
-              className="btn btn-ghost flex-1 rounded-xl"
-            >
-              Undo
-            </button>
-
-            {/* Add New */}
-
+            {/* Add New Bowler */}
             {filteredBowlersList.length === 0 && search && (
               <button
-                onClick={handleAddBowler}
+                onClick={handleAddNewBowler}
                 className="btn btn-info flex-1 rounded-xl"
               >
                 <Plus size={18} />
-                Add New Bowler
+                Add "{search}"
               </button>
             )}
           </div>
 
-          {/* Continue */}
+          {/* Confirm Selected Bowler */}
           {selectedBowler && (
             <button
               className="btn btn-primary mt-2 w-full rounded-xl"
-              onClick={() => {
-                console.log("Selected:", selectedBowler);
-              }}
+              onClick={() => handleConfirmBowler(selectedBowler)}
             >
               Choose {selectedBowler.name}
             </button>
