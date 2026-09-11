@@ -31,7 +31,7 @@ const recordBallInOver = (state, ballData) => {
     batsmanName: match.currentPlayers?.striker?.name,
     bowlerId: match.currentPlayers?.bowler?.playerId,
     bowlerName: match.currentPlayers?.bowler?.name,
-    type: ballData.type || "NORMAL",     // NORMAL, WD, NB, LB, BYE, WICKET
+    type: ballData.type || "NORMAL", // NORMAL, WD, NB, LB, BYE, WICKET
     isLegal: ballData.isLegal ?? true,
     extras: ballData.extras || 0,
     totalRuns: ballData.totalRuns ?? ballData.runs ?? 0,
@@ -52,7 +52,9 @@ const getMaxWicketsForBattingTeam = (match, battingTeamId) => {
   const isFirstTeam = match?.firstTeam?.teamId === battingTeamId;
   const squadSize = isFirstTeam
     ? (match?.firstTeamTotalPlayer ?? match?.firstTeam?.players?.length ?? 11)
-    : (match?.secondTeamTotalPlayer ?? match?.secondTeam?.players?.length ?? 11);
+    : (match?.secondTeamTotalPlayer ??
+      match?.secondTeam?.players?.length ??
+      11);
   return Math.max(Number(squadSize) - 1, 1);
 };
 
@@ -346,7 +348,13 @@ const recordWicketData = (state, data) => {
   const extraType = data.type; // "WD", "NB", "LB", "BYE" or undefined
 
   // --- Dismissal types where bowler gets credit ---
-  const bowlerGetsCreditTypes = ["Bowled", "Caught", "LBW", "Stumped", "Hit Wicket"];
+  const bowlerGetsCreditTypes = [
+    "Bowled",
+    "Caught",
+    "LBW",
+    "Stumped",
+    "Hit Wicket",
+  ];
   const bowlerGetsCredit = bowlerGetsCreditTypes.includes(wicketType);
 
   // 1. Update innings wickets
@@ -402,7 +410,8 @@ const recordWicketData = (state, data) => {
 
   // 5. Update striker batting stats if they scored completed runs
   if (completedRuns > 0) {
-    const outPlayerIsStriker = playerOutId === (striker?.playerId || striker?.id);
+    const outPlayerIsStriker =
+      playerOutId === (striker?.playerId || striker?.id);
     const batsmanStats = outPlayerIsStriker
       ? striker?.battingStats
       : nonStriker?.battingStats;
@@ -411,13 +420,16 @@ const recordWicketData = (state, data) => {
       batsmanStats.fours += completedRuns === 4 ? 1 : 0;
       batsmanStats.sixes += completedRuns === 6 ? 1 : 0;
       batsmanStats.strikeRate =
-        batsmanStats.balls > 0 ? (batsmanStats.runs / batsmanStats.balls) * 100 : 0;
+        batsmanStats.balls > 0
+          ? (batsmanStats.runs / batsmanStats.balls) * 100
+          : 0;
     }
   }
 
   // 6. Count the ball faced by striker (if legal and not run out of non-striker)
   if (isLegalDelivery) {
-    const outPlayerIsStriker = playerOutId === (striker?.playerId || striker?.id);
+    const outPlayerIsStriker =
+      playerOutId === (striker?.playerId || striker?.id);
     // For most dismissals, striker faces the ball
     if (striker?.battingStats) {
       striker.battingStats.balls += 1;
@@ -665,7 +677,10 @@ const scoreSlice = createSlice({
         // Check if this new batsman is a returning retired-hurt player
         // If so, use the SAVED version (with match stats) instead of the roster version
         let playerToSet = newBatsman;
-        if (inning?.retiredHurtPlayers && inning.retiredHurtPlayers.length > 0) {
+        if (
+          inning?.retiredHurtPlayers &&
+          inning.retiredHurtPlayers.length > 0
+        ) {
           const savedPlayer = inning.retiredHurtPlayers.find(
             (p) => (p.playerId || p.id) === newBatsmanId,
           );
@@ -685,7 +700,15 @@ const scoreSlice = createSlice({
       }
     },
     startSecondInning: (state, action) => {
-      const { striker, nonStriker, bowler, newBattingTeamId, newBowlingTeamId, newBattingTeamName, newBowlingTeamName } = action.payload;
+      const {
+        striker,
+        nonStriker,
+        bowler,
+        newBattingTeamId,
+        newBowlingTeamId,
+        newBattingTeamName,
+        newBowlingTeamName,
+      } = action.payload;
       const match = state.currentMatchData;
       if (!match) return;
 

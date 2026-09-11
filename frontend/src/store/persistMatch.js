@@ -11,7 +11,8 @@ const parseJson = (value, fallback) => {
   }
 };
 
-export const loadCurrentMatch = () => parseJson(localStorage.getItem(CURRENT_MATCH_KEY), {});
+export const loadCurrentMatch = () =>
+  parseJson(localStorage.getItem(CURRENT_MATCH_KEY), {});
 
 export const loadUndoStack = (matchId) => {
   const saved = parseJson(localStorage.getItem(UNDO_STACK_KEY), null);
@@ -21,16 +22,14 @@ export const loadUndoStack = (matchId) => {
   return saved.stack;
 };
 
-const upsertMatchHistory = (match) => {
+export const upsertMatchHistory = (match) => {
   if (!match?.matchId) return;
   const history = parseJson(localStorage.getItem(MATCH_HISTORY_KEY), []);
-  const index = history.findIndex((item) => item.matchId === match.matchId);
-  if (index === -1) {
-    history.push(match);
-  } else {
-    history[index] = match;
-  }
-  localStorage.setItem(MATCH_HISTORY_KEY, JSON.stringify(history));
+  const updatedHistory = history.filter(
+    (item) => item.matchId !== match.matchId,
+  );
+  updatedHistory.push(match);
+  localStorage.setItem(MATCH_HISTORY_KEY, JSON.stringify(updatedHistory));
 };
 
 export const persistScoreState = (scoreState) => {
@@ -62,7 +61,10 @@ export const persistScoreState = (scoreState) => {
 
 export const persistMatchMiddleware = (storeApi) => (next) => (action) => {
   const result = next(action);
-  if (typeof action?.type === "string" && action.type.startsWith("score_slice/")) {
+  if (
+    typeof action?.type === "string" &&
+    action.type.startsWith("score_slice/")
+  ) {
     persistScoreState(storeApi.getState().score);
   }
   return result;

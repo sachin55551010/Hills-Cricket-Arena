@@ -5,6 +5,7 @@ import { Header } from "../components/Header";
 import { nanoid } from "nanoid";
 import { useDispatch, useSelector } from "react-redux";
 import { setCurrentMatchData } from "../store/scoreSlice";
+import { upsertMatchHistory } from "../store/persistMatch";
 
 export const PlayerSetupPage = () => {
   const navigate = useNavigate();
@@ -421,19 +422,10 @@ export const PlayerSetupPage = () => {
       matchStatus: "ongoing",
     };
 
-    // MATCH HISTORY
-
-    const matchHistory = JSON.parse(
-      localStorage.getItem("matchHistory") || "[]",
-    );
-
-    const updatedMatchHistory = [...matchHistory, updatedData];
-
     // SAVE EVERYTHING
 
     localStorage.setItem("currentMatch", JSON.stringify(updatedData));
-
-    localStorage.setItem("matchHistory", JSON.stringify(updatedMatchHistory));
+    upsertMatchHistory(updatedData);
 
     dispatch(setCurrentMatchData(updatedData));
 

@@ -56,7 +56,13 @@ const TeamScoreRow = ({ teamName, inning }) => (
 );
 
 export const LocalMatchHisory = () => {
-  const matchList = JSON.parse(localStorage.getItem("matchHistory")) || [];
+  const storedMatchList =
+    JSON.parse(localStorage.getItem("matchHistory")) || [];
+
+  // Remove duplicate matches using matchId
+  const matchList = Array.from(
+    new Map(storedMatchList.map((match) => [match.matchId, match])).values(),
+  );
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
