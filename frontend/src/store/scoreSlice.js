@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { loadCurrentMatch, loadUndoStack } from "./persistMatch";
 
 // Swap striker
 const swapStriker = (state) => {
@@ -93,8 +94,10 @@ const checkMatchEnd = (state) => {
 // Save current state to history
 const saveHistory = (state) => {
   const snapshot = JSON.parse(JSON.stringify(state.currentMatchData));
-
   state.matchHistory.push(snapshot);
+  if (state.matchHistory.length > 80) {
+    state.matchHistory.splice(0, state.matchHistory.length - 80);
+  }
 };
 
 // Undo
@@ -108,15 +111,9 @@ const undoMatch = (state) => {
   state.currentMatchData = previousState;
 };
 
-// Initial match data
-
-let currentMatchData = {};
-
-try {
-  currentMatchData = JSON.parse(localStorage.getItem("currentMatch") || "{}");
-} catch (error) {
-  console.error("Invalid currentMatchData in localStorage:", error);
-}
+// Initial match data (restored so refresh keeps the live score)
+const currentMatchData = loadCurrentMatch();
+const undoHistory = loadUndoStack(currentMatchData?.matchId);
 
 // function to add legal runs
 const addRuns = (state, runs) => {
@@ -490,12 +487,17 @@ const scoreSlice = createSlice({
 
   initialState: {
     currentMatchData,
-    matchHistory: [],
+    matchHistory: undoHistory,
   },
 
   reducers: {
     setCurrentMatchData: (state, action) => {
-      state.currentMatchData = action.payload;
+      const nextMatch = action.payload;
+      const previousId = state.currentMatchData?.matchId;
+      state.currentMatchData = nextMatch;
+      if (nextMatch?.matchId !== previousId) {
+        state.matchHistory = [];
+      }
     },
     recordDelivery: (state, action) => {
       const payload = action.payload;

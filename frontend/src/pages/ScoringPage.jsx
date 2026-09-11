@@ -8,9 +8,11 @@ import { AddNewBowlerModal } from "../components/modals/AddNewBowlerModal";
 import { StartSecondInningModal } from "../components/modals/StartSecondInningModal";
 import { useDispatch, useSelector } from "react-redux";
 import { recordDelivery } from "../store/scoreSlice";
+import { persistScoreState } from "../store/persistMatch";
 
 export const ScoringPage = () => {
-  const { currentMatchData } = useSelector((state) => state.score);
+  const scoreState = useSelector((state) => state.score);
+  const { currentMatchData } = scoreState;
   const [isExtraModalOpen, setIsExtraModalOpen] = useState(false);
   const [extraType, setExtraType] = useState("");
   const [showNormalOutModal, setShowNormalOutModal] = useState(false);
@@ -134,7 +136,10 @@ export const ScoringPage = () => {
     }
   }, [legalBalls]);
 
-  const handleBackBtn = () => navigate("/local-match/setup");
+  const handleBackBtn = () => {
+    persistScoreState(scoreState);
+    navigate("/local-match/setup");
+  };
 
   const buttonColors = {
     0: "border-3 border-green-600 text-green-600",

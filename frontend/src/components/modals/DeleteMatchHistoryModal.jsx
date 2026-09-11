@@ -5,6 +5,7 @@ export const DeleteMatchHistoryModal = ({ onClose, matchId, matchList }) => {
     const updatedMatch = matchList.filter((match) => match.matchId !== matchId);
     if (currentMatch.matchId === matchId) {
       localStorage.removeItem("currentMatch");
+      localStorage.removeItem("currentMatchUndoStack");
     }
     localStorage.setItem("matchHistory", JSON.stringify(updatedMatch));
     onClose();

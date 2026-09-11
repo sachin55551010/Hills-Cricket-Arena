@@ -9,6 +9,7 @@ import { inviteLinkApi } from "./inviteTeamLinkApi";
 import { matchApi } from "./matchApi";
 import { newsApi } from "./newsApi";
 import localTeamReducer from "./localTeamSlice";
+import { persistMatchMiddleware } from "./persistMatch";
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -31,6 +32,7 @@ export const store = configureStore({
       inviteLinkApi.middleware,
       matchApi.middleware,
       newsApi.middleware,
+      persistMatchMiddleware,
     );
   },
 });

@@ -6,11 +6,14 @@ import { MdDelete } from "react-icons/md";
 import { useState } from "react";
 import { DeleteMatchHistoryModal } from "../../components/modals/DeleteMatchHistoryModal";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setCurrentMatchData } from "../../store/scoreSlice";
 
 export const LocalMatchHisory = () => {
   const matchList = JSON.parse(localStorage.getItem("matchHistory")) || [];
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [deleteMatchModal, setDeleteMatchModal] = useState(false);
   const [matchId, setmatchId] = useState("");
@@ -21,8 +24,10 @@ export const LocalMatchHisory = () => {
 
   const handleResumeBtn = (id) => {
     const match = matchList.find((match) => match.matchId === id);
+    if (!match) return;
 
     localStorage.setItem("currentMatch", JSON.stringify(match));
+    dispatch(setCurrentMatchData(match));
     navigate("/local-match/scoring");
   };
 
