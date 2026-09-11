@@ -1,148 +1,141 @@
 import { useEffect, useState } from "react";
 import { ExtraRunCountModal } from "../components/modals/ExtraRunCountModal";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { OutModal } from "../components/modals/OutModal";
 import { MoreOptionScoringModal } from "../components/modals/MoreOptionScoringModal";
 import { AddNewBowlerModal } from "../components/modals/AddNewBowlerModal";
+import { StartSecondInningModal } from "../components/modals/StartSecondInningModal";
 import { useDispatch, useSelector } from "react-redux";
 import { recordDelivery } from "../store/scoreSlice";
+
 export const ScoringPage = () => {
   const { currentMatchData } = useSelector((state) => state.score);
-  console.log("current match data", currentMatchData);
   const [isExtraModalOpen, setIsExtraModalOpen] = useState(false);
   const [extraType, setExtraType] = useState("");
   const [showNormalOutModal, setShowNormalOutModal] = useState(false);
   const [showExtraOutModal, setShowExtraOutModal] = useState(false);
-  const scoringButton = [
-    "0",
-    "1",
-    "2",
-    "MORE",
-    "UNDO",
-    "3",
-    "4",
-    "6",
-    "...",
-    "SWAP",
-    "WD",
-    "NB",
-    "LB",
-    "BYE",
-    "OUT",
-  ];
-
   const [openAddBowlerModal, setOpenAddBowlerModal] = useState(false);
   const [openMoreMotionModal, setOpenMoreOptionModal] = useState(false);
+  const [showStartSecondInningModal, setShowStartSecondInningModal] = useState(false);
 
-  // console.log("currentMatchData", currentMatchData);
+  const scoringButton = [
+    "0", "1", "2", "MORE", "UNDO",
+    "3", "4", "6", "...", "SWAP",
+    "WD", "NB", "LB", "BYE", "OUT",
+  ];
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const currentInningNumber = Number(currentMatchData?.currentInning);
-
   const currentInning = currentMatchData?.innings?.[currentInningNumber - 1];
+  const inning1 = currentMatchData?.innings?.[0];
 
-  const teamScore = currentInning?.runs;
-  const legalBalls = currentInning?.legalBalls;
-  const fallOfwickets = currentInning?.wickets;
-  const currentRunRate = ((teamScore * 6) / legalBalls).toFixed(1);
-  const bowlerEconomy =
-    currentMatchData?.currentPlayers?.bowler?.bowlingStats?.economy;
+  const teamScore = currentInning?.runs ?? 0;
+  const legalBalls = currentInning?.legalBalls ?? 0;
+  const fallOfWickets = currentInning?.wickets ?? 0;
+  const totalOvers = currentMatchData?.totalOvers ?? currentMatchData?.overs ?? 0;
+  const maxWickets = currentMatchData?.maxWickets ??
+    (currentInningNumber === 1
+      ? Math.max((currentInning?.battingTeamId === currentMatchData?.firstTeam?.teamId
+          ? (currentMatchData?.firstTeamTotalPlayer ?? currentMatchData?.firstTeam?.players?.length ?? 11)
+          : (currentMatchData?.secondTeamTotalPlayer ?? currentMatchData?.secondTeam?.players?.length ?? 11)) - 1, 1)
+      : 10);
 
-  const strikerBatsmanStrikeRate =
-    currentMatchData?.currentPlayers?.striker?.battingStats?.strikeRate;
-  const nonStrikerBatsmanStrikeRate =
-    currentMatchData?.currentPlayers?.nonStriker?.battingStats?.strikeRate;
-  const battingTeamName =
-    currentMatchData?.innings[currentInningNumber - 1].battingTeam;
+  const currentRunRate = legalBalls > 0 ? ((teamScore * 6) / legalBalls).toFixed(1) : "0.0";
+  const bowlerEconomy = currentMatchData?.currentPlayers?.bowler?.bowlingStats?.economy;
+  const strikerSR = currentMatchData?.currentPlayers?.striker?.battingStats?.strikeRate;
+  const nonStrikerSR = currentMatchData?.currentPlayers?.nonStriker?.battingStats?.strikeRate;
 
-  // Get current over balls from overHistory
+  const battingTeamName = currentInning?.battingTeam ?? "";
+
+  // Target / required run rate (inning 2 only)
+  const isSecondInning = currentInningNumber === 2;
+  const target = currentMatchData?.target;
+  const runsRequired = isSecondInning && target != null ? Math.max(target - teamScore, 0) : null;
+  const ballsLeft = isSecondInning ? Math.max(totalOvers * 6 - legalBalls, 0) : null;
+  const requiredRunRate =
+    isSecondInning && ballsLeft > 0
+      ? ((runsRequired * 6) / ballsLeft).toFixed(1)
+      : null;
+
+  // Match completed
+  const isMatchCompleted = currentMatchData?.matchStatus === "completed";
+  const matchResult = currentMatchData?.matchResult ?? "";
+
+  // Over ball data
   const overHistory = currentInning?.overHistory || [];
   const currentOverData = overHistory.length > 0 ? overHistory[overHistory.length - 1] : null;
   const currentOverBalls = currentOverData?.balls || [];
 
-  // Ball color and label helper
+  // Inning label
+  const inningLabel = currentInningNumber === 1 ? "1st Inning" : "2nd Inning";
+
+  // Ball display helper
   const getBallStyle = (ball) => {
-    if (ball.type === "WICKET") {
-      return { bg: "bg-red-500", text: "text-white", label: "W" };
-    }
-    if (ball.type === "WD") {
-      return { bg: "bg-yellow-500", text: "text-black", label: `${ball.totalRuns}WD` };
-    }
-    if (ball.type === "NB") {
-      return { bg: "bg-yellow-500", text: "text-black", label: `${ball.totalRuns}NB` };
-    }
-    if (ball.type === "LB") {
-      return { bg: "bg-purple-500", text: "text-white", label: `${ball.runs}LB` };
-    }
-    if (ball.type === "BYE") {
-      return { bg: "bg-purple-500", text: "text-white", label: `${ball.runs}B` };
-    }
-    // Normal deliveries
-    if (ball.runs === 6) {
-      return { bg: "bg-green-500", text: "text-white", label: "6" };
-    }
-    if (ball.runs === 4) {
-      return { bg: "bg-green-500", text: "text-white", label: "4" };
-    }
-    if (ball.runs === 0) {
-      return { bg: "bg-gray-500", text: "text-white", label: "0" };
-    }
+    if (ball.type === "WICKET") return { bg: "bg-red-500", text: "text-white", label: "W" };
+    if (ball.type === "WD") return { bg: "bg-yellow-500", text: "text-black", label: `${ball.totalRuns}WD` };
+    if (ball.type === "NB") return { bg: "bg-yellow-500", text: "text-black", label: `${ball.totalRuns}NB` };
+    if (ball.type === "LB") return { bg: "bg-purple-500", text: "text-white", label: `${ball.runs}LB` };
+    if (ball.type === "BYE") return { bg: "bg-purple-500", text: "text-white", label: `${ball.runs}B` };
+    if (ball.runs === 6) return { bg: "bg-green-500", text: "text-white", label: "6" };
+    if (ball.runs === 4) return { bg: "bg-green-500", text: "text-white", label: "4" };
+    if (ball.runs === 0) return { bg: "bg-gray-500", text: "text-white", label: "0" };
     return { bg: "bg-blue-500", text: "text-white", label: String(ball.runs) };
   };
 
-  const onConfirm = (data) => {
-    dispatch(recordDelivery(data));
-  };
+  const onConfirm = (data) => dispatch(recordDelivery(data));
 
   const handleScoreBtnClick = (val) => {
-    // Extra
+    if (isMatchCompleted) return; // block scoring after match ends
     if (["WD", "NB", "LB", "BYE"].includes(val)) {
       setExtraType(val);
       setIsExtraModalOpen(true);
       return;
     }
-
-    // Normal wicket
-    if (val === "OUT") {
-      setShowNormalOutModal(true);
-      return;
-    }
-
-    // More
-    if (val === "MORE") {
-      setOpenMoreOptionModal(true);
-      return;
-    }
-
-    // Normal runs
+    if (val === "OUT") { setShowNormalOutModal(true); return; }
+    if (val === "MORE") { setOpenMoreOptionModal(true); return; }
     dispatch(recordDelivery(val));
   };
-  // console.log(currentMatchData);
 
+
+  // Detect inning 1 end: all overs completed OR all wickets fallen
   useEffect(() => {
-    if (legalBalls > 0 && legalBalls % 6 === 0) {
-      setOpenAddBowlerModal(true);
+    if (currentInningNumber !== 1 || isMatchCompleted || showStartSecondInningModal) return;
+
+    const allOversCompleted = totalOvers > 0 && legalBalls >= totalOvers * 6;
+    const allOut = fallOfWickets >= maxWickets;
+
+    if (allOversCompleted || allOut) {
+      setShowStartSecondInningModal(true);
+    }
+  }, [legalBalls, fallOfWickets]);
+
+  // Detect mid-inning over change (new bowler needed after each 6-ball over)
+  useEffect(() => {
+    if (legalBalls <= 0 || legalBalls % 6 !== 0) return;
+    if (isMatchCompleted || showStartSecondInningModal) return;
+
+    // Inning 1: over change (not the last over — that's handled above)
+    if (currentInningNumber === 1) {
+      const allOversCompleted = totalOvers > 0 && legalBalls >= totalOvers * 6;
+      if (!allOversCompleted) {
+        setOpenAddBowlerModal(true);
+      }
       return;
+    }
+
+    // Inning 2: show new bowler unless match is over or final over done
+    if (currentInningNumber === 2) {
+      const finalOverDone = totalOvers > 0 && legalBalls >= totalOvers * 6;
+      if (!finalOverDone) {
+        setOpenAddBowlerModal(true);
+      }
     }
   }, [legalBalls]);
 
-  const navigate = useNavigate();
-
-  const handleBackBtn = () => {
-    navigate("/local-match/setup");
-    return;
-  };
-
-  // console.log(currentMatchData);
-
-  // const ballColors = {
-  //   wicket: "bg-red-500",
-  //   four: "bg-orange-600",
-  //   six: "bg-green-600",
-  // };
-
-  // console.log(currentMatchData);
+  const handleBackBtn = () => navigate("/local-match/setup");
 
   const buttonColors = {
     0: "border-3 border-green-600 text-green-600",
@@ -171,6 +164,31 @@ export const ScoringPage = () => {
         </div>
       </header>
 
+      {/* Match Completed Overlay */}
+      {isMatchCompleted && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-base-100 rounded-3xl p-8 shadow-2xl text-center max-w-sm w-full">
+            <Trophy size={56} className="mx-auto mb-3 text-yellow-500" />
+            <h2 className="text-2xl font-bold mb-2">Match Completed!</h2>
+            <p className="text-lg font-semibold text-primary mb-1">{matchResult}</p>
+            {inning1 && (
+              <div className="mt-3 text-sm text-base-content/60 space-y-1">
+                <p>{inning1.battingTeam}: {inning1.runs}/{inning1.wickets} ({totalOvers} ov)</p>
+                {currentInning && currentInningNumber === 2 && (
+                  <p>{currentInning.battingTeam}: {currentInning.runs}/{currentInning.wickets} ({Math.floor(legalBalls / 6)}.{legalBalls % 6} ov)</p>
+                )}
+              </div>
+            )}
+            <button
+              onClick={handleBackBtn}
+              className="btn btn-primary mt-6 w-full rounded-xl"
+            >
+              Back to Home
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* main scoring screen */}
       <div className="flex flex-col gap-2 w-[97%] lg:w-[60%]">
         {/* header */}
@@ -180,39 +198,65 @@ export const ScoringPage = () => {
           <h2 className="font-bold">{currentMatchData?.secondTeam?.name}</h2>
         </div>
 
+        {/* Target banner for inning 2 */}
+        {isSecondInning && target != null && !isMatchCompleted && (
+          <div className="rounded-xl bg-warning/15 border border-warning/30 px-4 py-2 text-center text-sm">
+            <span className="font-semibold text-warning">
+              Target: {target}
+            </span>
+            <span className="ml-2 text-base-content/70">
+              Need {runsRequired} off {ballsLeft} balls
+              {requiredRunRate && ` · RRR ${requiredRunRate}`}
+            </span>
+          </div>
+        )}
+
         {/* score display */}
         <div className="flex border border-base-content/15 rounded-md">
           {/* score */}
           <div className="flex-2 p-2">
-            {/* Team name and inning */}
             <div className="flex flex-col gap-2 text-sm">
               <div className="flex gap-2">
                 <p>{battingTeamName}</p>
-                <p>1st Inning</p>
+                <p>{inningLabel}</p>
               </div>
               <div className="flex items-center gap-1">
                 <div className="text-4xl font-semibold">
-                  {teamScore}-{fallOfwickets}
+                  {teamScore}-{fallOfWickets}
                 </div>
                 <div className="text-lg">
                   ({Math.floor(legalBalls / 6)}.{legalBalls % 6})
                 </div>
               </div>
+              {/* 1st inning score shown in 2nd inning */}
+              {isSecondInning && inning1 && (
+                <p className="text-xs text-base-content/50">
+                  {inning1.battingTeam}: {inning1.runs}/{inning1.wickets} ({totalOvers} ov)
+                </p>
+              )}
             </div>
           </div>
 
           {/* runrate */}
-          <div className="flex-1 p-2 text-sm flex flex-col items-end">
-            <p className="font-semibold">CRR</p>
-            <p className="">{legalBalls > 0 ? currentRunRate : "0.0"}</p>
+          <div className="flex-1 p-2 text-sm flex flex-col items-end gap-1">
+            <div>
+              <p className="font-semibold">CRR</p>
+              <p>{currentRunRate}</p>
+            </div>
+            {isSecondInning && requiredRunRate && (
+              <div className="text-right">
+                <p className="font-semibold text-warning">RRR</p>
+                <p className="text-warning">{requiredRunRate}</p>
+              </div>
+            )}
           </div>
         </div>
 
         {/* current score board list */}
         <div className="border border-base-content/15 rounded-md">
           <table className="w-full table-fixed text-[.85rem]">
-            <thead className="">
-              <tr className="">
+            <thead>
+              <tr>
                 <th className="text-left px-3 py-2">Batsman</th>
                 <th className="px-3 py-2">R</th>
                 <th className="px-3 py-2">B</th>
@@ -221,68 +265,45 @@ export const ScoringPage = () => {
                 <th className="px-3 py-2">SR</th>
               </tr>
             </thead>
-
             <tbody className="border-b border-base-content/15">
               <tr className="text-blue-500">
                 <td className="text-left px-3 py-2">
                   {currentMatchData?.currentPlayers?.striker?.name}*
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData?.currentPlayers?.striker.battingStats?.runs}
+                  {currentMatchData?.currentPlayers?.striker?.battingStats?.runs}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {
-                    currentMatchData?.currentPlayers?.striker?.battingStats
-                      ?.balls
-                  }
+                  {currentMatchData?.currentPlayers?.striker?.battingStats?.balls}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {
-                    currentMatchData?.currentPlayers?.striker?.battingStats
-                      ?.fours
-                  }
+                  {currentMatchData?.currentPlayers?.striker?.battingStats?.fours}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {
-                    currentMatchData?.currentPlayers?.striker?.battingStats
-                      ?.sixes
-                  }
+                  {currentMatchData?.currentPlayers?.striker?.battingStats?.sixes}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {strikerBatsmanStrikeRate?.toFixed(1)}
+                  {strikerSR?.toFixed(1)}
                 </td>
               </tr>
-
-              <tr className="">
+              <tr>
                 <td className="text-left px-3 py-2">
                   {currentMatchData?.currentPlayers?.nonStriker?.name}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {
-                    currentMatchData?.currentPlayers?.nonStriker?.battingStats
-                      ?.runs
-                  }
+                  {currentMatchData?.currentPlayers?.nonStriker?.battingStats?.runs}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {
-                    currentMatchData?.currentPlayers?.nonStriker?.battingStats
-                      .balls
-                  }
+                  {currentMatchData?.currentPlayers?.nonStriker?.battingStats?.balls}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {
-                    currentMatchData?.currentPlayers?.nonStriker?.battingStats
-                      .fours
-                  }
+                  {currentMatchData?.currentPlayers?.nonStriker?.battingStats?.fours}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {
-                    currentMatchData?.currentPlayers?.nonStriker?.battingStats
-                      .sixes
-                  }
+                  {currentMatchData?.currentPlayers?.nonStriker?.battingStats?.sixes}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {nonStrikerBatsmanStrikeRate?.toFixed(1)}
+                  {nonStrikerSR?.toFixed(1)}
                 </td>
               </tr>
             </tbody>
@@ -296,34 +317,24 @@ export const ScoringPage = () => {
                 <th className="px-3 py-2">ECO</th>
               </tr>
             </thead>
-            <tbody className="">
-              <tr className="">
+            <tbody>
+              <tr>
                 <td className="text-left px-3 py-2">
                   {currentMatchData?.currentPlayers?.bowler?.name}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {Math.floor(
-                    currentMatchData?.currentPlayers?.bowler?.bowlingStats
-                      ?.balls / 6,
-                  )}
+                  {Math.floor(currentMatchData?.currentPlayers?.bowler?.bowlingStats?.balls / 6)}
                   .
-                  {currentMatchData?.currentPlayers?.bowler?.bowlingStats
-                    ?.balls % 6}
+                  {currentMatchData?.currentPlayers?.bowler?.bowlingStats?.balls % 6}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {
-                    currentMatchData?.currentPlayers?.bowler?.bowlingStats
-                      ?.maidens
-                  }
+                  {currentMatchData?.currentPlayers?.bowler?.bowlingStats?.maidens}
                 </td>
                 <td className="text-center px-3 py-2">
                   {currentMatchData?.currentPlayers?.bowler?.bowlingStats?.runs}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {
-                    currentMatchData?.currentPlayers?.bowler?.bowlingStats
-                      ?.wickets
-                  }
+                  {currentMatchData?.currentPlayers?.bowler?.bowlingStats?.wickets}
                 </td>
                 <td className="text-center px-3 py-2">
                   {bowlerEconomy?.toFixed(1)}
@@ -336,7 +347,6 @@ export const ScoringPage = () => {
         {/* per ball record */}
         <div className="border border-base-content/15 rounded-md flex items-center text-[.85rem] pl-2 gap-2 py-2">
           <p className="shrink-0 whitespace-nowrap font-semibold">This over :</p>
-
           <div className="flex gap-2 overflow-x-auto min-w-0 hide-scrollbar">
             {currentOverBalls.length > 0 ? (
               currentOverBalls.map((ball, index) => {
@@ -356,26 +366,20 @@ export const ScoringPage = () => {
           </div>
         </div>
 
-        {/* Bowler's current over ball-by-ball breakdown */}
-        
-
-        {/* socring button and extra button */}
-        <div className=" flex border-base-content/15 rounded-md gap-2">
-          {/* scoring button */}
+        {/* scoring buttons */}
+        <div className="flex border-base-content/15 rounded-md gap-2">
           <div
-            className={`flex-2 border border-base-content/15 py-4 px-2 rounded-md grid gap-y-4 grid-cols-5 place-items-center`}
+            className={`flex-2 border border-base-content/15 py-4 px-2 rounded-md grid gap-y-4 grid-cols-5 place-items-center ${isMatchCompleted ? "opacity-40 pointer-events-none" : ""}`}
           >
-            {scoringButton.map((btn) => {
-              return (
-                <button
-                  onClick={() => handleScoreBtnClick(btn)}
-                  className={`border-base-content/40 w-15 h-15 rounded-full font-semibold ${buttonColors[btn]} cursor-pointer border-2`}
-                  key={btn}
-                >
-                  {btn}
-                </button>
-              );
-            })}
+            {scoringButton.map((btn) => (
+              <button
+                onClick={() => handleScoreBtnClick(btn)}
+                className={`border-base-content/40 w-15 h-15 rounded-full font-semibold ${buttonColors[btn]} cursor-pointer border-2`}
+                key={btn}
+              >
+                {btn}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -398,7 +402,6 @@ export const ScoringPage = () => {
           onClose={() => setShowNormalOutModal(false)}
           onSubmit={(outData) => {
             onConfirm(outData);
-
             setShowNormalOutModal(false);
           }}
         />
@@ -407,10 +410,21 @@ export const ScoringPage = () => {
       {openMoreMotionModal && (
         <MoreOptionScoringModal onClose={() => setOpenMoreOptionModal(false)} />
       )}
+
+      {/* NEW BOWLER (mid-match over change) */}
       {openAddBowlerModal && (
         <AddNewBowlerModal
-          onClose={() => {
-            setOpenAddBowlerModal(false);
+          onClose={() => setOpenAddBowlerModal(false)}
+        />
+      )}
+
+      {/* START 2ND INNING */}
+      {showStartSecondInningModal && (
+        <StartSecondInningModal
+          onClose={() => setShowStartSecondInningModal(false)}
+          onUndo={() => {
+            dispatch(recordDelivery("UNDO"));
+            setShowStartSecondInningModal(false);
           }}
         />
       )}

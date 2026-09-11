@@ -46,6 +46,41 @@ const recordBallInOver = (state, ballData) => {
   }
 };
 
+// Check if inning 2 target is chased or match is over
+const checkMatchEnd = (state) => {
+  const match = state.currentMatchData;
+  if (match?.currentInning !== 2) return;
+
+  const inning2 = match?.innings?.[1];
+  if (!inning2) return;
+
+  const target = match?.target;
+  if (target === undefined || target === null) return;
+
+  const totalOvers = match?.totalOvers ?? match?.overs ?? 0;
+  const maxWickets = match?.maxWickets || 10;
+  const runs2 = inning2.runs;
+  const wickets2 = inning2.wickets;
+  const legalBalls2 = inning2.legalBalls;
+
+  const chased = runs2 >= target;
+  const allOut = wickets2 >= maxWickets;
+  const oversCompleted = totalOvers > 0 && legalBalls2 >= totalOvers * 6;
+
+  if (chased) {
+    const wicketsLeft = maxWickets - wickets2;
+    match.matchStatus = "completed";
+    match.matchResult = `${inning2.battingTeam} won by ${wicketsLeft} wicket${wicketsLeft !== 1 ? "s" : ""}`;
+    return;
+  }
+
+  if (allOut || oversCompleted) {
+    const runsShort = target - 1 - runs2;
+    match.matchStatus = "completed";
+    match.matchResult = `${inning2.bowlingTeam} won by ${runsShort} run${runsShort !== 1 ? "s" : ""}`;
+  }
+};
+
 // Save current state to history
 const saveHistory = (state) => {
   const snapshot = JSON.parse(JSON.stringify(state.currentMatchData));
@@ -482,32 +517,38 @@ const scoreSlice = createSlice({
           swapStriker(state);
         }
 
+        checkMatchEnd(state);
         return;
       }
 
       if (payload?.type === "WD" && !payload?.wicket) {
         addWideBallRunData(state, payload);
+        checkMatchEnd(state);
         return;
       }
 
       if (payload?.type === "NB" && !payload?.wicket) {
         addNoBallRunData(state, payload);
+        checkMatchEnd(state);
         return;
       }
 
       if (payload?.type === "LB" && !payload?.wicket) {
         addLBRunData(state, payload);
+        checkMatchEnd(state);
         return;
       }
 
       if (payload?.type === "BYE" && !payload?.wicket) {
         addByeRunData(state, payload);
+        checkMatchEnd(state);
         return;
       }
 
       // Wicket (normal or extra+wicket)
       if (payload?.wicket) {
         recordWicketData(state, payload);
+        checkMatchEnd(state);
         return;
       }
     },
@@ -632,6 +673,69 @@ const scoreSlice = createSlice({
         match.currentPlayers[position] = playerToSet;
       }
     },
+    startSecondInning: (state, action) => {
+      const { striker, nonStriker, bowler, newBattingTeamId, newBowlingTeamId, newBattingTeamName, newBowlingTeamName } = action.payload;
+      const match = state.currentMatchData;
+      if (!match) return;
+
+      saveHistory(state);
+
+      const inning1 = match.innings?.[0];
+      if (!inning1) return;
+
+      // Calculate target = inning1 runs + 1
+      const target = inning1.runs + 1;
+      match.target = target;
+
+      // Set up second inning
+      const totalOvers = match.totalOvers ?? match.overs ?? 0;
+      const inning2 = {
+        inning: 2,
+        runs: 0,
+        wickets: 0,
+        legalBalls: 0,
+        battingTeam: newBattingTeamName,
+        bowlingTeam: newBowlingTeamName,
+        battingTeamId: newBattingTeamId,
+        bowlingTeamId: newBowlingTeamId,
+        extras: {
+          wideBallRun: 0,
+          noBallRun: 0,
+          byes: 0,
+          legByes: 0,
+          overthrow: 0,
+        },
+        outPlayers: [],
+        retiredHurtPlayers: [],
+        overHistory: [
+          {
+            over: 1,
+            bowlerId: bowler.playerId,
+            batsmanId: striker.playerId,
+            balls: [],
+            runs: 0,
+            legalBalls: 0,
+          },
+        ],
+      };
+
+      // Append inning 2 (keep inning 1 intact for scorecard)
+      match.innings = [inning1, inning2];
+
+      // Switch current inning
+      match.currentInning = 2;
+
+      // Set players: opening batsmen from the new batting team, new bowler
+      match.currentPlayers = { striker, nonStriker, bowler };
+
+      // maxWickets = team size - 1 (10 for 11-a-side)
+      const battingTeam = match.firstTeam?.teamId === newBattingTeamId
+        ? match.firstTeam
+        : match.secondTeam;
+      match.maxWickets = Math.max((battingTeam?.players?.length || 11) - 1, 1);
+
+      match.matchStatus = "second_inning";
+    },
   },
 });
 
@@ -641,6 +745,7 @@ export const {
   setNewBowler,
   retireBatsman,
   replaceBatsman,
+  startSecondInning,
 } = scoreSlice.actions;
 
 export default scoreSlice.reducer;
