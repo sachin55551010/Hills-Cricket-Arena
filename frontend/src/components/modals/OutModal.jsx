@@ -35,6 +35,7 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
     { type: "Obstructing Field" },
     { type: "Hit Ball Twice" },
   ];
+  console.log("out modal run");
 
   // Filter wicket types based on the extra delivery type
   const getValidWicketTypes = () => {
@@ -49,15 +50,11 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
         );
       case "NB":
         // On a no ball: only Run Out (stumped not possible on NB)
-        return allWicketTypes.filter((w) =>
-          ["Run Out"].includes(w.type),
-        );
+        return allWicketTypes.filter((w) => ["Run Out"].includes(w.type));
       case "BYE":
       case "LB":
         // On bye/leg-bye: only Run Out
-        return allWicketTypes.filter((w) =>
-          ["Run Out"].includes(w.type),
-        );
+        return allWicketTypes.filter((w) => ["Run Out"].includes(w.type));
       default:
         return allWicketTypes;
     }
@@ -115,12 +112,16 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
   );
 
   // Retired hurt players can come back after a wicket
-  const retiredHurtPlayers = (currentInning?.retiredHurtPlayers || []).map((p) => ({
-    ...p,
-    playerId: p.playerId || p.id,
-    isRetiredHurt: true,
-  }));
-  const retiredHurtIds = retiredHurtPlayers.map((p) => p.playerId || p.id || "");
+  const retiredHurtPlayers = (currentInning?.retiredHurtPlayers || []).map(
+    (p) => ({
+      ...p,
+      playerId: p.playerId || p.id,
+      isRetiredHurt: true,
+    }),
+  );
+  const retiredHurtIds = retiredHurtPlayers.map(
+    (p) => p.playerId || p.id || "",
+  );
 
   const availableBatsmen = battingTeamPlayer.filter((player) => {
     const playerId = getPlayerId(player);
@@ -399,11 +400,14 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
                   <div className="flex items-center gap-2">
                     {showRetiredHurtBadge && player.isRetiredHurt && (
                       <span className="text-xs text-warning bg-warning/10 px-2 py-0.5 rounded-full">
-                        Retired Hurt · {player.battingStats?.runs ?? 0}({player.battingStats?.balls ?? 0})
+                        Retired Hurt · {player.battingStats?.runs ?? 0}(
+                        {player.battingStats?.balls ?? 0})
                       </span>
                     )}
                     {disabled && (
-                      <span className="text-xs opacity-60">Already playing</span>
+                      <span className="text-xs opacity-60">
+                        Already playing
+                      </span>
                     )}
                   </div>
                 </button>
@@ -434,9 +438,12 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
         <button
           type="button"
           onClick={onClose}
-          className="flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-base-content/10 active:scale-95"
+          aria-label="Back to scoring"
+          title="Back to scoring"
+          className="flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium transition hover:bg-base-content/10 active:scale-95"
         >
           <ArrowLeft size={22} />
+          <span>Back to scoring</span>
         </button>
 
         <div>
@@ -451,20 +458,35 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
         {/* EXTRA INFORMATION */}
         {pendingData && (
           <section className="mb-6 rounded-2xl border border-info/20 bg-info/10 p-4">
-            <h2 className="text-sm font-semibold">Extra + Wicket</h2>
+            <div className="flex items-start gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Back to scoring"
+                title="Back to scoring"
+                className="flex h-10 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-medium transition hover:bg-base-content/10 active:scale-95"
+              >
+                <ArrowLeft size={20} />
+                <span>Back to scoring</span>
+              </button>
 
-            <div className="mt-2 flex flex-wrap gap-2 text-xs">
-              <span className="badge badge-info">{pendingData.type}</span>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-sm font-semibold">Extra + Wicket</h2>
 
-              <span className="badge badge-neutral">
-                {pendingData.runs} run{pendingData.runs !== 1 ? "s" : ""}
-              </span>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <span className="badge badge-info">{pendingData.type}</span>
 
-              {pendingData.runType && (
-                <span className="badge badge-neutral">
-                  {pendingData.runType}
-                </span>
-              )}
+                  <span className="badge badge-neutral">
+                    {pendingData.runs} run{pendingData.runs !== 1 ? "s" : ""}
+                  </span>
+
+                  {pendingData.runType && (
+                    <span className="badge badge-neutral">
+                      {pendingData.runType}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           </section>
         )}

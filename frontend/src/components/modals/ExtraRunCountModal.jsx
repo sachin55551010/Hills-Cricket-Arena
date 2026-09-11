@@ -194,7 +194,10 @@ export const ExtraRunCountModal = ({
       {showOutModal && (
         <OutModal
           pendingData={pendingData}
-          onClose={() => setShowOutModal(false)}
+          onClose={() => {
+            setShowOutModal(false);
+            onClose();
+          }}
           onSubmit={(outData) => {
             const finalData = {
               ...pendingData,
