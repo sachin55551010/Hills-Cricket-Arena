@@ -428,8 +428,6 @@ const recordWicketData = (state, data) => {
 
   // 6. Count the ball faced by striker (if legal and not run out of non-striker)
   if (isLegalDelivery) {
-    const outPlayerIsStriker =
-      playerOutId === (striker?.playerId || striker?.id);
     // For most dismissals, striker faces the ball
     if (striker?.battingStats) {
       striker.battingStats.balls += 1;
@@ -722,7 +720,7 @@ const scoreSlice = createSlice({
       match.target = target;
 
       // Set up second inning
-      const totalOvers = match.totalOvers ?? match.overs ?? 0;
+
       const inning2 = {
         inning: 2,
         runs: 0,
