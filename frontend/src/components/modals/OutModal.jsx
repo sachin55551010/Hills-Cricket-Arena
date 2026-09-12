@@ -25,7 +25,6 @@ const playerNameSchema = z
 export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
   const { currentMatchData } = useSelector((state) => state.score);
 
-
   const allWicketTypes = [
     { type: "Bowled" },
     { type: "Caught" },

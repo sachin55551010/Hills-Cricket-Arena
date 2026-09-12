@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ExtraRunCountModal } from "../components/modals/ExtraRunCountModal";
 import { ArrowLeft, Trophy } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { OutModal } from "../components/modals/OutModal";
 import { MoreOptionScoringModal } from "../components/modals/MoreOptionScoringModal";
 import { AddNewBowlerModal } from "../components/modals/AddNewBowlerModal";
@@ -19,14 +19,26 @@ export const ScoringPage = () => {
   const [showExtraOutModal, setShowExtraOutModal] = useState(false);
   const [openAddBowlerModal, setOpenAddBowlerModal] = useState(false);
   const [openMoreMotionModal, setOpenMoreOptionModal] = useState(false);
-  const [showStartSecondInningModal, setShowStartSecondInningModal] = useState(false);
-  
+  const [showStartSecondInningModal, setShowStartSecondInningModal] =
+    useState(false);
 
   // scoring buttons
   const scoringButton = [
-    "0", "1", "2", "MORE", "UNDO",
-    "3", "4", "6", "...", "SWAP",
-    "WD", "NB", "LB", "BYE", "OUT",
+    "0",
+    "1",
+    "2",
+    "MORE",
+    "UNDO",
+    "3",
+    "4",
+    "6",
+    "...",
+    "SWAP",
+    "WD",
+    "NB",
+    "LB",
+    "BYE",
+    "OUT",
   ];
 
   const dispatch = useDispatch();
@@ -39,25 +51,37 @@ export const ScoringPage = () => {
   const teamScore = currentInning?.runs ?? 0;
   const legalBalls = currentInning?.legalBalls ?? 0;
   const fallOfWickets = currentInning?.wickets ?? 0;
-  const totalOvers = currentMatchData?.totalOvers ?? currentMatchData?.overs ?? 0;
+  const totalOvers =
+    currentMatchData?.totalOvers ?? currentMatchData?.overs ?? 0;
   const battingSquadSize =
     currentInning?.battingTeamId === currentMatchData?.firstTeam?.teamId
-      ? (currentMatchData?.firstTeamTotalPlayer ?? currentMatchData?.firstTeam?.players?.length ?? 11)
-      : (currentMatchData?.secondTeamTotalPlayer ?? currentMatchData?.secondTeam?.players?.length ?? 11);
+      ? (currentMatchData?.firstTeamTotalPlayer ??
+        currentMatchData?.firstTeam?.players?.length ??
+        11)
+      : (currentMatchData?.secondTeamTotalPlayer ??
+        currentMatchData?.secondTeam?.players?.length ??
+        11);
   const maxWickets = Math.max(Number(battingSquadSize) - 1, 1);
 
-  const currentRunRate = legalBalls > 0 ? ((teamScore * 6) / legalBalls).toFixed(1) : "0.0";
-  const bowlerEconomy = currentMatchData?.currentPlayers?.bowler?.bowlingStats?.economy;
-  const strikerSR = currentMatchData?.currentPlayers?.striker?.battingStats?.strikeRate;
-  const nonStrikerSR = currentMatchData?.currentPlayers?.nonStriker?.battingStats?.strikeRate;
+  const currentRunRate =
+    legalBalls > 0 ? ((teamScore * 6) / legalBalls).toFixed(1) : "0.0";
+  const bowlerEconomy =
+    currentMatchData?.currentPlayers?.bowler?.bowlingStats?.economy;
+  const strikerSR =
+    currentMatchData?.currentPlayers?.striker?.battingStats?.strikeRate;
+  const nonStrikerSR =
+    currentMatchData?.currentPlayers?.nonStriker?.battingStats?.strikeRate;
 
   const battingTeamName = currentInning?.battingTeam ?? "";
 
   // Target / required run rate (inning 2 only)
   const isSecondInning = currentInningNumber === 2;
   const target = currentMatchData?.target;
-  const runsRequired = isSecondInning && target != null ? Math.max(target - teamScore, 0) : null;
-  const ballsLeft = isSecondInning ? Math.max(totalOvers * 6 - legalBalls, 0) : null;
+  const runsRequired =
+    isSecondInning && target != null ? Math.max(target - teamScore, 0) : null;
+  const ballsLeft = isSecondInning
+    ? Math.max(totalOvers * 6 - legalBalls, 0)
+    : null;
   const requiredRunRate =
     isSecondInning && ballsLeft > 0
       ? ((runsRequired * 6) / ballsLeft).toFixed(1)
@@ -69,7 +93,8 @@ export const ScoringPage = () => {
 
   // Over ball data
   const overHistory = currentInning?.overHistory || [];
-  const currentOverData = overHistory.length > 0 ? overHistory[overHistory.length - 1] : null;
+  const currentOverData =
+    overHistory.length > 0 ? overHistory[overHistory.length - 1] : null;
   const currentOverBalls = currentOverData?.balls || [];
 
   // Inning label
@@ -77,14 +102,38 @@ export const ScoringPage = () => {
 
   // Ball display helper
   const getBallStyle = (ball) => {
-    if (ball.type === "WICKET") return { bg: "bg-red-500", text: "text-white", label: "W" };
-    if (ball.type === "WD") return { bg: "bg-yellow-500", text: "text-black", label: `${ball.totalRuns}WD` };
-    if (ball.type === "NB") return { bg: "bg-yellow-500", text: "text-black", label: `${ball.totalRuns}NB` };
-    if (ball.type === "LB") return { bg: "bg-purple-500", text: "text-white", label: `${ball.runs}LB` };
-    if (ball.type === "BYE") return { bg: "bg-purple-500", text: "text-white", label: `${ball.runs}B` };
-    if (ball.runs === 6) return { bg: "bg-green-500", text: "text-white", label: "6" };
-    if (ball.runs === 4) return { bg: "bg-green-500", text: "text-white", label: "4" };
-    if (ball.runs === 0) return { bg: "bg-gray-500", text: "text-white", label: "0" };
+    if (ball.type === "WICKET")
+      return { bg: "bg-red-500", text: "text-white", label: "W" };
+    if (ball.type === "WD")
+      return {
+        bg: "bg-yellow-500",
+        text: "text-black",
+        label: `${ball.totalRuns}WD`,
+      };
+    if (ball.type === "NB")
+      return {
+        bg: "bg-yellow-500",
+        text: "text-black",
+        label: `${ball.totalRuns}NB`,
+      };
+    if (ball.type === "LB")
+      return {
+        bg: "bg-purple-500",
+        text: "text-white",
+        label: `${ball.runs}LB`,
+      };
+    if (ball.type === "BYE")
+      return {
+        bg: "bg-purple-500",
+        text: "text-white",
+        label: `${ball.runs}B`,
+      };
+    if (ball.runs === 6)
+      return { bg: "bg-green-500", text: "text-white", label: "6" };
+    if (ball.runs === 4)
+      return { bg: "bg-green-500", text: "text-white", label: "4" };
+    if (ball.runs === 0)
+      return { bg: "bg-gray-500", text: "text-white", label: "0" };
     return { bg: "bg-blue-500", text: "text-white", label: String(ball.runs) };
   };
 
@@ -98,15 +147,25 @@ export const ScoringPage = () => {
       setIsExtraModalOpen(true);
       return;
     }
-    if (val === "OUT") { setShowNormalOutModal(true); return; }
-    if (val === "MORE") { setOpenMoreOptionModal(true); return; }
+    if (val === "OUT") {
+      setShowNormalOutModal(true);
+      return;
+    }
+    if (val === "MORE") {
+      setOpenMoreOptionModal(true);
+      return;
+    }
     dispatch(recordDelivery(val));
   };
 
-
   // Detect inning 1 end: all overs completed OR all wickets fallen
   useEffect(() => {
-    if (currentInningNumber !== 1 || isMatchCompleted || showStartSecondInningModal) return;
+    if (
+      currentInningNumber !== 1 ||
+      isMatchCompleted ||
+      showStartSecondInningModal
+    )
+      return;
 
     const allOversCompleted = totalOvers > 0 && legalBalls >= totalOvers * 6;
     const allOut = fallOfWickets >= maxWickets;
@@ -114,7 +173,15 @@ export const ScoringPage = () => {
     if (allOversCompleted || allOut) {
       setShowStartSecondInningModal(true);
     }
-  }, [legalBalls, fallOfWickets]);
+  }, [
+    legalBalls,
+    fallOfWickets,
+    currentInningNumber,
+    isMatchCompleted,
+    showStartSecondInningModal,
+    totalOvers,
+    maxWickets,
+  ]);
 
   // Detect mid-inning over change (new bowler needed after each 6-ball over)
   useEffect(() => {
@@ -137,7 +204,13 @@ export const ScoringPage = () => {
         setOpenAddBowlerModal(true);
       }
     }
-  }, [legalBalls]);
+  }, [
+    currentInningNumber,
+    isMatchCompleted,
+    legalBalls,
+    showStartSecondInningModal,
+    totalOvers,
+  ]);
 
   const handleBackBtn = () => {
     persistScoreState(scoreState);
@@ -178,12 +251,21 @@ export const ScoringPage = () => {
           <div className="bg-base-100 rounded-3xl p-8 shadow-2xl text-center max-w-sm w-full">
             <Trophy size={56} className="mx-auto mb-3 text-yellow-500" />
             <h2 className="text-2xl font-bold mb-2">Match Completed!</h2>
-            <p className="text-lg font-semibold text-primary mb-1">{matchResult}</p>
+            <p className="text-lg font-semibold text-primary mb-1">
+              {matchResult}
+            </p>
             {inning1 && (
               <div className="mt-3 text-sm text-base-content/60 space-y-1">
-                <p>{inning1.battingTeam}: {inning1.runs}/{inning1.wickets} ({totalOvers} ov)</p>
+                <p>
+                  {inning1.battingTeam}: {inning1.runs}/{inning1.wickets} (
+                  {totalOvers} ov)
+                </p>
                 {currentInning && currentInningNumber === 2 && (
-                  <p>{currentInning.battingTeam}: {currentInning.runs}/{currentInning.wickets} ({Math.floor(legalBalls / 6)}.{legalBalls % 6} ov)</p>
+                  <p>
+                    {currentInning.battingTeam}: {currentInning.runs}/
+                    {currentInning.wickets} ({Math.floor(legalBalls / 6)}.
+                    {legalBalls % 6} ov)
+                  </p>
                 )}
               </div>
             )}
@@ -204,15 +286,18 @@ export const ScoringPage = () => {
           <h1 className="font-bold">{currentMatchData?.firstTeam?.name}</h1>
           <span className="font-semibold text-base-content/70">Vs</span>
           <h2 className="font-bold">{currentMatchData?.secondTeam?.name}</h2>
-          <div className="border p-2 absolute right-0"><GrScorecard/></div>
+          <Link
+            to="scoreboard"
+            className="border p-2 absolute right-0 rounded-md border-base-content/30 cursor-pointer"
+          >
+            <GrScorecard />
+          </Link>
         </div>
-        
+
         {/* Target banner for inning 2 */}
         {isSecondInning && target != null && !isMatchCompleted && (
           <div className="rounded-xl bg-warning/15 border border-warning/30 px-4 py-2 text-center text-sm">
-            <span className="font-semibold text-warning">
-              Target: {target}
-            </span>
+            <span className="font-semibold text-warning">Target: {target}</span>
             <span className="ml-2 text-base-content/70">
               Need {runsRequired} off {ballsLeft} balls
               {requiredRunRate && ` · RRR ${requiredRunRate}`}
@@ -237,10 +322,12 @@ export const ScoringPage = () => {
                   ({Math.floor(legalBalls / 6)}.{legalBalls % 6})
                 </div>
               </div>
+
               {/* 1st inning score shown in 2nd inning */}
               {isSecondInning && inning1 && (
                 <p className="text-xs text-base-content/50">
-                  {inning1.battingTeam}: {inning1.runs}/{inning1.wickets} ({totalOvers} ov)
+                  {inning1.battingTeam}: {inning1.runs}/{inning1.wickets} (
+                  {totalOvers} ov)
                 </p>
               )}
             </div>
@@ -280,16 +367,28 @@ export const ScoringPage = () => {
                   {currentMatchData?.currentPlayers?.striker?.name}*
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData?.currentPlayers?.striker?.battingStats?.runs}
+                  {
+                    currentMatchData?.currentPlayers?.striker?.battingStats
+                      ?.runs
+                  }
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData?.currentPlayers?.striker?.battingStats?.balls}
+                  {
+                    currentMatchData?.currentPlayers?.striker?.battingStats
+                      ?.balls
+                  }
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData?.currentPlayers?.striker?.battingStats?.fours}
+                  {
+                    currentMatchData?.currentPlayers?.striker?.battingStats
+                      ?.fours
+                  }
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData?.currentPlayers?.striker?.battingStats?.sixes}
+                  {
+                    currentMatchData?.currentPlayers?.striker?.battingStats
+                      ?.sixes
+                  }
                 </td>
                 <td className="text-center px-3 py-2">
                   {strikerSR?.toFixed(1)}
@@ -300,16 +399,28 @@ export const ScoringPage = () => {
                   {currentMatchData?.currentPlayers?.nonStriker?.name}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData?.currentPlayers?.nonStriker?.battingStats?.runs}
+                  {
+                    currentMatchData?.currentPlayers?.nonStriker?.battingStats
+                      ?.runs
+                  }
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData?.currentPlayers?.nonStriker?.battingStats?.balls}
+                  {
+                    currentMatchData?.currentPlayers?.nonStriker?.battingStats
+                      ?.balls
+                  }
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData?.currentPlayers?.nonStriker?.battingStats?.fours}
+                  {
+                    currentMatchData?.currentPlayers?.nonStriker?.battingStats
+                      ?.fours
+                  }
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData?.currentPlayers?.nonStriker?.battingStats?.sixes}
+                  {
+                    currentMatchData?.currentPlayers?.nonStriker?.battingStats
+                      ?.sixes
+                  }
                 </td>
                 <td className="text-center px-3 py-2">
                   {nonStrikerSR?.toFixed(1)}
@@ -332,18 +443,28 @@ export const ScoringPage = () => {
                   {currentMatchData?.currentPlayers?.bowler?.name}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {Math.floor(currentMatchData?.currentPlayers?.bowler?.bowlingStats?.balls / 6)}
+                  {Math.floor(
+                    currentMatchData?.currentPlayers?.bowler?.bowlingStats
+                      ?.balls / 6,
+                  )}
                   .
-                  {currentMatchData?.currentPlayers?.bowler?.bowlingStats?.balls % 6}
+                  {currentMatchData?.currentPlayers?.bowler?.bowlingStats
+                    ?.balls % 6}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData?.currentPlayers?.bowler?.bowlingStats?.maidens}
+                  {
+                    currentMatchData?.currentPlayers?.bowler?.bowlingStats
+                      ?.maidens
+                  }
                 </td>
                 <td className="text-center px-3 py-2">
                   {currentMatchData?.currentPlayers?.bowler?.bowlingStats?.runs}
                 </td>
                 <td className="text-center px-3 py-2">
-                  {currentMatchData?.currentPlayers?.bowler?.bowlingStats?.wickets}
+                  {
+                    currentMatchData?.currentPlayers?.bowler?.bowlingStats
+                      ?.wickets
+                  }
                 </td>
                 <td className="text-center px-3 py-2">
                   {bowlerEconomy?.toFixed(1)}
@@ -355,7 +476,9 @@ export const ScoringPage = () => {
 
         {/* per ball record */}
         <div className="border border-base-content/15 rounded-md flex items-center text-[.85rem] pl-2 gap-2 py-2">
-          <p className="shrink-0 whitespace-nowrap font-semibold">This over :</p>
+          <p className="shrink-0 whitespace-nowrap font-semibold">
+            This over :
+          </p>
           <div className="flex gap-2 overflow-x-auto min-w-0 hide-scrollbar">
             {currentOverBalls.length > 0 ? (
               currentOverBalls.map((ball, index) => {
@@ -422,9 +545,7 @@ export const ScoringPage = () => {
 
       {/* NEW BOWLER (mid-match over change) */}
       {openAddBowlerModal && (
-        <AddNewBowlerModal
-          onClose={() => setOpenAddBowlerModal(false)}
-        />
+        <AddNewBowlerModal onClose={() => setOpenAddBowlerModal(false)} />
       )}
 
       {/* START 2ND INNING */}

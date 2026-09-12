@@ -1,7 +1,15 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 
-const ProtectedRoute = ({ allowedStatus, children }) => {
-  const match = JSON.parse(localStorage.getItem("currentMatch")) || null;
+const ProtectedRoute = ({ allowedStatus }) => {
+  const storedMatch = localStorage.getItem("currentMatch");
+
+  let match = null;
+
+  try {
+    match = storedMatch ? JSON.parse(storedMatch) : null;
+  } catch (error) {
+    console.error("Invalid currentMatch in localStorage:", error);
+  }
 
   if (!match) {
     return <Navigate to="/local-match/setup" replace />;
@@ -16,14 +24,15 @@ const ProtectedRoute = ({ allowedStatus, children }) => {
         return <Navigate to="/local-match/players" replace />;
 
       case "scoring":
-        return <Navigate to="/local-match/scoring" replace />;
+        // Already in scoring status, so allow the route
+        return <Outlet />;
 
       default:
         return <Navigate to="/local-match/setup" replace />;
     }
   }
 
-  return children;
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

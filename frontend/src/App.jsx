@@ -49,6 +49,10 @@ import { ScoringPage } from "./pages/ScoringPage";
 import { LocalTeamList } from "./pages/Local Match Page/LocalTeamList";
 import { LocalMatchHisory } from "./pages/Local Match Page/LocalMatchHisory";
 import { AddLocalTeamPlayer } from "./pages/Local Match Page/AddLocalTeamPlayer";
+import { LocalMatchleaderBoardPage } from "./pages/Local Match Page/LocalMatchLeaderBoardPage";
+import { LocalMatchScoreboard } from "./pages/Local Match Page/LocalMatchScoreboard";
+import { LocalMatchOvers } from "./pages/Local Match Page/LocalMatchOvers";
+
 function App() {
   const { authUser } = useSelector((state) => state.auth);
   const { isLoading } = useCheckAuthUserQuery();
@@ -266,14 +270,21 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/local-match/scoring"
-            element={
-              <ProtectedRoute allowedStatus="scoring">
-                <ScoringPage />
-              </ProtectedRoute>
-            }
-          />
+            element={<ProtectedRoute allowedStatus="scoring" />}
+          >
+            {/* Main scoring page */}
+            <Route index element={<ScoringPage />} />
+
+            {/* Leaderboard section */}
+            <Route element={<LocalMatchleaderBoardPage />}>
+              <Route path="scoreboard" element={<LocalMatchScoreboard />} />
+
+              <Route path="overs" element={<LocalMatchOvers />} />
+            </Route>
+          </Route>
 
           {/* local match pages */}
           <Route path="/local-match/teams" element={<LocalTeamList />} />
