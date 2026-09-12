@@ -9,7 +9,7 @@ import { StartSecondInningModal } from "../components/modals/StartSecondInningMo
 import { useDispatch, useSelector } from "react-redux";
 import { recordDelivery } from "../store/scoreSlice";
 import { persistScoreState } from "../store/persistMatch";
-
+import { GrScorecard } from "react-icons/gr";
 export const ScoringPage = () => {
   const scoreState = useSelector((state) => state.score);
   const { currentMatchData } = scoreState;
@@ -20,7 +20,9 @@ export const ScoringPage = () => {
   const [openAddBowlerModal, setOpenAddBowlerModal] = useState(false);
   const [openMoreMotionModal, setOpenMoreOptionModal] = useState(false);
   const [showStartSecondInningModal, setShowStartSecondInningModal] = useState(false);
+  
 
+  // scoring buttons
   const scoringButton = [
     "0", "1", "2", "MORE", "UNDO",
     "3", "4", "6", "...", "SWAP",
@@ -88,6 +90,7 @@ export const ScoringPage = () => {
 
   const onConfirm = (data) => dispatch(recordDelivery(data));
 
+  // button to perform all socirng related task
   const handleScoreBtnClick = (val) => {
     if (isMatchCompleted) return; // block scoring after match ends
     if (["WD", "NB", "LB", "BYE"].includes(val)) {
@@ -141,6 +144,7 @@ export const ScoringPage = () => {
     navigate("/local-match/setup");
   };
 
+  // each ball colors
   const buttonColors = {
     0: "border-3 border-green-600 text-green-600",
     1: "border-3 border-green-600 text-green-600",
@@ -196,12 +200,13 @@ export const ScoringPage = () => {
       {/* main scoring screen */}
       <div className="flex flex-col gap-2 w-[97%] lg:w-[60%]">
         {/* header */}
-        <div className="flex justify-center gap-2 h-15 items-center">
+        <div className="flex gap-2 h-15 items-center relative">
           <h1 className="font-bold">{currentMatchData?.firstTeam?.name}</h1>
           <span className="font-semibold text-base-content/70">Vs</span>
           <h2 className="font-bold">{currentMatchData?.secondTeam?.name}</h2>
+          <div className="border p-2 absolute right-0"><GrScorecard/></div>
         </div>
-
+        
         {/* Target banner for inning 2 */}
         {isSecondInning && target != null && !isMatchCompleted && (
           <div className="rounded-xl bg-warning/15 border border-warning/30 px-4 py-2 text-center text-sm">
