@@ -35,7 +35,6 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
     { type: "Obstructing Field" },
     { type: "Hit Ball Twice" },
   ];
-  console.log("out modal run");
 
   // Filter wicket types based on the extra delivery type
   const getValidWicketTypes = () => {

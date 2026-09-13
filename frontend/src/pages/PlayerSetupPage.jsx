@@ -9,6 +9,7 @@ import { upsertMatchHistory } from "../store/persistMatch";
 
 export const PlayerSetupPage = () => {
   const navigate = useNavigate();
+  console.log("player setup run");
 
   const { currentMatchData } = useSelector((state) => state.score);
 
@@ -410,10 +411,12 @@ export const PlayerSetupPage = () => {
             {
               over: 1,
               bowlerId: bowler.playerId,
+              bowlerName: bowler.name,
               batsmanId: striker.playerId,
               balls: [],
               runs: 0,
               legalBalls: 0,
+              wickets: 0,
             },
           ],
         },

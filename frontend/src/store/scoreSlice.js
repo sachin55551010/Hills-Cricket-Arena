@@ -35,6 +35,7 @@ const recordBallInOver = (state, ballData) => {
     isLegal: ballData.isLegal ?? true,
     extras: ballData.extras || 0,
     totalRuns: ballData.totalRuns ?? ballData.runs ?? 0,
+    isBowlerWicket: ballData.isBowlerWicket ?? false,
     timestamp: Date.now(),
   };
 
@@ -44,6 +45,9 @@ const recordBallInOver = (state, ballData) => {
   currentOver.runs += ball.totalRuns;
   if (ball.isLegal) {
     currentOver.legalBalls += 1;
+  }
+  if (ball.isBowlerWicket) {
+    currentOver.wickets = (currentOver.wickets || 0) + 1;
   }
 };
 
@@ -446,6 +450,7 @@ const recordWicketData = (state, data) => {
     isLegal: isLegalDelivery,
     extras: extraPenaltyRuns,
     totalRuns: ballTotalRuns,
+    isBowlerWicket: bowlerGetsCredit,
   });
 
   // 8. Add dismissed player to outPlayers list
@@ -460,6 +465,9 @@ const recordWicketData = (state, data) => {
     fielder: data.fielder || null,
     bowlerName: match.currentPlayers?.bowler?.name,
     bowlerId: match.currentPlayers?.bowler?.playerId,
+    teamRuns: inning.runs,
+    teamWickets: inning.wickets,
+    teamLegalBalls: inning.legalBalls,
   });
 
   // 9. Replace dismissed player with new batsman
@@ -594,10 +602,12 @@ const scoreSlice = createSlice({
       inning.overHistory.push({
         over: newOverNumber,
         bowlerId: newBowler.playerId,
+        bowlerName: newBowler.name,
         batsmanId: match.currentPlayers.striker.playerId,
         balls: [],
         runs: 0,
         legalBalls: 0,
+        wickets: 0,
       });
     },
     retireBatsman: (state, action) => {
@@ -743,10 +753,12 @@ const scoreSlice = createSlice({
           {
             over: 1,
             bowlerId: bowler.playerId,
+            bowlerName: bowler.name,
             batsmanId: striker.playerId,
             balls: [],
             runs: 0,
             legalBalls: 0,
+            wickets: 0,
           },
         ],
       };

@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom";
 
-const ProtectedRoute = ({ allowedStatus }) => {
+const ProtectedRoute = ({ allowedStatus, children }) => {
   const storedMatch = localStorage.getItem("currentMatch");
 
   let match = null;
@@ -10,6 +10,9 @@ const ProtectedRoute = ({ allowedStatus }) => {
   } catch (error) {
     console.error("Invalid currentMatch in localStorage:", error);
   }
+
+  // Route elements passed as children render directly; nested routes use Outlet.
+  const renderAllowed = () => children ?? <Outlet />;
 
   if (!match) {
     return <Navigate to="/local-match/setup" replace />;
@@ -25,14 +28,14 @@ const ProtectedRoute = ({ allowedStatus }) => {
 
       case "scoring":
         // Already in scoring status, so allow the route
-        return <Outlet />;
+        return renderAllowed();
 
       default:
         return <Navigate to="/local-match/setup" replace />;
     }
   }
 
-  return <Outlet />;
+  return renderAllowed();
 };
 
 export default ProtectedRoute;
