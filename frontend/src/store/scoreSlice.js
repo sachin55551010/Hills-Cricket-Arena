@@ -777,6 +777,54 @@ const scoreSlice = createSlice({
 
       match.matchStatus = "second_inning";
     },
+    renameCurrentPlayer: (state, action) => {
+      const { position, name } = action.payload;
+      const match = state.currentMatchData;
+      if (!match || !["striker", "nonStriker", "bowler"].includes(position)) {
+        return;
+      }
+
+      const player = match.currentPlayers?.[position];
+      if (!player || !name) return;
+
+      const trimmedName = name.trim();
+      const playerId = player.playerId || player.id;
+
+      saveHistory(state);
+
+      // Update the live player
+      match.currentPlayers[position].name = trimmedName;
+
+      // Keep the batting/bowling team roster in sync
+      const inningIndex = match.currentInning - 1;
+      const inning = match.innings?.[inningIndex];
+      const teamId =
+        position === "bowler"
+          ? inning?.bowlingTeamId
+          : inning?.battingTeamId;
+
+      [match.firstTeam, match.secondTeam].forEach((team) => {
+        if (!team || team.teamId !== teamId) return;
+        (team.players || []).forEach((teamPlayer) => {
+          if ((teamPlayer.playerId || teamPlayer.id) === playerId) {
+            teamPlayer.name = trimmedName;
+          }
+        });
+      });
+
+      // Update the bowler name recorded on the current over and balls
+      if (position === "bowler" && inning?.overHistory?.length > 0) {
+        const over = inning.overHistory[inning.overHistory.length - 1];
+        if (over.bowlerId === playerId) {
+          over.bowlerName = trimmedName;
+          (over.balls || []).forEach((ball) => {
+            if (ball.bowlerId === playerId) {
+              ball.bowlerName = trimmedName;
+            }
+          });
+        }
+      }
+    },
   },
 });
 
@@ -787,6 +835,7 @@ export const {
   retireBatsman,
   replaceBatsman,
   startSecondInning,
+  renameCurrentPlayer,
 } = scoreSlice.actions;
 
 export default scoreSlice.reducer;

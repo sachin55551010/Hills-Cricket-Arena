@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { Pencil } from "lucide-react";
+import { RenamePlayerModal } from "../../components/modals/RenamePlayerModal";
 
 const formatOvers = (legalBalls = 0) =>
   `${Math.floor(legalBalls / 6)}.${legalBalls % 6}`;
@@ -25,7 +28,13 @@ const emptyExtras = {
   overthrow: 0,
 };
 
-const InningSection = ({ match, inning, isCurrent, currentPlayers }) => {
+const InningSection = ({
+  match,
+  inning,
+  isCurrent,
+  currentPlayers,
+  onEditPlayer,
+}) => {
   if (!inning) return null;
 
   const extras = { ...emptyExtras, ...(inning.extras || {}) };
@@ -137,9 +146,23 @@ const InningSection = ({ match, inning, isCurrent, currentPlayers }) => {
                   key={getPlayerId(player) || `current-${index}`}
                   className="text-blue-500"
                 >
-                  <td className="text-left px-3 py-2 truncate">
-                    {player.name}
-                    {index === 0 ? "*" : ""}
+                  <td className="text-left px-3 py-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onEditPlayer(
+                          index === 0 ? "striker" : "nonStriker",
+                          player.name,
+                        )
+                      }
+                      className="flex w-full items-center gap-1.5 text-left"
+                    >
+                      <span className="truncate">
+                        {player.name}
+                        {index === 0 ? "*" : ""}
+                      </span>
+                      <Pencil size={12} className="shrink-0 opacity-50" />
+                    </button>
                   </td>
                   <td className="text-center px-1 py-2">{stats.runs ?? 0}</td>
                   <td className="text-center px-1 py-2">{stats.balls ?? 0}</td>
@@ -246,9 +269,25 @@ const InningSection = ({ match, inning, isCurrent, currentPlayers }) => {
                     key={bowler.id}
                     className={isCurrent ? "text-blue-500" : "opacity-80"}
                   >
-                    <td className="text-left px-3 py-2 truncate">
-                      {bowler.name || "Unknown"}
-                      {isCurrent ? " *" : ""}
+                    <td className="text-left px-3 py-2">
+                      {isCurrent ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onEditPlayer("bowler", bowler.name || "")
+                          }
+                          className="flex w-full items-center gap-1.5 text-left"
+                        >
+                          <span className="truncate">
+                            {bowler.name || "Unknown"} *
+                          </span>
+                          <Pencil size={12} className="shrink-0 opacity-50" />
+                        </button>
+                      ) : (
+                        <span className="block truncate">
+                          {bowler.name || "Unknown"}
+                        </span>
+                      )}
                     </td>
                     <td className="text-center px-1 py-2">
                       {formatOvers(bowler.balls)}
@@ -305,6 +344,7 @@ const InningSection = ({ match, inning, isCurrent, currentPlayers }) => {
 
 export const LocalMatchScoreboard = () => {
   const { currentMatchData } = useSelector((state) => state.score);
+  const [editing, setEditing] = useState(null);
 
   const innings = currentMatchData?.innings || [];
   const currentInningNumber = Number(currentMatchData?.currentInning) || 1;
@@ -341,6 +381,7 @@ export const LocalMatchScoreboard = () => {
               inning={inning}
               isCurrent={isCurrent}
               currentPlayers={currentMatchData.currentPlayers}
+              onEditPlayer={(position, name) => setEditing({ position, name })}
             />
           ))}
 
@@ -352,6 +393,14 @@ export const LocalMatchScoreboard = () => {
           Back to scoring
         </Link>
       </div>
+
+      {editing && (
+        <RenamePlayerModal
+          position={editing.position}
+          currentName={editing.name}
+          onClose={() => setEditing(null)}
+        />
+      )}
     </div>
   );
 };
