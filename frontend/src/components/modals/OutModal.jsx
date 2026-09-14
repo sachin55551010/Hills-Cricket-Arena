@@ -7,23 +7,62 @@ import {
   UsersRound,
   PersonStanding,
 } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { nanoid } from "nanoid";
 import { z } from "zod";
+import { addPlayerToTeam } from "../../store/localTeamSlice";
 
 const playerNameSchema = z
   .string()
   .trim()
-  .min(1, "Player name is required")
+  .min(3, "Player name must be at least 3 characters")
+  .max(15, "Player name cannot be more than 15 characters")
   .refine((name) => !/^\d+$/.test(name), {
     message: "Player name cannot contain only numbers",
-  })
-  .refine((name) => (name.match(/[A-Za-z]/g) || []).length >= 3, {
-    message: "Player name must contain at least 3 letters",
   });
+
+const createPlayer = (name) => ({
+  playerId: nanoid(),
+  name: name.trim(),
+  matches: 0,
+
+  battingStats: {
+    innings: 0,
+    notOut: 0,
+    runs: 0,
+    balls: 0,
+    bestScore: 0,
+    average: 0,
+    strikeRate: 0,
+    thirties: 0,
+    fifties: 0,
+    hundreds: 0,
+    ducks: 0,
+    fours: 0,
+    sixes: 0,
+  },
+
+  bowlingStats: {
+    innings: 0,
+    balls: 0,
+    runs: 0,
+    wickets: 0,
+    bestBowling: "0/0",
+    average: 0,
+    economy: 0,
+    strikeRate: 0,
+    maidens: 0,
+    threeWickets: 0,
+    fiveWickets: 0,
+    wides: 0,
+    noBalls: 0,
+    dotBalls: 0,
+  },
+});
 
 export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
   const { currentMatchData } = useSelector((state) => state.score);
+  const dispatch = useDispatch();
 
   const allWicketTypes = [
     { type: "Bowled" },
@@ -76,6 +115,7 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
   const [newBatsman, setNewBatsman] = useState("");
   const [newPlayerPosition, setNewPlayerPosition] = useState("striker");
   const [nameError, setNameError] = useState("");
+  const [fielderError, setFielderError] = useState("");
 
   const currentInning =
     currentMatchData?.innings?.[currentMatchData.currentInning - 1];
@@ -173,6 +213,7 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
 
   const selectFielder = (player) => {
     setFielder(player.name);
+    setFielderError("");
   };
 
   const handleWicketTypeBtn = (type) => {
@@ -190,6 +231,7 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
 
     setCompletedRuns("");
     setNameError("");
+    setFielderError("");
   };
 
   const handleSubmitBtn = () => {
@@ -235,75 +277,67 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
         return;
       }
 
-      newPlayer = {
-        id: nanoid(),
-        name: trimmedName,
-        matches: 0,
-
-        battingStats: {
-          innings: 0,
-          notOut: 0,
-          runs: 0,
-          balls: 0,
-          bestScore: 0,
-          average: 0,
-          strikeRate: 0,
-          thirties: 0,
-          fifties: 0,
-          hundreds: 0,
-          ducks: 0,
-          fours: 0,
-          sixes: 0,
-        },
-
-        bowlingStats: {
-          innings: 0,
-          balls: 0,
-          runs: 0,
-          wickets: 0,
-          bestBowling: "0/0",
-          average: 0,
-          economy: 0,
-          strikeRate: 0,
-          maidens: 0,
-          threeWickets: 0,
-          fiveWickets: 0,
-          wides: 0,
-          noBalls: 0,
-          dotBalls: 0,
-        },
-      };
+      newPlayer = createPlayer(trimmedName);
     }
 
     /*
      * Validate fielder selection for dismissals that need one.
-     * The fielder must come from the bowling team.
+     * An existing bowling-team player is matched by name; if no matching
+     * player is found, the entered name is created as a new bowling-team
+     * player so the wicket is not blocked.
      */
     let selectedFielder = null;
+    let newFielder = null;
 
     if (
       selectedWicketType === "Caught" ||
       selectedWicketType === "Run Out" ||
       selectedWicketType === "Stumped"
     ) {
+      const trimmedFielderName = fielder.trim();
+
       const matchingFielder = bowlingFielders.find(
         (player) =>
-          player?.name?.trim().toLowerCase() === fielder.trim().toLowerCase(),
+          player?.name?.trim().toLowerCase() ===
+          trimmedFielderName.toLowerCase(),
       );
 
-      if (!matchingFielder) {
-        setNameError(
-          selectedWicketType === "Stumped"
-            ? "Select a wicketkeeper from the bowling team (except the bowler)"
-            : "Select a fielder from the bowling team",
-        );
-        return;
-      }
+      if (matchingFielder) {
+        selectedFielder = {
+          playerId: getPlayerId(matchingFielder),
+          name: matchingFielder.name,
+        };
+      } else {
+        const result = playerNameSchema.safeParse(trimmedFielderName);
 
-      selectedFielder = {
-        playerId: getPlayerId(matchingFielder),
-        name: matchingFielder.name,
-      };
+        if (!result.success) {
+          const message =
+            result.error.issues[0]?.message || "Invalid fielder name";
+          setFielderError(message);
+          return;
+        }
+
+        const duplicateName = bowlingTeamPlayer.some(
+          (player) =>
+            player?.name?.trim().toLowerCase() ===
+            trimmedFielderName.toLowerCase(),
+        );
+
+        if (duplicateName) {
+          setFielderError(
+            selectedWicketType === "Stumped"
+              ? "Select a wicketkeeper from the bowling team (except the bowler)"
+              : "Select a fielder from the bowling team",
+          );
+          return;
+        }
+
+        newFielder = createPlayer(trimmedFielderName);
+        selectedFielder = {
+          playerId: newFielder.playerId,
+          name: newFielder.name,
+        };
+      }
     }
 
     /*
@@ -319,6 +353,19 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
     if (!selectedPlayerOut) {
       setNameError("Please select which batsman got out");
       return;
+    }
+
+    /*
+     * Persist a newly-created fielder to the bowling team roster so they
+     * appear in future suggestions.
+     */
+    if (newFielder) {
+      dispatch(
+        addPlayerToTeam({
+          teamId: currentInning?.bowlingTeamId,
+          player: newFielder,
+        }),
+      );
     }
 
     // prepare full player
@@ -595,10 +642,11 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
                 <input
                   id="fielder"
                   type="text"
+                  maxLength={15}
                   value={fielder}
                   onChange={(e) => {
                     setFielder(e.target.value);
-                    setNameError("");
+                    setFielderError("");
                   }}
                   className="h-11 w-full rounded-xl border border-base-content/10 bg-base-100 px-3 text-sm outline-none placeholder:text-base-content/30 focus:border-blue-500"
                   placeholder={
@@ -612,15 +660,28 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
                   items: filteredFielders,
                   value: fielder,
                   onSelect: selectFielder,
-                  emptyMessage: "No matching bowling-team player found",
+                  emptyMessage:
+                    "No matching player found. This name will be created as a new player.",
                 })}
               </div>
+
+              {fielder.trim() && filteredFielders.length === 0 && (
+                <p className="mt-2 text-xs text-info">
+                  No existing player matched. A new player will be created
+                  automatically if the name is valid.
+                </p>
+              )}
+
+              {fielderError && (
+                <p className="mt-2 text-xs text-error">{fielderError}</p>
+              )}
             </div>
           )}
 
           {/* COMPLETED RUNS */}
-          {(selectedWicketType === "Run Out" ||
-            selectedWicketType === "Caught") && (
+          {!pendingData &&
+            (selectedWicketType === "Run Out" ||
+              selectedWicketType === "Caught") && (
             <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
               <label
                 htmlFor="completedRuns"
@@ -669,6 +730,7 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
               <input
                 id="newBatsman"
                 type="text"
+                maxLength={15}
                 value={newBatsman}
                 onChange={(e) => {
                   setNewBatsman(e.target.value);

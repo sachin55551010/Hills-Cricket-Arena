@@ -62,7 +62,7 @@ export const LocalMatchHisory = () => {
   // Remove duplicate matches using matchId
   const matchList = Array.from(
     new Map(storedMatchList.map((match) => [match.matchId, match])).values(),
-  );
+  ).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   const navigate = useNavigate();
   const dispatch = useDispatch();

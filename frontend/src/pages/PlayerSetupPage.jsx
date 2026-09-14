@@ -9,13 +9,11 @@ import { upsertMatchHistory } from "../store/persistMatch";
 
 export const PlayerSetupPage = () => {
   const navigate = useNavigate();
-  console.log("player setup run");
 
   const { currentMatchData } = useSelector((state) => state.score);
 
   const teamList = JSON.parse(localStorage.getItem("localTeams")) || [];
   // console.log("team list", teamList);
-  console.log("current match data", currentMatchData);
 
   const dispatch = useDispatch();
 
@@ -31,7 +29,7 @@ export const PlayerSetupPage = () => {
 
   const tossWinnerId = currentMatchData?.toss?.winner?.teamId;
   const tossDecision = currentMatchData?.toss?.decision;
-  console.log("toss winner", tossWinnerId, "toss decision", tossDecision);
+
   const firstTeam = currentMatchData?.firstTeam;
   const secondTeam = currentMatchData?.secondTeam;
 
@@ -77,13 +75,19 @@ export const PlayerSetupPage = () => {
   // console.log("bowling team list", bowlingTeamList);
 
   // CHECK WHETHER PLAYER IS ALREADY SELECTED
-  const isPlayerSelected = (player) => {
+  // Striker/non-striker belong to the batting team and the bowler belongs to
+  // the bowling team. A same-named player in the other team is a different
+  // player, so selection checks are scoped to the relevant team.
+  const isPlayerSelected = (player, teamType = "batting") => {
     const playerName = player.name.trim().toLowerCase();
 
-    return (
-      formData.striker.trim().toLowerCase() === playerName ||
-      formData.nonStriker.trim().toLowerCase() === playerName ||
-      formData.bowler.trim().toLowerCase() === playerName
+    const selectedNames =
+      teamType === "bowling"
+        ? [formData.bowler]
+        : [formData.striker, formData.nonStriker];
+
+    return selectedNames.some(
+      (name) => name.trim().toLowerCase() === playerName,
     );
   };
 
@@ -161,9 +165,9 @@ export const PlayerSetupPage = () => {
   };
 
   // SELECT PLAYER FROM SUGGESTION
-  const handleSelectPlayer = (fieldName, player) => {
-    // Do not allow selecting a player already used
-    if (isPlayerSelected(player)) {
+  const handleSelectPlayer = (fieldName, player, teamType) => {
+    // Do not allow selecting a player already used in the same team
+    if (isPlayerSelected(player, teamType)) {
       return;
     }
 
@@ -269,7 +273,6 @@ export const PlayerSetupPage = () => {
 
     const strikerName = formData.striker.trim().toLowerCase();
     const nonStrikerName = formData.nonStriker.trim().toLowerCase();
-    const bowlerName = formData.bowler.trim().toLowerCase();
 
     if (strikerName === nonStrikerName) {
       setErrorData({
@@ -279,24 +282,11 @@ export const PlayerSetupPage = () => {
       return;
     }
 
-    // Optional safety check:
-    // striker/non-striker are batting players
-    // bowler belongs to bowling team
-    if (strikerName === bowlerName) {
-      setErrorData({
-        bowler: "The same player cannot be both batsman and bowler",
-      });
-
-      return;
-    }
-
-    if (nonStrikerName === bowlerName) {
-      setErrorData({
-        bowler: "The same player cannot be both batsman and bowler",
-      });
-
-      return;
-    }
+    /*
+     * Striker/non-striker belong to the batting team and the bowler belongs
+     * to the bowling team. Same-named players in different teams are separate
+     * players, so cross-team name matches are allowed.
+     */
 
     // GET PLAYERS
 
@@ -445,13 +435,15 @@ export const PlayerSetupPage = () => {
 
   // SUGGESTION ITEM COMPONENT
 
-  const renderPlayerSuggestion = (player, fieldName) => {
-    const selected = isPlayerSelected(player);
+  const renderPlayerSuggestion = (player, fieldName, teamType) => {
+    const selected = isPlayerSelected(player, teamType);
 
     return (
       <li
         key={player.playerId}
-        onClick={() => !selected && handleSelectPlayer(fieldName, player)}
+        onClick={() =>
+          !selected && handleSelectPlayer(fieldName, player, teamType)
+        }
         className={`
           px-3 py-2 rounded-lg
           transition
@@ -513,7 +505,7 @@ export const PlayerSetupPage = () => {
                 <ul className="mt-1 rounded-lg border border-base-content/15 p-2 shadow-sm">
                   {battingTeamList.length > 0 ? (
                     battingTeamList.map((player) =>
-                      renderPlayerSuggestion(player, "striker"),
+                      renderPlayerSuggestion(player, "striker", "batting"),
                     )
                   ) : (
                     <li className="px-3 py-2 text-sm opacity-60">
@@ -551,7 +543,7 @@ export const PlayerSetupPage = () => {
                 <ul className="mt-1 rounded-lg border border-base-content/15 p-2 shadow-sm">
                   {nonStrikerList.length > 0 ? (
                     nonStrikerList.map((player) =>
-                      renderPlayerSuggestion(player, "nonStriker"),
+                      renderPlayerSuggestion(player, "nonStriker", "batting"),
                     )
                   ) : (
                     <li className="px-3 py-2 text-sm opacity-60">
@@ -589,7 +581,7 @@ export const PlayerSetupPage = () => {
                 <ul className="mt-1 rounded-lg border border-base-content/15 p-2 shadow-sm">
                   {bowlingTeamList.length > 0 ? (
                     bowlingTeamList.map((player) =>
-                      renderPlayerSuggestion(player, "bowler"),
+                      renderPlayerSuggestion(player, "bowler", "bowling"),
                     )
                   ) : (
                     <li className="px-3 py-2 text-sm opacity-60">

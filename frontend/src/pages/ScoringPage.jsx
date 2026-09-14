@@ -6,6 +6,7 @@ import { OutModal } from "../components/modals/OutModal";
 import { MoreOptionScoringModal } from "../components/modals/MoreOptionScoringModal";
 import { AddNewBowlerModal } from "../components/modals/AddNewBowlerModal";
 import { StartSecondInningModal } from "../components/modals/StartSecondInningModal";
+import { UndoConfirmModal } from "../components/modals/UndoConfirmModal";
 import { useDispatch, useSelector } from "react-redux";
 import { recordDelivery } from "../store/scoreSlice";
 import { persistScoreState } from "../store/persistMatch";
@@ -19,6 +20,7 @@ export const ScoringPage = () => {
   const [showExtraOutModal, setShowExtraOutModal] = useState(false);
   const [openAddBowlerModal, setOpenAddBowlerModal] = useState(false);
   const [openMoreMotionModal, setOpenMoreOptionModal] = useState(false);
+  const [showUndoConfirmModal, setShowUndoConfirmModal] = useState(false);
   const [showStartSecondInningModal, setShowStartSecondInningModal] =
     useState(false);
 
@@ -153,6 +155,10 @@ export const ScoringPage = () => {
     }
     if (val === "MORE") {
       setOpenMoreOptionModal(true);
+      return;
+    }
+    if (val === "UNDO") {
+      setShowUndoConfirmModal(true);
       return;
     }
     dispatch(recordDelivery(val));
@@ -552,10 +558,19 @@ export const ScoringPage = () => {
       {showStartSecondInningModal && (
         <StartSecondInningModal
           onClose={() => setShowStartSecondInningModal(false)}
-          onUndo={() => {
+          onUndo={() => setShowUndoConfirmModal(true)}
+        />
+      )}
+
+      {/* UNDO CONFIRM */}
+      {showUndoConfirmModal && (
+        <UndoConfirmModal
+          onConfirm={() => {
             dispatch(recordDelivery("UNDO"));
             setShowStartSecondInningModal(false);
+            setShowUndoConfirmModal(false);
           }}
+          onCancel={() => setShowUndoConfirmModal(false)}
         />
       )}
     </div>
