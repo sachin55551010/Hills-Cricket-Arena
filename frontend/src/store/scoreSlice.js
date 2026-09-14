@@ -62,6 +62,103 @@ const getMaxWicketsForBattingTeam = (match, battingTeamId) => {
   return Math.max(Number(squadSize) - 1, 1);
 };
 
+// Human-readable dismissal description for the scorecard
+const dismissalText = (player) => {
+  if (!player) return "out";
+  if (player.isNotOut) return "not out";
+  switch (player.wicketType) {
+    case "Run Out":
+      return `run out (${player.fielder?.name || "fielder"})`;
+    case "Caught":
+      return `c ${player.fielder?.name || ""} b ${player.bowlerName || ""}`;
+    case "Stumped":
+      return `st ${player.fielder?.name || ""} b ${player.bowlerName || ""}`;
+    case "Retired Out":
+      return "retired out";
+    default:
+      return player.wicketType
+        ? `${player.wicketType.toLowerCase()} b ${player.bowlerName || ""}`
+        : "out";
+  }
+};
+
+// Full batting card snapshot: dismissed batsmen plus the not-out pair
+const buildBattingCard = (inning, currentPlayers, includeCurrent) => {
+  const card = [];
+  const seen = new Set();
+
+  const pushBatsman = (player, isNotOut) => {
+    if (!player) return;
+
+    const id = player.playerId || player.id || "";
+    if (id && seen.has(id)) return;
+    if (id) seen.add(id);
+
+    card.push({
+      playerId: id,
+      name: player.name || "",
+      battingStats: { ...(player.battingStats || {}) },
+      isNotOut,
+      dismissal: dismissalText({ ...player, isNotOut }),
+    });
+  };
+
+  (inning.outPlayers || []).forEach((player) => pushBatsman(player, false));
+
+  if (includeCurrent) {
+    pushBatsman(currentPlayers?.striker, true);
+    pushBatsman(currentPlayers?.nonStriker, true);
+  }
+
+  return card;
+};
+
+// Full bowling card snapshot aggregated from the over history
+const buildBowlingCard = (inning) => {
+  const map = new Map();
+
+  (inning.overHistory || []).forEach((over) => {
+    const key = over.bowlerId || over.bowlerName;
+    if (!key) return;
+
+    if (!map.has(key)) {
+      map.set(key, {
+        id: key,
+        name: over.bowlerName || "",
+        balls: 0,
+        runs: 0,
+        wickets: 0,
+        maidens: 0,
+      });
+    }
+
+    const entry = map.get(key);
+    entry.balls += over.legalBalls || 0;
+    entry.runs += over.runs || 0;
+    entry.wickets += over.wickets || 0;
+
+    if ((over.legalBalls || 0) >= 6 && (over.runs || 0) === 0) {
+      entry.maidens += 1;
+    }
+  });
+
+  return [...map.values()];
+};
+
+// Store the complete scorecard once an inning is finished
+const finalizeInning = (state, inningIndex) => {
+  const match = state.currentMatchData;
+  const inning = match?.innings?.[inningIndex];
+  if (!inning || inning.battingCard) return;
+
+  inning.battingCard = buildBattingCard(
+    inning,
+    match?.currentPlayers,
+    match?.currentInning - 1 === inningIndex,
+  );
+  inning.bowlingCard = buildBowlingCard(inning);
+};
+
 // Check if inning 2 target is chased or match is over
 const checkMatchEnd = (state) => {
   const match = state.currentMatchData;
@@ -87,6 +184,7 @@ const checkMatchEnd = (state) => {
     const wicketsLeft = maxWickets - wickets2;
     match.matchStatus = "completed";
     match.matchResult = `${inning2.battingTeam} won by ${wicketsLeft} wicket${wicketsLeft !== 1 ? "s" : ""}`;
+    finalizeInning(state, 1);
     return;
   }
 
@@ -94,6 +192,7 @@ const checkMatchEnd = (state) => {
     const runsShort = target - 1 - runs2;
     match.matchStatus = "completed";
     match.matchResult = `${inning2.bowlingTeam} won by ${runsShort} run${runsShort !== 1 ? "s" : ""}`;
+    finalizeInning(state, 1);
   }
 };
 
@@ -724,6 +823,9 @@ const scoreSlice = createSlice({
 
       const inning1 = match.innings?.[0];
       if (!inning1) return;
+
+      // Save the completed first inning scorecard before moving on
+      finalizeInning(state, 0);
 
       // Calculate target = inning1 runs + 1
       const target = inning1.runs + 1;

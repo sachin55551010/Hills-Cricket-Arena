@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { Pencil } from "lucide-react";
+import { ChevronDown, Pencil } from "lucide-react";
 import { RenamePlayerModal } from "../../components/modals/RenamePlayerModal";
 
 const formatOvers = (legalBalls = 0) =>
@@ -28,6 +28,135 @@ const emptyExtras = {
   overthrow: 0,
 };
 
+const dismissalText = (player) => {
+  if (player?.dismissal) return player.dismissal;
+  if (!player) return "out";
+  if (player.wicketType === "Run Out") {
+    return `run out (${player.fielder?.name || "fielder"})`;
+  }
+  if (player.wicketType === "Caught") {
+    return `c ${player.fielder?.name || ""} b ${player.bowlerName || ""}`;
+  }
+  if (player.wicketType === "Stumped") {
+    return `st ${player.fielder?.name || ""} b ${player.bowlerName || ""}`;
+  }
+  if (player.wicketType === "Retired Out") return "retired out";
+  if (player.wicketType) {
+    return `${player.wicketType.toLowerCase()} b ${player.bowlerName || ""}`;
+  }
+  return "out";
+};
+
+/*
+ * Full batting card:
+ * - Completed innings use the saved battingCard snapshot.
+ * - The live innings is built from dismissed players plus the not-out pair.
+ */
+const getBattingCard = (inning, currentPlayers, isCurrent) => {
+  if (inning.battingCard?.length) {
+    return inning.battingCard;
+  }
+
+  const card = [];
+  const seen = new Set();
+
+  const push = (player, isNotOut) => {
+    if (!player) return;
+    const id = getPlayerId(player);
+    if (id && seen.has(id)) return;
+    if (id) seen.add(id);
+    card.push({
+      playerId: id,
+      name: player.name || "",
+      battingStats: { ...(player.battingStats || {}) },
+      isNotOut,
+      dismissal: isNotOut ? "not out" : dismissalText(player),
+    });
+  };
+
+  (inning.outPlayers || []).forEach((player) => push(player, false));
+
+  if (isCurrent) {
+    push(currentPlayers?.striker, true);
+    push(currentPlayers?.nonStriker, true);
+  }
+
+  return card;
+};
+
+const getBowlingCard = (inning, currentPlayers, isCurrent) => {
+  if (inning.bowlingCard?.length) {
+    return inning.bowlingCard;
+  }
+
+  const map = new Map();
+
+  (inning.overHistory || []).forEach((over) => {
+    const key = over.bowlerId || over.bowlerName;
+    if (!key) return;
+
+    if (!map.has(key)) {
+      map.set(key, {
+        id: key,
+        name: over.bowlerName || "",
+        balls: 0,
+        runs: 0,
+        wickets: 0,
+        maidens: 0,
+      });
+    }
+
+    const entry = map.get(key);
+    entry.balls += over.legalBalls || 0;
+    entry.runs += over.runs || 0;
+    entry.wickets += over.wickets || 0;
+
+    if ((over.legalBalls || 0) >= 6 && (over.runs || 0) === 0) {
+      entry.maidens += 1;
+    }
+  });
+
+  const bowlers = [...map.values()];
+  const currentBowlerId = isCurrent ? getPlayerId(currentPlayers?.bowler) : "";
+  return bowlers.map((bowler) => ({
+    ...bowler,
+    isCurrent: bowler.id === currentBowlerId,
+  }));
+};
+
+const AccordionSection = ({ title, subtitle, defaultOpen, children }) => {
+  const [isOpen, setIsOpen] = useState(Boolean(defaultOpen));
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-base-content/15 bg-base-100">
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-expanded={isOpen}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-base-200/60"
+      >
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold">{title}</p>
+          {subtitle && (
+            <p className="truncate text-xs text-base-content/50">{subtitle}</p>
+          )}
+        </div>
+
+        <ChevronDown
+          size={18}
+          className={`shrink-0 text-base-content/50 transition-transform duration-200 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="border-t border-base-content/10 p-3">{children}</div>
+      )}
+    </div>
+  );
+};
+
 const InningSection = ({
   match,
   inning,
@@ -50,38 +179,14 @@ const InningSection = ({
     getTeamNameById(match, inning.battingTeamId) ||
     "Team";
 
-  // Dismissed batsmen: outPlayers carries their battingStats snapshot
-  const outPlayers = inning.outPlayers || [];
+  const battingCard = getBattingCard(inning, currentPlayers, isCurrent);
+  const bowlers = getBowlingCard(inning, currentPlayers, isCurrent);
 
-  // Current batsmen (only for the live inning)
   const striker = isCurrent ? currentPlayers?.striker : null;
   const nonStriker = isCurrent ? currentPlayers?.nonStriker : null;
 
-  // Bowlers are read from the over history (one entry per completed/ongoing over)
-  const overHistory = inning.overHistory || [];
-  const bowlerMap = new Map();
-  overHistory.forEach((over) => {
-    const key = over.bowlerId || over.bowlerName;
-    if (!key) return;
-    if (!bowlerMap.has(key)) {
-      bowlerMap.set(key, {
-        id: key,
-        name: over.bowlerName || "",
-        balls: 0,
-        runs: 0,
-        wickets: 0,
-      });
-    }
-    const entry = bowlerMap.get(key);
-    entry.balls += over.legalBalls || 0;
-    entry.runs += over.runs || 0;
-    entry.wickets += over.wickets || 0;
-  });
-
-  const bowlers = [...bowlerMap.values()];
-  const currentBowlerId = isCurrent ? currentPlayers?.bowler?.playerId : null;
-
   // Fall of wickets: 1st out player aligns with 1st wicket of the inning
+  const outPlayers = inning.outPlayers || [];
   const fallOfWickets = outPlayers.map((player, index) => ({
     wicket: player.teamWickets ?? index + 1,
     name: player.name,
@@ -95,140 +200,150 @@ const InningSection = ({
   const runRate =
     totalBalls > 0 ? ((inning.runs * 6) / totalBalls).toFixed(2) : "0.00";
 
+  const isInningComplete = Boolean(inning.battingCard);
+
   return (
-    <section className="flex flex-col gap-3 mt-10">
+    <section className="mt-6 flex flex-col gap-3">
       {/* Inning header */}
-      <div className="flex items-end justify-between border-b border-base-content/15 pb-2">
-        <div>
-          <div className="flex items-center gap-2">
-            <h3 className="text-base font-bold">{battingTeamName}</h3>
-            <span className="text-[11px] rounded-md bg-base-content/10 px-2 py-0.5 text-base-content/70">
-              {inning.inning === 1 ? "1st Inning" : "2nd Inning"}
-            </span>
-          </div>
+      <div className="border-b border-base-content/15 pb-2">
+        <div className="flex items-center gap-2">
+          <h3 className="text-base font-bold">{battingTeamName}</h3>
+          <span className="rounded-md bg-base-content/10 px-2 py-0.5 text-[11px] text-base-content/70">
+            {inning.inning === 1 ? "1st Inning" : "2nd Inning"}
+          </span>
+          <span
+            className={`rounded-md px-2 py-0.5 text-[11px] font-medium ${
+              isInningComplete
+                ? "bg-success/15 text-success"
+                : "bg-warning/15 text-warning"
+            }`}
+          >
+            {isInningComplete ? "Completed" : "In progress"}
+          </span>
+        </div>
+
+        <div className="mt-1 flex items-end justify-between">
           <p className="text-xs text-base-content/50">
             vs{" "}
             {inning.bowlingTeam || getTeamNameById(match, inning.bowlingTeamId)}
           </p>
-        </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold leading-none">
-            {inning.runs ?? 0}-{inning.wickets ?? 0}
-          </p>
-          <p className="text-xs text-base-content/60">
-            ({formatOvers(totalBalls)} ov) · CRR {runRate}
-          </p>
+          <div className="text-right">
+            <p className="text-2xl font-bold leading-none">
+              {inning.runs ?? 0}-{inning.wickets ?? 0}
+            </p>
+            <p className="text-xs text-base-content/60">
+              ({formatOvers(totalBalls)} ov) · CRR {runRate}
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Batting */}
-      <div className="overflow-hidden rounded-md border border-base-content/15">
-        <table className="w-full table-fixed text-[.8rem]">
-          <thead className="bg-base-content/5 text-base-content/70">
-            <tr>
-              <th className="w-auto text-left px-3 py-2">Batsman</th>
-              <th className="w-9 px-1 py-2">R</th>
-              <th className="w-9 px-1 py-2">B</th>
-              <th className="w-9 px-1 py-2">4s</th>
-              <th className="w-9 px-1 py-2">6s</th>
-              <th className="w-14 px-1 py-2">SR</th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* Current batsmen */}
-            {[striker, nonStriker].map((player, index) => {
-              if (!player) return null;
-              const stats = player.battingStats || {};
-              const sr =
-                stats.strikeRate != null ? stats.strikeRate.toFixed(1) : "0.0";
-              return (
-                <tr
-                  key={getPlayerId(player) || `current-${index}`}
-                  className="text-blue-500"
-                >
-                  <td className="text-left px-3 py-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        onEditPlayer(
-                          index === 0 ? "striker" : "nonStriker",
-                          player.name,
-                        )
-                      }
-                      className="flex w-full items-center gap-1.5 text-left"
-                    >
-                      <span className="truncate">
-                        {player.name}
-                        {index === 0 ? "*" : ""}
-                      </span>
-                      <Pencil size={12} className="shrink-0 opacity-50" />
-                    </button>
-                  </td>
-                  <td className="text-center px-1 py-2">{stats.runs ?? 0}</td>
-                  <td className="text-center px-1 py-2">{stats.balls ?? 0}</td>
-                  <td className="text-center px-1 py-2">{stats.fours ?? 0}</td>
-                  <td className="text-center px-1 py-2">{stats.sixes ?? 0}</td>
-                  <td className="text-center px-1 py-2">{sr}</td>
-                </tr>
-              );
-            })}
-
-            {/* Dismissed batsmen */}
-            {outPlayers.map((player, index) => {
-              const stats = player.battingStats || {};
-              const sr =
-                stats.strikeRate != null ? stats.strikeRate.toFixed(1) : "0.0";
-              const dismissal =
-                player.wicketType === "Run Out"
-                  ? `run out (${player.fielder?.name || "fielder"})`
-                  : player.wicketType === "Caught"
-                    ? `c ${player.fielder?.name || ""} b ${player.bowlerName || ""}`
-                    : player.wicketType === "Stumped"
-                      ? `st ${player.fielder?.name || ""} b ${player.bowlerName || ""}`
-                      : player.wicketType
-                        ? `${player.wicketType.toLowerCase()} b ${player.bowlerName || ""}`
-                        : "out";
-              return (
-                <tr
-                  key={player.playerId || player.id || index}
-                  className="opacity-70"
-                >
-                  <td className="text-left px-3 py-2">
-                    <span className="block truncate">{player.name}</span>
-                    <span className="block truncate text-[10px] text-base-content/50">
-                      {dismissal}
-                    </span>
-                  </td>
-                  <td className="text-center px-1 py-2">{stats.runs ?? 0}</td>
-                  <td className="text-center px-1 py-2">{stats.balls ?? 0}</td>
-                  <td className="text-center px-1 py-2">{stats.fours ?? 0}</td>
-                  <td className="text-center px-1 py-2">{stats.sixes ?? 0}</td>
-                  <td className="text-center px-1 py-2">{sr}</td>
-                </tr>
-              );
-            })}
-
-            {!striker && !nonStriker && outPlayers.length === 0 && (
+      <AccordionSection
+        title="Batting"
+        subtitle={`${battingCard.length} batsman${battingCard.length === 1 ? "" : "s"}`}
+        defaultOpen
+      >
+        <div className="overflow-hidden rounded-md border border-base-content/15">
+          <table className="w-full table-fixed text-[.8rem]">
+            <thead className="bg-base-content/5 text-base-content/70">
               <tr>
-                <td
-                  colSpan={6}
-                  className="px-3 py-3 text-center text-base-content/40 italic"
-                >
-                  No batting data yet
-                </td>
+                <th className="w-auto px-3 py-2 text-left">Batsman</th>
+                <th className="w-9 px-1 py-2">R</th>
+                <th className="w-9 px-1 py-2">B</th>
+                <th className="w-9 px-1 py-2">4s</th>
+                <th className="w-9 px-1 py-2">6s</th>
+                <th className="w-14 px-1 py-2">SR</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {battingCard.length > 0 ? (
+                battingCard.map((player, index) => {
+                  const stats = player.battingStats || {};
+                  const sr =
+                    stats.strikeRate != null
+                      ? stats.strikeRate.toFixed(1)
+                      : "0.0";
+                  const isStriker =
+                    isCurrent &&
+                    getPlayerId(striker) === getPlayerId(player);
+                  const canEdit = player.isNotOut && isCurrent;
+
+                  return (
+                    <tr
+                      key={player.playerId || index}
+                      className={canEdit ? "text-blue-500" : "opacity-80"}
+                    >
+                      <td className="px-3 py-2 text-left">
+                        {canEdit ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onEditPlayer(
+                                getPlayerId(striker) === getPlayerId(player)
+                                  ? "striker"
+                                  : "nonStriker",
+                                player.name,
+                              )
+                            }
+                            className="flex w-full items-center gap-1.5 text-left"
+                          >
+                            <span className="truncate">
+                              {player.name}
+                              {isStriker ? "*" : ""}
+                            </span>
+                            <Pencil size={12} className="shrink-0 opacity-50" />
+                          </button>
+                        ) : (
+                          <>
+                            <span className="block truncate">
+                              {player.name}
+                              {isStriker ? "*" : ""}
+                            </span>
+                            <span className="block truncate text-[10px] text-base-content/50">
+                              {player.dismissal}
+                            </span>
+                          </>
+                        )}
+                      </td>
+                      <td className="px-1 py-2 text-center">
+                        {stats.runs ?? 0}
+                      </td>
+                      <td className="px-1 py-2 text-center">
+                        {stats.balls ?? 0}
+                      </td>
+                      <td className="px-1 py-2 text-center">
+                        {stats.fours ?? 0}
+                      </td>
+                      <td className="px-1 py-2 text-center">
+                        {stats.sixes ?? 0}
+                      </td>
+                      <td className="px-1 py-2 text-center">{sr}</td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="px-3 py-3 text-center italic text-base-content/40"
+                  >
+                    No batting data yet
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </AccordionSection>
 
       {/* Extras */}
-      <div className="rounded-md border border-base-content/15 p-3">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold">Extras</p>
-          <p className="text-sm font-bold">{extrasTotal}</p>
-        </div>
-        <div className="mt-2 grid grid-cols-5 gap-2 text-center text-[.75rem]">
+      <AccordionSection
+        title="Extras"
+        subtitle={`Total ${extrasTotal}`}
+        defaultOpen
+      >
+        <div className="grid grid-cols-5 gap-2 text-center text-[.75rem]">
           {[
             { label: "WD", value: extras.wideBallRun },
             { label: "NB", value: extras.noBallRun },
@@ -245,80 +360,100 @@ const InningSection = ({
             </div>
           ))}
         </div>
-      </div>
+      </AccordionSection>
 
       {/* Bowling */}
-      <div className="overflow-hidden rounded-md border border-base-content/15">
-        <table className="w-full table-fixed text-[.8rem]">
-          <thead className="bg-base-content/5 text-base-content/70">
-            <tr>
-              <th className="w-auto text-left px-3 py-2">Bowler</th>
-              <th className="w-10 px-1 py-2">O</th>
-              <th className="w-9 px-1 py-2">R</th>
-              <th className="w-9 px-1 py-2">W</th>
-              <th className="w-14 px-1 py-2">ECO</th>
-            </tr>
-          </thead>
-          <tbody>
-            {bowlers.length > 0 ? (
-              bowlers.map((bowler) => {
-                const eco = economyOf(bowler);
-                const isCurrent = bowler.id === currentBowlerId;
-                return (
-                  <tr
-                    key={bowler.id}
-                    className={isCurrent ? "text-blue-500" : "opacity-80"}
-                  >
-                    <td className="text-left px-3 py-2">
-                      {isCurrent ? (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            onEditPlayer("bowler", bowler.name || "")
-                          }
-                          className="flex w-full items-center gap-1.5 text-left"
-                        >
-                          <span className="truncate">
-                            {bowler.name || "Unknown"} *
-                          </span>
-                          <Pencil size={12} className="shrink-0 opacity-50" />
-                        </button>
-                      ) : (
-                        <span className="block truncate">
-                          {bowler.name || "Unknown"}
-                        </span>
-                      )}
-                    </td>
-                    <td className="text-center px-1 py-2">
-                      {formatOvers(bowler.balls)}
-                    </td>
-                    <td className="text-center px-1 py-2">{bowler.runs}</td>
-                    <td className="text-center px-1 py-2">{bowler.wickets}</td>
-                    <td className="text-center px-1 py-2">
-                      {eco != null ? eco.toFixed(1) : "-"}
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
+      <AccordionSection
+        title="Bowling"
+        subtitle={`${bowlers.length} bowler${bowlers.length === 1 ? "" : "s"}`}
+        defaultOpen
+      >
+        <div className="overflow-hidden rounded-md border border-base-content/15">
+          <table className="w-full table-fixed text-[.8rem]">
+            <thead className="bg-base-content/5 text-base-content/70">
               <tr>
-                <td
-                  colSpan={5}
-                  className="px-3 py-3 text-center text-base-content/40 italic"
-                >
-                  No bowling data yet
-                </td>
+                <th className="w-auto px-3 py-2 text-left">Bowler</th>
+                <th className="w-10 px-1 py-2">O</th>
+                <th className="w-9 px-1 py-2">R</th>
+                <th className="w-9 px-1 py-2">W</th>
+                <th className="w-11 px-1 py-2">M</th>
+                <th className="w-14 px-1 py-2">ECO</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {bowlers.length > 0 ? (
+                bowlers.map((bowler) => {
+                  const eco = economyOf(bowler);
+                  const canEdit = bowler.isCurrent && isCurrent;
+
+                  return (
+                    <tr
+                      key={bowler.id}
+                      className={canEdit ? "text-blue-500" : "opacity-80"}
+                    >
+                      <td className="px-3 py-2 text-left">
+                        {canEdit ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onEditPlayer("bowler", bowler.name || "")
+                            }
+                            className="flex w-full items-center gap-1.5 text-left"
+                          >
+                            <span className="truncate">
+                              {bowler.name || "Unknown"} *
+                            </span>
+                            <Pencil size={12} className="shrink-0 opacity-50" />
+                          </button>
+                        ) : (
+                          <span className="block truncate">
+                            {bowler.name || "Unknown"}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-1 py-2 text-center">
+                        {formatOvers(bowler.balls)}
+                      </td>
+                      <td className="px-1 py-2 text-center">{bowler.runs}</td>
+                      <td className="px-1 py-2 text-center">
+                        {bowler.wickets}
+                      </td>
+                      <td className="px-1 py-2 text-center">
+                        {bowler.maidens || 0}
+                      </td>
+                      <td className="px-1 py-2 text-center">
+                        {eco != null ? eco.toFixed(1) : "-"}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="px-3 py-3 text-center italic text-base-content/40"
+                  >
+                    No bowling data yet
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </AccordionSection>
 
       {/* Fall of wickets */}
-      <div className="rounded-md border border-base-content/15 p-3">
-        <p className="text-sm font-semibold">Fall of Wickets</p>
+      <AccordionSection
+        title="Fall of Wickets"
+        subtitle={
+          fallOfWickets.length > 0
+            ? `${fallOfWickets.length} wicket${fallOfWickets.length === 1 ? "" : "s"}`
+            : "No wickets yet"
+        }
+        defaultOpen={fallOfWickets.length > 0}
+      >
         {fallOfWickets.length > 0 ? (
-          <div className="mt-2 flex flex-wrap gap-2 text-[.75rem]">
+          <div className="flex flex-wrap gap-2 text-[.75rem]">
             {fallOfWickets.map((fow) => (
               <div
                 key={fow.wicket}
@@ -333,11 +468,15 @@ const InningSection = ({
             ))}
           </div>
         ) : (
-          <p className="mt-1 text-xs text-base-content/40 italic">
-            No wickets yet
-          </p>
+          <p className="text-xs italic text-base-content/40">No wickets yet</p>
         )}
-      </div>
+      </AccordionSection>
+
+      {(striker || nonStriker) && isCurrent && (
+        <p className="text-[11px] text-base-content/45">
+          * denotes the batsman currently on strike
+        </p>
+      )}
     </section>
   );
 };
