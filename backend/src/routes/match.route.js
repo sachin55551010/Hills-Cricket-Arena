@@ -3,6 +3,7 @@ import { isAuthenticated } from "../middlewares/isAuthenticated.js";
 import {
   createMatch,
   getAllMatches,
+  getManOfTheMatch,
   getMatchById,
   myTournamentMatches,
   scheduleMatch,
@@ -28,3 +29,5 @@ match_route.get("/tournament-matches/:tournamentId", myTournamentMatches);
 match_route.get("/all-matches/:tournamentCategory", getAllMatches);
 
 match_route.get("/match/:matchId", getMatchById);
+
+match_route.post("/:matchId/get-man-of-the-match", getManOfTheMatch);

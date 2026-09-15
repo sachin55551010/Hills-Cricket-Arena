@@ -5,7 +5,6 @@ import { Tournament } from "../models/tournamentSchema.js";
 import { io } from "../utils/socket.js";
 
 export const createMatch = async (req, res, next) => {
-  
   try {
     const { tournamentId } = req.params;
     const {
@@ -43,7 +42,7 @@ export const createMatch = async (req, res, next) => {
 
     if (firstTeamId === secondTeamId)
       return next(new CustomErrHandler(400, "Both teams cannot be same"));
-    
+
     // ✅ Create match
     const createdMatch = await Match.create({
       tournamentId,
@@ -350,4 +349,17 @@ export const getMatchById = async (req, res, next) => {
   }
 };
 
+export const getManOfTheMatch = async (req, res, next) => {
+  try {
+    const { matchId } = req.params;
+    console.log(matchId);
 
+    res.status(200).json({
+      message: "Man of the match fetched successfully",
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+    console.log(error);
+  }
+};

@@ -256,8 +256,7 @@ const InningSection = ({
                       const isStriker =
                         isCurrent &&
                         getPlayerId(striker) === getPlayerId(player);
-                      const canEdit =
-                        editable && player.isNotOut && isCurrent;
+                      const canEdit = editable && player.isNotOut && isCurrent;
 
                       return (
                         <tr

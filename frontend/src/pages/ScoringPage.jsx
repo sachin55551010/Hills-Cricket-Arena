@@ -11,8 +11,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { recordDelivery } from "../store/scoreSlice";
 import { persistScoreState } from "../store/persistMatch";
 import { GrScorecard } from "react-icons/gr";
+import { useGetManOfTheMatchMutation } from "../store/matchApi";
+
 export const ScoringPage = () => {
   const scoreState = useSelector((state) => state.score);
+  const [getManOfTheMatch, { data, isLoading, error }] =
+    useGetManOfTheMatchMutation();
   const { currentMatchData } = scoreState;
   const [isExtraModalOpen, setIsExtraModalOpen] = useState(false);
   const [extraType, setExtraType] = useState("");
@@ -240,6 +244,12 @@ export const ScoringPage = () => {
     LB: "border-3 border-blue-600 text-blue-600",
     BYE: "border-3 border-blue-600 text-blue-600 text-[.8rem]",
     OUT: "border-3 border-red-600 text-red-600 text-[.8rem]",
+  };
+
+  const handleTestBtn = () => {
+    const data = currentMatchData;
+    const matchId = currentMatchData.matchId;
+    getManOfTheMatch({ data, matchId });
   };
 
   return (
@@ -573,6 +583,9 @@ export const ScoringPage = () => {
           onCancel={() => setShowUndoConfirmModal(false)}
         />
       )}
+      <button onClick={handleTestBtn} className="btn btn-dash">
+        testing
+      </button>
     </div>
   );
 };

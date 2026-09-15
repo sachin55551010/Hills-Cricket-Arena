@@ -51,6 +51,14 @@ export const matchApi = createApi({
       }),
       providesTags: ["Match"],
     }),
+
+    getManOfTheMatch: builder.mutation({
+      query: ({ data, matchId }) => ({
+        url: `/${matchId}/get-man-of-the-match`,
+        method: "POST",
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -60,4 +68,5 @@ export const {
   useGetMyTournamentTeamsQuery,
   useGetAllMatchesQuery,
   useGetMatchByIdQuery,
+  useGetManOfTheMatchMutation,
 } = matchApi;
