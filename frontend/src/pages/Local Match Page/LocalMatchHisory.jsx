@@ -1,13 +1,14 @@
-import { Header } from "../../components/Header";
 import noData from "../../../assets/No data-amico.svg";
 import { NoDataFoundPage } from "../../components/NoDataFoundPage";
 import { defaultAvatar } from "../../utils/noprofilePicHelper";
 import { MdDelete } from "react-icons/md";
 import { useState } from "react";
 import { DeleteMatchHistoryModal } from "../../components/modals/DeleteMatchHistoryModal";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setCurrentMatchData } from "../../store/scoreSlice";
+import { GrScorecard } from "react-icons/gr";
+import { ArrowLeft } from "lucide-react";
 
 const formatOvers = (legalBalls = 0) =>
   `${Math.floor(legalBalls / 6)}.${legalBalls % 6}`;
@@ -83,9 +84,23 @@ export const LocalMatchHisory = () => {
     navigate("/local-match/scoring");
   };
 
+  const handleScoreboardBtn = (id) => {
+    navigate(`/local-match/local-match-history/${id}/scoreboard`);
+  };
+
   return (
     <div className="min-h-dvh w-full bg-base-100 pt-14">
-      <Header data="Match History" />
+      <header className="fixed top-0 left-0 z-[1000] flex h-[var(--nav-h)] w-dvw items-center gap-2 bg-base-100 px-2">
+        <Link
+          to="/local-match/setup"
+          aria-label="Back to match history"
+          className="flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-base-content/10"
+        >
+          <ArrowLeft size={26} strokeWidth={3} />
+        </Link>
+
+        <h1 className="font-semibold">Scoreboard</h1>
+      </header>
 
       <div className="mx-auto w-full max-w-2xl">
         {matchList.length === 0 ? (
@@ -195,10 +210,25 @@ export const LocalMatchHisory = () => {
 
                   <div className="px-4 pb-4">
                     <button
+                      onClick={() => handleScoreboardBtn(match.matchId)}
+                      className="
+                      btn btn-outline btn-info
+                      h-10 min-h-10 w-full
+                      rounded-xl
+                      text-sm font-semibold
+                      shadow-none
+                    "
+                    >
+                      <GrScorecard size={17} />
+                      View Scoreboard
+                    </button>
+
+                    <button
                       onClick={() => handleResumeBtn(match.matchId)}
                       disabled={isCompleted}
                       className="
                       btn btn-info
+                      mt-2
                       h-10 min-h-10 w-full
                       rounded-xl
                       text-sm font-semibold

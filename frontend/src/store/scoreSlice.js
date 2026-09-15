@@ -105,6 +105,10 @@ const buildBattingCard = (inning, currentPlayers, includeCurrent) => {
 
   (inning.outPlayers || []).forEach((player) => pushBatsman(player, false));
 
+  (inning.retiredHurtPlayers || []).forEach((player) =>
+    pushBatsman(player, true),
+  );
+
   if (includeCurrent) {
     pushBatsman(currentPlayers?.striker, true);
     pushBatsman(currentPlayers?.nonStriker, true);
@@ -159,6 +163,126 @@ const finalizeInning = (state, inningIndex) => {
   inning.bowlingCard = buildBowlingCard(inning);
 };
 
+const asNumber = (value) => Number(value) || 0;
+
+// Fold the completed scorecards into the player records once per match.
+const applyCompletedMatchStats = (match) => {
+  if (!match || match.careerStatsApplied) return;
+
+  const battingByPlayer = new Map();
+  const bowlingByPlayer = new Map();
+  const participants = new Set();
+
+  (match.innings || []).forEach((inning) => {
+    (inning.battingCard || []).forEach((entry) => {
+      const playerId = entry.playerId;
+      if (!playerId) return;
+      const stats = entry.battingStats || {};
+      const current = battingByPlayer.get(playerId) || {
+        innings: 0,
+        runs: 0,
+        balls: 0,
+        fours: 0,
+        sixes: 0,
+        notOuts: 0,
+      };
+
+      current.innings += 1;
+      current.runs += asNumber(stats.runs);
+      current.balls += asNumber(stats.balls ?? stats.ballsFaced);
+      current.fours += asNumber(stats.fours);
+      current.sixes += asNumber(stats.sixes);
+      current.notOuts += entry.isNotOut ? 1 : 0;
+      battingByPlayer.set(playerId, current);
+      participants.add(playerId);
+    });
+
+    (inning.bowlingCard || []).forEach((entry) => {
+      const playerId = entry.id;
+      if (!playerId) return;
+      const current = bowlingByPlayer.get(playerId) || {
+        innings: 0,
+        balls: 0,
+        runs: 0,
+        wickets: 0,
+      };
+
+      current.innings += 1;
+      current.balls += asNumber(entry.balls);
+      current.runs += asNumber(entry.runs);
+      current.wickets += asNumber(entry.wickets);
+      bowlingByPlayer.set(playerId, current);
+      participants.add(playerId);
+    });
+  });
+
+  const updatePlayer = (player) => {
+    if (!player) return;
+    const playerId = player.playerId || player.id;
+    if (!playerId || !participants.has(playerId)) return;
+
+    player.matches = asNumber(player.matches) + 1;
+
+    const batting = battingByPlayer.get(playerId);
+    if (batting) {
+      const stats = player.battingStats || {};
+      const highestScore = Math.max(asNumber(stats.bestScore), batting.runs);
+      stats.innings = asNumber(stats.innings) + batting.innings;
+      stats.runs = asNumber(stats.runs) + batting.runs;
+      stats.balls = asNumber(stats.balls) + batting.balls;
+      stats.notOut = asNumber(stats.notOut) + batting.notOuts;
+      stats.fours = asNumber(stats.fours) + batting.fours;
+      stats.sixes = asNumber(stats.sixes) + batting.sixes;
+      stats.thirties =
+        asNumber(stats.thirties) +
+        (batting.runs >= 30 && batting.runs < 50 ? 1 : 0);
+      stats.fifties =
+        asNumber(stats.fifties) +
+        (batting.runs >= 50 && batting.runs < 100 ? 1 : 0);
+      stats.hundreds = asNumber(stats.hundreds) + (batting.runs >= 100 ? 1 : 0);
+      stats.ducks = asNumber(stats.ducks) + (batting.runs === 0 ? 1 : 0);
+      stats.bestScore = highestScore;
+      stats.average =
+        stats.innings - asNumber(stats.notOut) > 0
+          ? stats.runs / (stats.innings - asNumber(stats.notOut))
+          : 0;
+      stats.strikeRate = stats.balls > 0 ? (stats.runs / stats.balls) * 100 : 0;
+      player.battingStats = stats;
+    }
+
+    const bowling = bowlingByPlayer.get(playerId);
+    if (bowling) {
+      const stats = player.bowlingStats || {};
+      const previousBest = String(stats.bestBowling || "0/0")
+        .split("/")
+        .map(asNumber);
+      const bestWickets = previousBest[0] || 0;
+      const bestRuns = previousBest[1] || 0;
+      const isBetter =
+        bowling.wickets > bestWickets ||
+        (bowling.wickets === bestWickets && bowling.runs < bestRuns);
+
+      stats.innings = asNumber(stats.innings) + bowling.innings;
+      stats.balls = asNumber(stats.balls) + bowling.balls;
+      stats.runs = asNumber(stats.runs) + bowling.runs;
+      stats.wickets = asNumber(stats.wickets) + bowling.wickets;
+      stats.threeWickets =
+        asNumber(stats.threeWickets) + (bowling.wickets >= 3 ? 1 : 0);
+      stats.fiveWickets =
+        asNumber(stats.fiveWickets) + (bowling.wickets >= 5 ? 1 : 0);
+      if (isBetter) stats.bestBowling = `${bowling.wickets}/${bowling.runs}`;
+      stats.average = stats.wickets > 0 ? stats.runs / stats.wickets : 0;
+      stats.economy = stats.balls > 0 ? (stats.runs / stats.balls) * 6 : 0;
+      stats.strikeRate = stats.wickets > 0 ? stats.balls / stats.wickets : 0;
+      player.bowlingStats = stats;
+    }
+  };
+
+  (match.firstTeam?.players || []).forEach(updatePlayer);
+  (match.secondTeam?.players || []).forEach(updatePlayer);
+  match.careerStatsApplied = true;
+};
+
 // Check if inning 2 target is chased or match is over
 const checkMatchEnd = (state) => {
   const match = state.currentMatchData;
@@ -185,6 +309,7 @@ const checkMatchEnd = (state) => {
     match.matchStatus = "completed";
     match.matchResult = `${inning2.battingTeam} won by ${wicketsLeft} wicket${wicketsLeft !== 1 ? "s" : ""}`;
     finalizeInning(state, 1);
+    applyCompletedMatchStats(match);
     return;
   }
 
@@ -193,6 +318,7 @@ const checkMatchEnd = (state) => {
     match.matchStatus = "completed";
     match.matchResult = `${inning2.bowlingTeam} won by ${runsShort} run${runsShort !== 1 ? "s" : ""}`;
     finalizeInning(state, 1);
+    applyCompletedMatchStats(match);
   }
 };
 
@@ -901,9 +1027,7 @@ const scoreSlice = createSlice({
       const inningIndex = match.currentInning - 1;
       const inning = match.innings?.[inningIndex];
       const teamId =
-        position === "bowler"
-          ? inning?.bowlingTeamId
-          : inning?.battingTeamId;
+        position === "bowler" ? inning?.bowlingTeamId : inning?.battingTeamId;
 
       [match.firstTeam, match.secondTeam].forEach((team) => {
         if (!team || team.teamId !== teamId) return;

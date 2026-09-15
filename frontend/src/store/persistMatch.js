@@ -32,6 +32,33 @@ export const upsertMatchHistory = (match) => {
   localStorage.setItem(MATCH_HISTORY_KEY, JSON.stringify(updatedHistory));
 };
 
+const persistUpdatedTeamPlayers = (match) => {
+  if (!match?.careerStatsApplied) return;
+
+  const teams = parseJson(localStorage.getItem("localTeams"), []);
+  if (!Array.isArray(teams)) return;
+
+  const updatedTeams = teams.map((team) => {
+    const matchTeam = [match.firstTeam, match.secondTeam].find(
+      (candidate) => candidate?.teamId === team.teamId,
+    );
+    if (!matchTeam) return team;
+
+    const updatedPlayers = (team.players || []).map((player) => {
+      const updatedPlayer = (matchTeam.players || []).find(
+        (candidate) =>
+          (candidate.playerId || candidate.id) ===
+          (player.playerId || player.id),
+      );
+      return updatedPlayer || player;
+    });
+
+    return { ...team, players: updatedPlayers };
+  });
+
+  localStorage.setItem("localTeams", JSON.stringify(updatedTeams));
+};
+
 export const persistScoreState = (scoreState) => {
   const match = scoreState?.currentMatchData;
   if (!match || typeof match !== "object" || Object.keys(match).length === 0) {
@@ -46,12 +73,14 @@ export const persistScoreState = (scoreState) => {
       UNDO_STACK_KEY,
       JSON.stringify({ matchId: match.matchId, stack: undoStack }),
     );
+    persistUpdatedTeamPlayers(match);
     upsertMatchHistory(match);
   } catch (error) {
     console.error("Failed to persist match:", error);
     try {
       localStorage.removeItem(UNDO_STACK_KEY);
       localStorage.setItem(CURRENT_MATCH_KEY, JSON.stringify(match));
+      persistUpdatedTeamPlayers(match);
       upsertMatchHistory(match);
     } catch (retryError) {
       console.error("Failed to persist match after retry:", retryError);

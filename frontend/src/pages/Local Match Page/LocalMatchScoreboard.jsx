@@ -133,6 +133,7 @@ const InningSection = ({
   match,
   inning,
   isCurrent,
+  editable = true,
   currentPlayers,
   onEditPlayer,
 }) => {
@@ -255,7 +256,8 @@ const InningSection = ({
                       const isStriker =
                         isCurrent &&
                         getPlayerId(striker) === getPlayerId(player);
-                      const canEdit = player.isNotOut && isCurrent;
+                      const canEdit =
+                        editable && player.isNotOut && isCurrent;
 
                       return (
                         <tr
@@ -375,7 +377,7 @@ const InningSection = ({
                   {bowlers.length > 0 ? (
                     bowlers.map((bowler) => {
                       const eco = economyOf(bowler);
-                      const canEdit = bowler.isCurrent && isCurrent;
+                      const canEdit = editable && bowler.isCurrent && isCurrent;
 
                       return (
                         <tr
@@ -479,12 +481,20 @@ const InningSection = ({
   );
 };
 
-export const LocalMatchScoreboard = () => {
-  const { currentMatchData } = useSelector((state) => state.score);
+export const LocalMatchScoreboard = ({
+  matchData = null,
+  readOnly = false,
+  showBackLink = true,
+}) => {
+  const { currentMatchData: liveMatchData } = useSelector(
+    (state) => state.score,
+  );
+  const currentMatchData = matchData || liveMatchData;
   const [editing, setEditing] = useState(null);
 
   const innings = currentMatchData?.innings || [];
   const currentInningNumber = Number(currentMatchData?.currentInning) || 1;
+  const canEdit = !readOnly && !matchData;
 
   if (!currentMatchData || innings.length === 0) {
     return (
@@ -495,7 +505,7 @@ export const LocalMatchScoreboard = () => {
   }
 
   return (
-    <div className="w-full px-3 pb-10 pt-24">
+    <div className={`w-full px-3 pb-10 ${showBackLink ? "pt-24" : "pt-4"}`}>
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
         {currentMatchData.matchStatus === "completed" &&
           currentMatchData.matchResult && (
@@ -517,18 +527,25 @@ export const LocalMatchScoreboard = () => {
               match={currentMatchData}
               inning={inning}
               isCurrent={isCurrent}
+              editable={canEdit}
               currentPlayers={currentMatchData.currentPlayers}
-              onEditPlayer={(position, name) => setEditing({ position, name })}
+              onEditPlayer={
+                canEdit
+                  ? (position, name) => setEditing({ position, name })
+                  : () => {}
+              }
             />
           ))}
 
-        <Link
-          to=".."
-          relative="path"
-          className="btn btn-sm btn-outline self-center rounded-lg"
-        >
-          Back to scoring
-        </Link>
+        {showBackLink && (
+          <Link
+            to=".."
+            relative="path"
+            className="btn btn-sm btn-outline self-center rounded-lg"
+          >
+            Back to scoring
+          </Link>
+        )}
       </div>
 
       {editing && (

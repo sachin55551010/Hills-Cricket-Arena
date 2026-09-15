@@ -194,8 +194,11 @@ const InningOvers = ({ match, inning, isCurrent }) => {
   );
 };
 
-export const LocalMatchOvers = () => {
-  const { currentMatchData } = useSelector((state) => state.score);
+export const LocalMatchOvers = ({ matchData = null, showBackLink = true }) => {
+  const { currentMatchData: liveMatchData } = useSelector(
+    (state) => state.score,
+  );
+  const currentMatchData = matchData || liveMatchData;
 
   const innings = currentMatchData?.innings || [];
   const currentInningNumber = Number(currentMatchData?.currentInning) || 1;
@@ -209,7 +212,7 @@ export const LocalMatchOvers = () => {
   }
 
   return (
-    <div className="w-full px-3 pb-10 pt-34">
+    <div className={`w-full px-3 pb-10 ${showBackLink ? "pt-34" : "pt-4"}`}>
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
         {currentMatchData.matchStatus === "completed" &&
           currentMatchData.matchResult && (
@@ -233,13 +236,15 @@ export const LocalMatchOvers = () => {
             />
           ))}
 
-        <Link
-          to=".."
-          relative="path"
-          className="btn btn-sm btn-outline self-center rounded-lg"
-        >
-          Back to scoring
-        </Link>
+        {showBackLink && (
+          <Link
+            to=".."
+            relative="path"
+            className="btn btn-sm btn-outline self-center rounded-lg"
+          >
+            Back to scoring
+          </Link>
+        )}
       </div>
     </div>
   );
