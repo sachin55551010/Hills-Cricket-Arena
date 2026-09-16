@@ -86,8 +86,6 @@ export const LocalMatchSummary = ({ matchData } = {}) => {
     chartData.push(data);
   }
 
-  const teams = innings.map((inning) => inning.battingTeam);
-
   return (
     <div className="w-full rounded-xl bg-base-100 pt-40 shadow-md">
       {/* Header */}
