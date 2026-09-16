@@ -53,6 +53,7 @@ import { LocalMatchleaderBoardPage } from "./pages/Local Match Page/LocalMatchLe
 import { LocalMatchScoreboard } from "./pages/Local Match Page/LocalMatchScoreboard";
 import { LocalMatchOvers } from "./pages/Local Match Page/LocalMatchOvers";
 import { LocalMatchHistoryScoreboard } from "./pages/Local Match Page/LocalMatchHistoryScoreboard";
+import { LocalMatchSummary } from "./pages/Local Match Page/LocalMatchSummary";
 
 function App() {
   const { authUser } = useSelector((state) => state.auth);
@@ -284,6 +285,10 @@ function App() {
               <Route path="scoreboard" element={<LocalMatchScoreboard />} />
 
               <Route path="overs" element={<LocalMatchOvers />} />
+              <Route
+                path="local-match-summary"
+                element={<LocalMatchSummary />}
+              />
             </Route>
           </Route>
 

@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { LocalMatchScoreboard } from "./LocalMatchScoreboard";
 import { LocalMatchOvers } from "./LocalMatchOvers";
+import { LocalMatchSummary } from "./LocalMatchSummary";
 
 const getMatchFromHistory = (matchId) => {
   try {
@@ -22,6 +23,7 @@ export const LocalMatchHistoryScoreboard = () => {
   const tabs = [
     { id: "scoreboard", label: "Scoreboard" },
     { id: "overs", label: "Overs" },
+    { id: "summary", label: "Summary" },
   ];
 
   return (
@@ -67,8 +69,10 @@ export const LocalMatchHistoryScoreboard = () => {
                 readOnly
                 showBackLink={false}
               />
-            ) : (
+            ) : activeTab === "overs" ? (
               <LocalMatchOvers matchData={match} showBackLink={false} />
+            ) : (
+              <LocalMatchSummary matchData={match} />
             )}
           </div>
         </>

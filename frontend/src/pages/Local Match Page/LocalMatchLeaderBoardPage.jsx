@@ -31,6 +31,16 @@ export const LocalMatchleaderBoardPage = () => {
           >
             Overs
           </NavLink>
+          <NavLink
+            to="local-match-summary"
+            className={({ isActive }) =>
+              `${
+                isActive && "border-b-2 font-extrabold text-success"
+              } text-center flex-1 pb-2`
+            }
+          >
+            Match Summary
+          </NavLink>
         </nav>
       </div>
 
