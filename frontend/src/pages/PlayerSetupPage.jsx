@@ -232,10 +232,46 @@ export const PlayerSetupPage = () => {
       (player) => player.name.trim().toLowerCase() === trimmedName,
     );
 
-    // Player already exists in team
+    // Player already exists in team — return a fresh copy with match stats
+    // reset to zero so the scoreboard always starts clean for each new match.
+    // Career stats remain intact in the team roster; only this in-match
+    // scratch copy starts from zero.
     if (existingPlayer) {
       return {
-        player: existingPlayer,
+        player: {
+          ...existingPlayer,
+          battingStats: {
+            innings: 0,
+            notOut: 0,
+            runs: 0,
+            balls: 0,
+            bestScore: 0,
+            average: 0,
+            strikeRate: 0,
+            thirties: 0,
+            fifties: 0,
+            hundreds: 0,
+            ducks: 0,
+            fours: 0,
+            sixes: 0,
+          },
+          bowlingStats: {
+            innings: 0,
+            balls: 0,
+            runs: 0,
+            wickets: 0,
+            bestBowling: "0/0",
+            average: 0,
+            economy: 0,
+            strikeRate: 0,
+            maidens: 0,
+            threeWickets: 0,
+            fiveWickets: 0,
+            wides: 0,
+            noBalls: 0,
+            dotBalls: 0,
+          },
+        },
         isNew: false,
       };
     }

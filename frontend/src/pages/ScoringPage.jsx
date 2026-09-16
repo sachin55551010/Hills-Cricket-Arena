@@ -15,8 +15,7 @@ import { GrScorecard } from "react-icons/gr";
 
 export const ScoringPage = () => {
   const scoreState = useSelector((state) => state.score);
-  // const [getManOfTheMatch, { data, isLoading, error }] =
-  //   useGetManOfTheMatchMutation();
+  // const [getManOfTheMatch] = useGetManOfTheMatchMutation();
   const { currentMatchData } = scoreState;
   const [isExtraModalOpen, setIsExtraModalOpen] = useState(false);
   const [extraType, setExtraType] = useState("");
@@ -248,6 +247,8 @@ export const ScoringPage = () => {
 
   // const handleTestBtn = () => {
   //   const data = currentMatchData;
+  //   console.log(data);
+
   //   const matchId = currentMatchData.matchId;
   //   getManOfTheMatch({ data, matchId });
   // };
@@ -583,6 +584,9 @@ export const ScoringPage = () => {
           onCancel={() => setShowUndoConfirmModal(false)}
         />
       )}
+      {/* <button onClick={handleTestBtn} className="btn">
+        Hello
+      </button> */}
     </div>
   );
 };

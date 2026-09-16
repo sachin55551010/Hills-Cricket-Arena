@@ -4,6 +4,44 @@ import { nanoid } from "nanoid";
 import { X, Search, RotateCcw } from "lucide-react";
 import { startSecondInning } from "../../store/scoreSlice";
 
+// Reset match-level stats on an existing player so the scoreboard always
+// starts clean for each new match. Career stats in the team roster are
+// untouched; only this in-match scratch copy starts from zero.
+const withFreshMatchStats = (player) => ({
+  ...player,
+  battingStats: {
+    innings: 0,
+    notOut: 0,
+    runs: 0,
+    balls: 0,
+    bestScore: 0,
+    average: 0,
+    strikeRate: 0,
+    thirties: 0,
+    fifties: 0,
+    hundreds: 0,
+    ducks: 0,
+    fours: 0,
+    sixes: 0,
+  },
+  bowlingStats: {
+    innings: 0,
+    balls: 0,
+    runs: 0,
+    wickets: 0,
+    bestBowling: "0/0",
+    average: 0,
+    economy: 0,
+    strikeRate: 0,
+    maidens: 0,
+    threeWickets: 0,
+    fiveWickets: 0,
+    wides: 0,
+    noBalls: 0,
+    dotBalls: 0,
+  },
+});
+
 // Keep this OUTSIDE StartSecondInningModal
 const PlayerSearchSection = ({
   label,
@@ -15,7 +53,7 @@ const PlayerSearchSection = ({
   createPlayer,
 }) => {
   const handleSelect = (player) => {
-    setSelected(player);
+    setSelected(withFreshMatchStats(player));
     setSearch("");
   };
 
