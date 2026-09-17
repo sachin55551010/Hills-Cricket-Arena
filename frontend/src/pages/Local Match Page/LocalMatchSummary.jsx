@@ -123,7 +123,7 @@ export const LocalMatchSummary = ({ matchData } = {}) => {
   // --------------------------------------------------
 
   return (
-    <div className="w-full rounded-2xl bg-base-100 border border-base-content/10 p-6 space-y-8">
+    <div className="w-full rounded-2xl bg-base-100 border border-base-content/10 p-6 space-y-8 ">
       {/* Header */}
       <div className="space-y-0.5">
         <p className="text-xs font-medium text-base-content/40 uppercase tracking-widest">
@@ -166,7 +166,7 @@ export const LocalMatchSummary = ({ matchData } = {}) => {
       {/* Line Chart */}
       {/* -------------------------------------------- */}
 
-      <div className="h-[240px] w-full">
+      <div className="h-[240px] w-full no-chart-focus">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}
@@ -259,7 +259,7 @@ export const LocalMatchSummary = ({ matchData } = {}) => {
       {/* Final Score Bar Chart */}
       {/* -------------------------------------------- */}
 
-      <div className="pt-2 space-y-3">
+      <div className="pt-2 space-y-3 no-chart-focus">
         <div>
           <h3 className="text-sm font-medium text-base-content">
             Runs per over
@@ -342,6 +342,7 @@ export const LocalMatchSummary = ({ matchData } = {}) => {
                   fill={COLORS[index]}
                   radius={[5, 5, 0, 0]}
                   maxBarSize={24}
+                  activeBar={false}
                 />
               ))}
             </BarChart>

@@ -56,3 +56,13 @@ body {
 .hide-scrollbar::-webkit-scrollbar {
   display: none; /* Chrome/Safari */
 }
+
+.recharts-bar-rectangle:focus,
+.recharts-rectangle:focus {
+  outline: none;
+}
+
+.no-chart-focus *:focus,
+.no-chart-focus *:focus-visible {
+  outline: none !important;
+}
