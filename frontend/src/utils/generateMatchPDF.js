@@ -1,13 +1,17 @@
-import jsPDF from "jspdf";
+﻿import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-// ── helpers ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Pure helpers  (same logic as LocalMatchScoreboard.jsx)
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const fmt = (v, decimals = 1) =>
   v != null && !isNaN(v) ? Number(v).toFixed(decimals) : "-";
 
 const formatOvers = (legalBalls = 0) =>
   `${Math.floor(legalBalls / 6)}.${legalBalls % 6}`;
+
+const getPlayerId = (p) => p?.id ?? p?.playerId ?? "";
 
 const dismissalText = (player) => {
   if (player?.dismissal) return player.dismissal;
@@ -29,34 +33,55 @@ const dismissalText = (player) => {
   }
 };
 
-const getBattingCard = (inning) => {
+/**
+ * Mirrors getBattingCard() in LocalMatchScoreboard.jsx
+ * - Completed innings: uses saved battingCard snapshot
+ * - Live innings: dismissed players + current not-out pair (striker/nonStriker)
+ */
+const getBattingCard = (inning, currentPlayers, isCurrent) => {
   if (inning.battingCard?.length) return inning.battingCard;
+
   const card = [];
   const seen = new Set();
+
   const push = (player, isNotOut) => {
     if (!player) return;
-    const id = player.playerId || player.id || "";
+    const id = getPlayerId(player);
     if (id && seen.has(id)) return;
     if (id) seen.add(id);
     card.push({
+      playerId: id,
       name: player.name || "",
       battingStats: { ...(player.battingStats || {}) },
       isNotOut,
       dismissal: isNotOut ? "not out" : dismissalText(player),
     });
   };
+
   (inning.outPlayers || []).forEach((p) => push(p, false));
+  (inning.retiredHurtPlayers || []).forEach((p) => push(p, true));
+
+  if (isCurrent) {
+    push(currentPlayers?.striker, true);
+    push(currentPlayers?.nonStriker, true);
+  }
+
   return card;
 };
 
-const getBowlingCard = (inning) => {
+/**
+ * Mirrors getBowlingCard() in LocalMatchScoreboard.jsx
+ */
+const getBowlingCard = (inning, currentPlayers, isCurrent) => {
   if (inning.bowlingCard?.length) return inning.bowlingCard;
+
   const map = new Map();
   (inning.overHistory || []).forEach((over) => {
     const key = over.bowlerId || over.bowlerName;
     if (!key) return;
     if (!map.has(key)) {
       map.set(key, {
+        id: key,
         name: over.bowlerName || "",
         balls: 0,
         runs: 0,
@@ -70,86 +95,120 @@ const getBowlingCard = (inning) => {
     e.wickets += over.wickets || 0;
     if ((over.legalBalls || 0) >= 6 && (over.runs || 0) === 0) e.maidens += 1;
   });
-  return [...map.values()];
+
+  const currentBowlerId = isCurrent ? getPlayerId(currentPlayers?.bowler) : "";
+  return [...map.values()].map((b) => ({
+    ...b,
+    isCurrent: b.id === currentBowlerId,
+  }));
 };
 
-// ── colour palette ────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Colour palette
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const BRAND        = [42, 120, 214];
+const ACCENT       = [239, 68, 68];
+const DARK         = [18, 24, 38];
+const LIGHT_BG     = [245, 246, 248];
+const MID_GRAY     = [160, 170, 185];
+const WHITE        = [255, 255, 255];
+const SUCCESS_CLR  = [34, 197, 94];
+const WARNING_CLR  = [234, 179, 8];
+const SECTION_BG   = [230, 238, 250];
 
-const BRAND = [42, 120, 214];
-const ACCENT = [239, 68, 68];
-const DARK = [18, 24, 38];
-const LIGHT_GRAY = [245, 246, 248];
-const MID_GRAY = [160, 170, 185];
-const WHITE = [255, 255, 255];
-const SUCCESS_COLOR = [34, 197, 94];
-
-// ── main export ───────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Main export
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * generateMatchPDF(matchData)
- * Creates and auto-downloads a PDF scorecard for a cricket match.
+ * Produces a full scorecard PDF that mirrors LocalMatchScoreboard.jsx.
  *
- * @param {Object} matchData  – Redux currentMatchData object
+ * @param {Object} matchData â€“ Redux currentMatchData object
  */
 export const generateMatchPDF = (matchData) => {
   if (!matchData) return;
 
   const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-  const W = doc.internal.pageSize.getWidth();
-  const H = doc.internal.pageSize.getHeight();
+  const W = doc.internal.pageSize.getWidth();   // 210
+  const H = doc.internal.pageSize.getHeight();  // 297
 
-  const MARGIN = 14;
+  const MARGIN    = 12;
   const CONTENT_W = W - MARGIN * 2;
   let y = 0;
 
-  // ── utility: ensure space or add page ───────────────────────────────────────
-  const ensureSpace = (needed) => {
-    if (y + needed > H - 18) {
-      doc.addPage();
-      drawPageBg();
-      drawHeader();
-      y = 38;
-    }
-  };
-
-
-  // ── page background & header (drawn BEFORE content on each page) ─────────────
-  const drawPageBg = () => {
+  // â”€â”€ draw background on current page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const drawBg = () => {
     doc.setFillColor(...DARK);
-    doc.rect(0, 0, W, 20, "F");
-    doc.setFillColor(...LIGHT_GRAY);
-    doc.rect(0, 20, W, H - 20, "F");
+    doc.rect(0, 0, W, 18, "F");
+    doc.setFillColor(...LIGHT_BG);
+    doc.rect(0, 18, W, H - 18, "F");
   };
 
-  const drawHeader = () => {
+  // â”€â”€ draw branded top bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const drawTopBar = () => {
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setTextColor(...WHITE);
-    doc.text("HILLS CRICKET ARENA", MARGIN, 13);
+    doc.text("HILLS CRICKET ARENA", MARGIN, 12);
 
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
+    doc.setFontSize(7);
     doc.setTextColor(...MID_GRAY);
-    doc.text("Match Scorecard", W - MARGIN, 13, { align: "right" });
+    doc.text("Match Scorecard", W - MARGIN, 12, { align: "right" });
   };
 
-  // ── section title ────────────────────────────────────────────────────────────
-  const sectionTitle = (text, color = BRAND) => {
-    ensureSpace(10);
+  // â”€â”€ page setup for new pages added manually â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const newPage = () => {
+    doc.addPage();
+    drawBg();
+    drawTopBar();
+    y = 26;
+  };
+
+  // â”€â”€ ensure there's enough vertical room, add page if not â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const ensureSpace = (needed) => {
+    if (y + needed > H - 14) newPage();
+  };
+
+  // â”€â”€ coloured section title bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const sectionBar = (text, color = BRAND) => {
+    ensureSpace(9);
     doc.setFillColor(...color);
-    doc.roundedRect(MARGIN, y, CONTENT_W, 7, 1.5, 1.5, "F");
+    doc.roundedRect(MARGIN, y, CONTENT_W, 6.5, 1.2, 1.2, "F");
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
+    doc.setFontSize(7.5);
     doc.setTextColor(...WHITE);
-    doc.text(text.toUpperCase(), MARGIN + 4, y + 5);
-    y += 10;
+    doc.text(text.toUpperCase(), MARGIN + 3, y + 4.5);
+    y += 9;
   };
 
-  // ── autoTable wrapper ────────────────────────────────────────────────────────
-  // willDrawPage fires BEFORE any content is placed on each page, so the
-  // background is drawn first and never overwrites table rows.
-  const addTable = (head, body, columnStyles = {}) => {
-    ensureSpace(14);
+  // â”€â”€ sub-heading (e.g. "BATTING â€“ Team A") â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const subHeading = (text) => {
+    ensureSpace(7);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.setTextColor(...MID_GRAY);
+    doc.text(text.toUpperCase(), MARGIN, y);
+    y += 4.5;
+  };
+
+  // â”€â”€ small label + value pair inline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const inlineStat = (label, value, xOffset = 0, yOffset = 0) => {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.5);
+    doc.setTextColor(...MID_GRAY);
+    doc.text(label, MARGIN + xOffset, y + yOffset);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...DARK);
+    doc.text(String(value ?? "-"), MARGIN + xOffset, y + yOffset + 4);
+  };
+
+  // â”€â”€ autoTable wrapper (willDrawPage = safe background before rows) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const addTable = (head, body, colStyles = {}, opts = {}) => {
+    if (!body || body.length === 0) return;
+    ensureSpace(12);
     autoTable(doc, {
       startY: y,
       head,
@@ -158,211 +217,248 @@ export const generateMatchPDF = (matchData) => {
       tableWidth: CONTENT_W,
       styles: {
         font: "helvetica",
-        fontSize: 7.5,
-        cellPadding: { top: 2, right: 3, bottom: 2, left: 3 },
+        fontSize: 7,
+        cellPadding: { top: 1.8, right: 2.5, bottom: 1.8, left: 2.5 },
         textColor: DARK,
-        lineColor: [220, 224, 230],
-        lineWidth: 0.2,
+        lineColor: [215, 220, 228],
+        lineWidth: 0.18,
         fillColor: WHITE,
+        overflow: "ellipsize",
       },
       headStyles: {
         fillColor: DARK,
         textColor: WHITE,
         fontStyle: "bold",
-        fontSize: 7.5,
+        fontSize: 7,
       },
-      alternateRowStyles: { fillColor: [250, 251, 253] },
-      columnStyles,
-      // willDrawPage fires BEFORE table rows — safe to paint background here
+      alternateRowStyles: { fillColor: [248, 249, 251] },
+      columnStyles: colStyles,
       willDrawPage: () => {
-        drawPageBg();
-        drawHeader();
+        drawBg();
+        drawTopBar();
       },
+      ...opts,
     });
-    y = doc.lastAutoTable.finalY + 5;
+    y = doc.lastAutoTable.finalY + 4;
   };
 
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // PAGE 1 â€“ MATCH SUMMARY CARD
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // START DOCUMENT
-  // ═══════════════════════════════════════════════════════════════════════════
+  drawBg();
+  drawTopBar();
+  y = 24;
 
-  drawPageBg();
-  drawHeader();
-  y = 28;
+  const t1      = matchData.firstTeam?.name  || "Team A";
+  const t2      = matchData.secondTeam?.name || "Team B";
+  const innings = matchData.innings || [];
+  const inn1    = innings[0];
+  const inn2    = innings[1];
 
+  const currentInning   = Number(matchData.currentInning) || 1;
+  const currentPlayers  = matchData.currentPlayers;
 
-  // ── Match info card ──────────────────────────────────────────────────────────
+  // â”€â”€ White hero card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const CARD_H = 62;
   doc.setFillColor(...WHITE);
-  doc.roundedRect(MARGIN, y, CONTENT_W, 56, 3, 3, "F");
+  doc.roundedRect(MARGIN, y, CONTENT_W, CARD_H, 3, 3, "F");
 
-  const t1 = matchData.firstTeam?.name || "Team A";
-  const t2 = matchData.secondTeam?.name || "Team B";
-  const inn1 = matchData.innings?.[0];
-  const inn2 = matchData.innings?.[1];
-
+  // Team names
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
+  doc.setFontSize(13);
   doc.setTextColor(...DARK);
-  doc.text(t1, MARGIN + 5, y + 12);
+  doc.text(t1, MARGIN + 5, y + 11);
 
-  doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
   doc.setTextColor(...MID_GRAY);
-  doc.text("vs", W / 2, y + 12, { align: "center" });
+  doc.text("vs", W / 2, y + 11, { align: "center" });
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
+  doc.setFontSize(13);
   doc.setTextColor(...DARK);
-  doc.text(t2, W - MARGIN - 5, y + 12, { align: "right" });
+  doc.text(t2, W - MARGIN - 5, y + 11, { align: "right" });
 
-  if (inn1) {
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...BRAND);
-    doc.text(
-      `${inn1.runs ?? 0}/${inn1.wickets ?? 0} (${formatOvers(inn1.legalBalls || 0)})`,
-      MARGIN + 5,
-      y + 22
-    );
-  }
-  if (inn2) {
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...ACCENT);
-    doc.text(
-      `${inn2.runs ?? 0}/${inn2.wickets ?? 0} (${formatOvers(inn2.legalBalls || 0)})`,
-      W - MARGIN - 5,
-      y + 22,
-      { align: "right" }
-    );
-  }
+  // Scores
+  const score = (inn) =>
+    inn ? `${inn.runs ?? 0}/${inn.wickets ?? 0} (${formatOvers(inn.legalBalls || 0)})` : "-";
 
-  doc.setDrawColor(220, 224, 230);
-  doc.setLineWidth(0.3);
-  doc.line(MARGIN + 5, y + 26, W - MARGIN - 5, y + 26);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...BRAND);
+  doc.text(score(inn1), MARGIN + 5, y + 20);
 
+  doc.setTextColor(...ACCENT);
+  doc.text(score(inn2), W - MARGIN - 5, y + 20, { align: "right" });
+
+  // Divider
+  doc.setDrawColor(215, 220, 228);
+  doc.setLineWidth(0.25);
+  doc.line(MARGIN + 4, y + 24, W - MARGIN - 4, y + 24);
+
+  // Details grid (3 Ã— 2)
   const details = [
-    ["Overs", matchData.totalOvers ?? matchData.overs ?? "-"],
-    ["Format", matchData.matchType || "-"],
-    ["Toss", matchData.tossWinner || "-"],
-    [
-      "Date",
-      matchData.date
-        ? new Date(matchData.date).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
-        : new Date().toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          }),
-    ],
-    ["Status", matchData.matchStatus || "-"],
-    [
-      "Match ID",
-      matchData.matchId ? String(matchData.matchId).slice(0, 12) : "-",
-    ],
+    ["Overs",   matchData.totalOvers ?? matchData.overs ?? "-"],
+    ["Format",  matchData.matchType  || "-"],
+    ["Toss",    matchData.tossWinner || "-"],
+    ["Date",    matchData.date
+        ? new Date(matchData.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+        : new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })],
+    ["Status",  matchData.matchStatus || "-"],
+    ["Match ID", matchData.matchId ? String(matchData.matchId).slice(0, 14) : "-"],
   ];
 
-  const COL2_X = MARGIN + CONTENT_W / 2;
-  details.forEach((pair, i) => {
-    const col = i % 2;
-    const row = Math.floor(i / 2);
-    const xBase = col === 0 ? MARGIN + 5 : COL2_X;
-    const yBase = y + 32 + row * 7;
+  const COL2 = MARGIN + CONTENT_W / 2;
+  details.forEach(([label, value], i) => {
+    const col  = i % 2;
+    const row  = Math.floor(i / 2);
+    const xB   = col === 0 ? MARGIN + 5 : COL2;
+    const yB   = y + 30 + row * 9;
 
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
+    doc.setFontSize(6.5);
     doc.setTextColor(...MID_GRAY);
-    doc.text(pair[0], xBase, yBase);
+    doc.text(label, xB, yB);
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
     doc.setTextColor(...DARK);
-    doc.text(String(pair[1]), xBase, yBase + 4);
+    doc.text(String(value), xB, yB + 4.5);
   });
 
-  y += 62;
+  y += CARD_H + 4;
 
   // Match result banner
   if (matchData.matchResult) {
-    doc.setFillColor(...SUCCESS_COLOR);
-    doc.roundedRect(MARGIN, y, CONTENT_W, 9, 2, 2, "F");
+    doc.setFillColor(...SUCCESS_CLR);
+    doc.roundedRect(MARGIN, y, CONTENT_W, 8.5, 1.8, 1.8, "F");
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
+    doc.setFontSize(8);
     doc.setTextColor(...WHITE);
-    doc.text(`Result: ${matchData.matchResult}`, W / 2, y + 6, {
-      align: "center",
-    });
-    y += 14;
+    doc.text(`Result: ${matchData.matchResult}`, W / 2, y + 5.5, { align: "center" });
+    y += 13;
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // INNINGS SECTIONS
-  // ═══════════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // INNINGS LOOP â€“ mirrors InningSection in LocalMatchScoreboard.jsx
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-  const innings = matchData.innings || [];
+  innings.forEach((inning, idx) => {
+    const isCurrent    = idx + 1 === currentInning;
+    const inningLabel  = idx === 0 ? "1st Innings" : "2nd Innings";
+    const statusLabel  = inning.battingCard ? "Completed" : "In Progress";
+    const statusColor  = inning.battingCard ? SUCCESS_CLR : WARNING_CLR;
+    const battingTeam  = inning.battingTeam  || (idx === 0 ? t1 : t2);
+    const bowlingTeam  = inning.bowlingTeam  || (idx === 0 ? t2 : t1);
+    const color        = idx === 0 ? BRAND : ACCENT;
 
-  innings.forEach((inning, inningIdx) => {
-    const color = inningIdx === 0 ? BRAND : ACCENT;
-    const inningLabel = inningIdx === 0 ? "1st Innings" : "2nd Innings";
-    const battingTeam = inning.battingTeam || (inningIdx === 0 ? t1 : t2);
-    const bowlingTeam = inning.bowlingTeam || (inningIdx === 0 ? t2 : t1);
+    const totalBalls   = inning.legalBalls || 0;
+    const runRate      = totalBalls > 0 ? ((inning.runs * 6) / totalBalls).toFixed(2) : "0.00";
 
-    y += 4;
-    sectionTitle(`${inningLabel} - ${battingTeam}`, color);
-
-    // Inning summary
-    const totalBalls = inning.legalBalls || 0;
-    const rr =
-      totalBalls > 0 ? ((inning.runs * 6) / totalBalls).toFixed(2) : "0.00";
-    const extras = inning.extras || {};
-    const extrasTotal =
+    const extras       = inning.extras || {};
+    const extrasTotal  =
       (extras.wideBallRun || 0) +
-      (extras.noBallRun || 0) +
-      (extras.byes || 0) +
-      (extras.legByes || 0) +
-      (extras.overthrow || 0);
+      (extras.noBallRun   || 0) +
+      (extras.byes        || 0) +
+      (extras.legByes     || 0) +
+      (extras.overthrow   || 0);
 
-    addTable(
-      [["Score", "Overs", "Run Rate", "Extras", "Target"]],
-      [[
-        `${inning.runs ?? 0}/${inning.wickets ?? 0}`,
-        formatOvers(totalBalls),
-        rr,
-        extrasTotal,
-        inningIdx === 1 ? (matchData.target ?? "-") : "-",
-      ]],
-      {
-        0: { halign: "center" },
-        1: { halign: "center" },
-        2: { halign: "center" },
-        3: { halign: "center" },
-        4: { halign: "center" },
-      }
+    // â”€â”€ Inning header bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    y += 5;
+    ensureSpace(30);
+
+    // Inning section background
+    doc.setFillColor(...SECTION_BG);
+    doc.roundedRect(MARGIN, y, CONTENT_W, 22, 2.5, 2.5, "F");
+
+    // Left â€“ team + inning label + status badge
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...DARK);
+    doc.text(battingTeam, MARGIN + 4, y + 8);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...MID_GRAY);
+    doc.text(`vs ${bowlingTeam}`, MARGIN + 4, y + 14.5);
+
+    // Inning tag
+    doc.setFillColor(...DARK);
+    doc.roundedRect(MARGIN + 4, y + 16.5, 22, 4, 1, 1, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(6);
+    doc.setTextColor(...WHITE);
+    doc.text(inningLabel, MARGIN + 6, y + 19.5);
+
+    // Status badge
+    doc.setFillColor(...statusColor);
+    doc.roundedRect(MARGIN + 28, y + 16.5, 22, 4, 1, 1, "F");
+    doc.setFontSize(6);
+    doc.text(statusLabel, MARGIN + 30, y + 19.5);
+
+    // Right â€“ score + CRR
+    const scoreStr = `${inning.runs ?? 0}-${inning.wickets ?? 0}`;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(...DARK);
+    doc.text(scoreStr, W - MARGIN - 4, y + 13, { align: "right" });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.5);
+    doc.setTextColor(...MID_GRAY);
+    doc.text(
+      `(${formatOvers(totalBalls)} ov)  Â·  CRR ${runRate}`,
+      W - MARGIN - 4,
+      y + 19,
+      { align: "right" }
     );
 
-    // ── Batting card ──────────────────────────────────────────────────────────
-    const battingCard = getBattingCard(inning);
-    if (battingCard.length > 0) {
-      ensureSpace(8);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(7.5);
+    y += 26;
+
+    // â”€â”€ Summary stats row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    const summaryStats = [
+      ["Overs",    formatOvers(totalBalls)],
+      ["Run Rate", runRate],
+      ["Extras",   extrasTotal],
+      ...(idx === 1 ? [["Target", matchData.target ?? "-"]] : []),
+    ];
+
+    const colCount = summaryStats.length;
+    const colW     = CONTENT_W / colCount;
+
+    ensureSpace(14);
+    doc.setFillColor(...WHITE);
+    doc.roundedRect(MARGIN, y, CONTENT_W, 12, 1.5, 1.5, "F");
+    summaryStats.forEach(([label, value], si) => {
+      const xC = MARGIN + si * colW + colW / 2;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(6.5);
       doc.setTextColor(...MID_GRAY);
-      doc.text(`BATTING  -  ${battingTeam}`, MARGIN, y);
-      y += 4;
+      doc.text(label, xC, y + 4, { align: "center" });
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8.5);
+      doc.setTextColor(...DARK);
+      doc.text(String(value), xC, y + 10, { align: "center" });
+    });
+    y += 16;
+
+    // â”€â”€ Batting card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    const battingCard = getBattingCard(inning, currentPlayers, isCurrent);
+
+    if (battingCard.length > 0) {
+      subHeading(`Batting  Â·  ${battingTeam}  Â·  ${battingCard.length} batsman${battingCard.length !== 1 ? "s" : ""}`);
 
       addTable(
         [["Batsman", "Dismissal", "R", "B", "4s", "6s", "SR"]],
         battingCard.map((p) => {
-          const s = p.battingStats || {};
+          const s  = p.battingStats || {};
+          const isStriker =
+            isCurrent && getPlayerId(currentPlayers?.striker) === p.playerId;
           return [
-            p.name || "-",
+            (p.name || "-") + (isStriker ? " *" : ""),
             p.dismissal || (p.isNotOut ? "not out" : "out"),
-            s.runs ?? 0,
+            s.runs  ?? 0,
             s.balls ?? 0,
             s.fours ?? 0,
             s.sixes ?? 0,
@@ -370,8 +466,8 @@ export const generateMatchPDF = (matchData) => {
           ];
         }),
         {
-          0: { cellWidth: 38, halign: "left" },
-          1: { cellWidth: "auto", halign: "left", fontStyle: "italic" },
+          0: { cellWidth: 36, halign: "left",   fontStyle: "bold" },
+          1: { cellWidth: "auto", halign: "left", fontStyle: "italic", textColor: MID_GRAY },
           2: { cellWidth: 10, halign: "center", fontStyle: "bold" },
           3: { cellWidth: 10, halign: "center" },
           4: { cellWidth: 10, halign: "center" },
@@ -381,101 +477,113 @@ export const generateMatchPDF = (matchData) => {
       );
     }
 
-    // ── Extras breakdown ──────────────────────────────────────────────────────
-    ensureSpace(10);
+    // â”€â”€ Extras row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    ensureSpace(8);
+    doc.setFillColor(...WHITE);
+    doc.roundedRect(MARGIN, y, CONTENT_W, 8, 1.5, 1.5, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.setTextColor(...DARK);
+    doc.text(`Extras: ${extrasTotal}`, MARGIN + 3, y + 5);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
+    doc.setFontSize(6.5);
     doc.setTextColor(...MID_GRAY);
     doc.text(
-      `Extras: ${extrasTotal}  (WD ${extras.wideBallRun || 0}, NB ${extras.noBallRun || 0}, LB ${extras.legByes || 0}, B ${extras.byes || 0}, OV ${extras.overthrow || 0})`,
-      MARGIN,
-      y
+      `(WD ${extras.wideBallRun || 0}  NB ${extras.noBallRun || 0}  LB ${extras.legByes || 0}  B ${extras.byes || 0}  OV ${extras.overthrow || 0})`,
+      MARGIN + 28,
+      y + 5
     );
-    y += 7;
+    y += 12;
 
-    // ── Bowling card ──────────────────────────────────────────────────────────
-    const bowlingCard = getBowlingCard(inning);
+    // â”€â”€ Bowling card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    const bowlingCard = getBowlingCard(inning, currentPlayers, isCurrent);
+
     if (bowlingCard.length > 0) {
-      ensureSpace(8);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(7.5);
-      doc.setTextColor(...MID_GRAY);
-      doc.text(`BOWLING  -  ${bowlingTeam}`, MARGIN, y);
-      y += 4;
+      subHeading(`Bowling  Â·  ${bowlingTeam}  Â·  ${bowlingCard.length} bowler${bowlingCard.length !== 1 ? "s" : ""}`);
 
       addTable(
         [["Bowler", "O", "R", "W", "M", "Economy"]],
         bowlingCard.map((b) => [
-          b.name || "-",
+          (b.name || "-") + (b.isCurrent ? " *" : ""),
           formatOvers(b.balls || 0),
-          b.runs ?? 0,
+          b.runs    ?? 0,
           b.wickets ?? 0,
           b.maidens ?? 0,
           b.balls > 0 ? fmt((b.runs / b.balls) * 6) : "-",
         ]),
         {
-          0: { cellWidth: 52, halign: "left" },
-          1: { cellWidth: 16, halign: "center" },
-          2: { cellWidth: 16, halign: "center" },
-          3: { cellWidth: 16, halign: "center", fontStyle: "bold" },
-          4: { cellWidth: 16, halign: "center" },
-          5: { cellWidth: "auto", halign: "center" },
+          0: { cellWidth: "auto", halign: "left",   fontStyle: "bold" },
+          1: { cellWidth: 16,     halign: "center" },
+          2: { cellWidth: 16,     halign: "center" },
+          3: { cellWidth: 16,     halign: "center", fontStyle: "bold" },
+          4: { cellWidth: 16,     halign: "center" },
+          5: { cellWidth: 20,     halign: "center" },
         }
       );
     }
 
-    // ── Fall of wickets ───────────────────────────────────────────────────────
+    // â”€â”€ Fall of wickets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const fow = (inning.outPlayers || []).map((p, i) => ({
-      wicket: p.teamWickets ?? i + 1,
-      name: p.name || "-",
-      runs: p.teamRuns ?? 0,
-      balls: p.battingStats?.balls ?? 0,
-      over:
-        p.teamLegalBalls != null ? formatOvers(p.teamLegalBalls) : "-",
+      wicket: p.teamWickets  ?? i + 1,
+      name:   p.name         || "-",
+      runs:   p.teamRuns     ?? 0,
+      balls:  p.battingStats?.balls ?? 0,
+      over:   p.teamLegalBalls != null ? formatOvers(p.teamLegalBalls) : "-",
     }));
 
     if (fow.length > 0) {
-      ensureSpace(8);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(7.5);
-      doc.setTextColor(...MID_GRAY);
-      doc.text("FALL OF WICKETS", MARGIN, y);
-      y += 4;
+      subHeading(`Fall of Wickets  Â·  ${fow.length} wicket${fow.length !== 1 ? "s" : ""}`);
 
       addTable(
         [["Wkt", "Batsman", "Score", "Balls", "Over"]],
         fow.map((f) => [f.wicket, f.name, f.runs, f.balls, f.over]),
         {
-          0: { cellWidth: 12, halign: "center" },
+          0: { cellWidth: 12,     halign: "center" },
           1: { cellWidth: "auto", halign: "left" },
-          2: { cellWidth: 18, halign: "center" },
-          3: { cellWidth: 18, halign: "center" },
-          4: { cellWidth: 18, halign: "center" },
+          2: { cellWidth: 18,     halign: "center" },
+          3: { cellWidth: 18,     halign: "center" },
+          4: { cellWidth: 18,     halign: "center" },
         }
       );
     }
+
+    // â”€â”€ Footnote for live inning â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    if (isCurrent && !inning.battingCard) {
+      ensureSpace(6);
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(6);
+      doc.setTextColor(...MID_GRAY);
+      doc.text("* denotes batsman currently on strike  |  * denotes bowler currently bowling", MARGIN, y);
+      y += 6;
+    }
   });
 
-  // ── Footer on every page ──────────────────────────────────────────────────────
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // FOOTER on every page
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
   const pageCount = doc.internal.getNumberOfPages();
+  const genTime   = new Date().toLocaleString("en-IN");
+
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFillColor(...DARK);
-    doc.rect(0, H - 10, W, 10, "F");
+    doc.rect(0, H - 9, W, 9, "F");
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(6.5);
+    doc.setFontSize(6);
     doc.setTextColor(...MID_GRAY);
-    doc.text("Hills Cricket Arena - Match Scorecard", MARGIN, H - 4);
+    doc.text("Hills Cricket Arena â€” Match Scorecard", MARGIN, H - 3.5);
     doc.text(
-      `Generated ${new Date().toLocaleString("en-IN")}  |  Page ${i} of ${pageCount}`,
+      `Generated ${genTime}  |  Page ${i} of ${pageCount}`,
       W - MARGIN,
-      H - 4,
+      H - 3.5,
       { align: "right" }
     );
   }
 
-  // ── Save ──────────────────────────────────────────────────────────────────────
-  const safeName = (s) => String(s || "").replace(/\s+/g, "_").replace(/[^\w_-]/g, "");
-  const fileName = `HCA_${safeName(matchData.firstTeam?.name) || "Team1"}_vs_${safeName(matchData.secondTeam?.name) || "Team2"}_${new Date().toISOString().slice(0, 10)}.pdf`;
+  // â”€ Save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const safe = (s) => String(s || "").replace(/\s+/g, "_").replace(/[^\w_-]/g, "");
+  const fileName = `HCA_${safe(matchData.firstTeam?.name) || "Team1"}_vs_${safe(matchData.secondTeam?.name) || "Team2"}_${new Date().toISOString().slice(0, 10)}.pdf`;
   doc.save(fileName);
 };
+
