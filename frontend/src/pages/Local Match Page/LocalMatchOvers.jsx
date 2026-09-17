@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-
+import { ChevronDown } from "lucide-react";
 const formatOvers = (legalBalls = 0) =>
   `${Math.floor(legalBalls / 6)}.${legalBalls % 6}`;
 
@@ -128,12 +129,20 @@ const OverCard = ({ over, isCurrent }) => {
 };
 
 const InningOvers = ({ match, inning, isCurrent }) => {
+  const [isOpen, setIsOpen] = useState(isCurrent);
+
   if (!inning) return null;
 
   const overHistory = inning.overHistory || [];
+
   const battingTeamName =
     inning.battingTeam ||
     getTeamNameById(match, inning.battingTeamId) ||
+    "Team";
+
+  const bowlingTeamName =
+    inning.bowlingTeam ||
+    getTeamNameById(match, inning.bowlingTeamId) ||
     "Team";
 
   const totalOverRuns = overHistory.reduce(
@@ -142,54 +151,102 @@ const InningOvers = ({ match, inning, isCurrent }) => {
   );
 
   return (
-    <section className="flex flex-col gap-3">
-      <div className="flex items-end justify-between border-b border-base-content/15 pb-2">
-        <div>
+    <section className="overflow-hidden rounded-2xl border border-base-content/15 bg-base-100">
+      {/*  HEADER  */}
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors ${
+          isOpen ? "bg-base-content/5" : "hover:bg-base-content/5"
+        }`}
+      >
+        {/* Left side */}
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-bold">{battingTeamName}</h3>
-            <span className="rounded-md bg-base-content/10 px-2 py-0.5 text-[11px] text-base-content/70">
-              {inning.inning === 1 ? "1st Inning" : "2nd Inning"}
-            </span>
+            <h3 className="truncate text-base font-bold">{battingTeamName}</h3>
+
+            {isCurrent && (
+              <span className="rounded-md bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold text-blue-500">
+                LIVE
+              </span>
+            )}
           </div>
-          <p className="text-xs text-base-content/50">
-            vs{" "}
-            {inning.bowlingTeam || getTeamNameById(match, inning.bowlingTeamId)}
+
+          <p className="mt-1 text-xs text-base-content/50">
+            {inning.inning === 1 ? "1st Inning" : "2nd Inning"}
+            <span className="mx-1">·</span>
+            vs {bowlingTeamName}
           </p>
         </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold leading-none">
-            {inning.runs ?? 0}-{inning.wickets ?? 0}
-          </p>
-          <p className="text-xs text-base-content/60">
-            ({formatOvers(inning.legalBalls || 0)} ov)
-          </p>
+
+        {/* Score + Chevron */}
+        <div className="flex shrink-0 items-center gap-3">
+          <div className="text-right">
+            <p className="text-xl font-bold leading-none">
+              {inning.runs ?? 0}-{inning.wickets ?? 0}
+            </p>
+
+            <p className="mt-1 text-[11px] text-base-content/60">
+              ({formatOvers(inning.legalBalls || 0)} ov)
+            </p>
+          </div>
+
+          <ChevronDown
+            size={18}
+            strokeWidth={1.8}
+            className={`text-base-content/50 transition-transform duration-200 ${
+              isOpen ? "rotate-180" : ""
+            }`}
+          />
+        </div>
+      </button>
+
+      {/*  ACCORDION CONTENT  */}
+      <div
+        className={`grid transition-[grid-template-rows]  ${
+          isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        }`}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="border-t border-base-content/10 p-3">
+            {overHistory.length > 0 ? (
+              <>
+                {/* Overs */}
+                <div className="flex flex-col gap-3">
+                  {[...overHistory]
+                    .map((over, index) => ({
+                      over,
+                      isOverCurrent:
+                        isCurrent && index === overHistory.length - 1,
+                    }))
+                    .reverse()
+                    .map(({ over, isOverCurrent }) => (
+                      <OverCard
+                        key={over.over}
+                        over={over}
+                        isCurrent={isOverCurrent}
+                      />
+                    ))}
+                </div>
+
+                {/* Total */}
+                <div className="mt-3 flex items-center justify-between rounded-xl border border-base-content/15 bg-base-content/5 px-3 py-2 text-sm">
+                  <span className="font-semibold">Total from overs</span>
+
+                  <span className="font-bold">
+                    {totalOverRuns} run
+                    {totalOverRuns !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <p className="py-6 text-center text-sm italic text-base-content/40">
+                No overs bowled yet
+              </p>
+            )}
+          </div>
         </div>
       </div>
-
-      {overHistory.length > 0 ? (
-        <>
-          {[...overHistory]
-            .map((over, index) => ({
-              over,
-              isOverCurrent: isCurrent && index === overHistory.length - 1,
-            }))
-            .reverse()
-            .map(({ over, isOverCurrent }) => (
-              <OverCard key={over.over} over={over} isCurrent={isOverCurrent} />
-            ))}
-
-          <div className="flex items-center justify-between rounded-xl border border-base-content/15 px-3 py-2 text-sm">
-            <span className="font-semibold">Total from overs</span>
-            <span className="font-bold">
-              {totalOverRuns} run{totalOverRuns !== 1 ? "s" : ""}
-            </span>
-          </div>
-        </>
-      ) : (
-        <p className="py-6 text-center text-sm text-base-content/40 italic">
-          No overs bowled yet
-        </p>
-      )}
     </section>
   );
 };
