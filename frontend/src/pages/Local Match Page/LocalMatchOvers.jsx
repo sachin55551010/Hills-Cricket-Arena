@@ -14,38 +14,70 @@ const getTeamNameById = (match, teamId) => {
 // Mirrors the per-ball styling used on the scoring page
 const getBallStyle = (ball) => {
   if (ball.type === "WICKET")
-    return { bg: "bg-red-500", text: "text-white", label: "W" };
+    return {
+      bg: "bg-red-500",
+      text: "text-white",
+      label: "W",
+    };
+
   if (ball.type === "WD")
     return {
       bg: "bg-yellow-500",
       text: "text-black",
-      label: `${ball.totalRuns}WD`,
+      label: "WD",
+      runs: Math.max((ball.totalRuns ?? 1) - 1, 0),
     };
+
   if (ball.type === "NB")
     return {
       bg: "bg-yellow-500",
       text: "text-black",
-      label: `${ball.totalRuns}NB`,
+      label: "NB",
+      runs: Math.max((ball.totalRuns ?? 1) - 1, 0),
     };
+
   if (ball.type === "LB")
     return {
       bg: "bg-purple-500",
       text: "text-white",
-      label: `${ball.runs}LB`,
+      label: "LB",
+      runs: ball.runs ?? 0,
     };
+
   if (ball.type === "BYE")
     return {
       bg: "bg-purple-500",
       text: "text-white",
-      label: `${ball.runs}B`,
+      label: "B",
+      runs: ball.runs ?? 0,
     };
+
   if (ball.runs === 6)
-    return { bg: "bg-green-500", text: "text-white", label: "6" };
+    return {
+      bg: "bg-green-500",
+      text: "text-white",
+      label: "6",
+    };
+
   if (ball.runs === 4)
-    return { bg: "bg-green-500", text: "text-white", label: "4" };
+    return {
+      bg: "bg-green-500",
+      text: "text-white",
+      label: "4",
+    };
+
   if (ball.runs === 0)
-    return { bg: "bg-gray-500", text: "text-white", label: "0" };
-  return { bg: "bg-blue-500", text: "text-white", label: String(ball.runs) };
+    return {
+      bg: "bg-gray-500",
+      text: "text-white",
+      label: "0",
+    };
+
+  return {
+    bg: "bg-blue-500",
+    text: "text-white",
+    label: String(ball.runs),
+  };
 };
 
 // Human-readable description of what happened on a delivery
@@ -110,13 +142,35 @@ const OverCard = ({ over, isCurrent }) => {
         {balls.length > 0 ? (
           balls.map((ball, index) => {
             const style = getBallStyle(ball);
+
+            const isExtra = ["WD", "NB", "LB", "BYE"].includes(ball.type);
+
             return (
               <div
                 key={ball.timestamp || index}
                 title={`${ball.batsmanName || "Batsman"} · ${describeBall(ball)}`}
-                className={`${style.bg} ${style.text} flex h-8 min-w-8 items-center justify-center rounded-full px-1.5 text-xs font-bold shadow-sm`}
+                className="flex flex-col items-center"
               >
-                {style.label}
+                {/* Ball circle */}
+                <div
+                  className={`
+              ${style.bg}
+              ${style.text}
+              flex h-8 min-w-8 items-center justify-center
+              rounded-full px-1.5
+              text-xs font-bold
+              shadow-sm
+            `}
+                >
+                  {style.label}
+                </div>
+
+                {/* Only show runs for extra deliveries */}
+                {isExtra && (
+                  <span className="mt-1 text-[10px] font-semibold leading-none text-base-content/60">
+                    {style.runs}
+                  </span>
+                )}
               </div>
             );
           })

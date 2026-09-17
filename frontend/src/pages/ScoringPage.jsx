@@ -108,38 +108,70 @@ export const ScoringPage = () => {
   // Ball display helper
   const getBallStyle = (ball) => {
     if (ball.type === "WICKET")
-      return { bg: "bg-red-500", text: "text-white", label: "W" };
+      return {
+        bg: "bg-red-500",
+        text: "text-white",
+        label: "W",
+      };
+
     if (ball.type === "WD")
       return {
         bg: "bg-yellow-500",
         text: "text-black",
-        label: `${ball.totalRuns}WD`,
+        label: "WD",
+        runs: Math.max((ball.totalRuns ?? 1) - 1, 0),
       };
+
     if (ball.type === "NB")
       return {
         bg: "bg-yellow-500",
         text: "text-black",
-        label: `${ball.totalRuns}NB`,
+        label: "NB",
+        runs: Math.max((ball.totalRuns ?? 1) - 1, 0),
       };
+
     if (ball.type === "LB")
       return {
         bg: "bg-purple-500",
         text: "text-white",
-        label: `${ball.runs}LB`,
+        label: "LB",
+        runs: ball.runs ?? 0,
       };
+
     if (ball.type === "BYE")
       return {
         bg: "bg-purple-500",
         text: "text-white",
-        label: `${ball.runs}B`,
+        label: "B",
+        runs: ball.runs ?? 0,
       };
+
     if (ball.runs === 6)
-      return { bg: "bg-green-500", text: "text-white", label: "6" };
+      return {
+        bg: "bg-green-500",
+        text: "text-white",
+        label: "6",
+      };
+
     if (ball.runs === 4)
-      return { bg: "bg-green-500", text: "text-white", label: "4" };
+      return {
+        bg: "bg-green-500",
+        text: "text-white",
+        label: "4",
+      };
+
     if (ball.runs === 0)
-      return { bg: "bg-gray-500", text: "text-white", label: "0" };
-    return { bg: "bg-blue-500", text: "text-white", label: String(ball.runs) };
+      return {
+        bg: "bg-gray-500",
+        text: "text-white",
+        label: "0",
+      };
+
+    return {
+      bg: "bg-blue-500",
+      text: "text-white",
+      label: String(ball.runs),
+    };
   };
 
   const onConfirm = (data) => dispatch(recordDelivery(data));
@@ -243,6 +275,27 @@ export const ScoringPage = () => {
     LB: "border-3 border-blue-600 text-blue-600",
     BYE: "border-3 border-blue-600 text-blue-600 text-[.8rem]",
     OUT: "border-3 border-red-600 text-red-600 text-[.8rem]",
+  };
+
+  // Human-readable description of what happened on a delivery
+  const describeBall = (ball) => {
+    switch (ball.type) {
+      case "WICKET":
+        return "Wicket";
+      case "WD":
+        return `Wide (${ball.totalRuns} run${ball.totalRuns !== 1 ? "s" : ""})`;
+      case "NB":
+        return `No ball (${ball.totalRuns} run${ball.totalRuns !== 1 ? "s" : ""})`;
+      case "LB":
+        return `Leg bye (${ball.runs})`;
+      case "BYE":
+        return `Bye (${ball.runs})`;
+      default:
+        if (ball.runs === 4) return "Four";
+        if (ball.runs === 6) return "Six";
+        if (ball.runs === 0) return "Dot ball";
+        return `${ball.runs} run${ball.runs !== 1 ? "s" : ""}`;
+    }
   };
 
   // const handleTestBtn = () => {
@@ -492,27 +545,45 @@ export const ScoringPage = () => {
         </div>
 
         {/* per ball record */}
-        <div className="border border-base-content/15 rounded-md flex items-center text-[.85rem] pl-2 gap-2 py-2">
-          <p className="shrink-0 whitespace-nowrap font-semibold">
-            This over :
-          </p>
-          <div className="flex gap-2 overflow-x-auto min-w-0 hide-scrollbar">
-            {currentOverBalls.length > 0 ? (
-              currentOverBalls.map((ball, index) => {
-                const style = getBallStyle(ball);
-                return (
+        <div className="flex flex-wrap gap-2 px-3 py-3">
+          {currentOverBalls.length > 0 ? (
+            currentOverBalls.map((ball, index) => {
+              const style = getBallStyle(ball);
+
+              const isExtra = ["WD", "NB", "LB", "BYE"].includes(ball.type);
+
+              return (
+                <div
+                  key={ball.timestamp || index}
+                  title={`${ball.batsmanName || "Batsman"} · ${describeBall(ball)}`}
+                  className="flex flex-col items-center"
+                >
+                  {/* Ball circle */}
                   <div
-                    key={index}
-                    className={`${style.bg} ${style.text} min-w-7 h-7 px-1 rounded-full flex items-center justify-center shrink-0 text-xs font-bold shadow-sm`}
+                    className={`
+              ${style.bg}
+              ${style.text}
+              flex h-8 min-w-8 items-center justify-center
+              rounded-full px-1.5
+              text-xs font-bold
+              shadow-sm
+            `}
                   >
                     {style.label}
                   </div>
-                );
-              })
-            ) : (
-              <p className="text-base-content/40 italic">No balls yet</p>
-            )}
-          </div>
+
+                  {/* Only show runs for extra deliveries */}
+                  {isExtra && (
+                    <span className="mt-1 text-[10px] font-semibold leading-none text-base-content/60">
+                      {style.runs}
+                    </span>
+                  )}
+                </div>
+              );
+            })
+          ) : (
+            <p className="text-xs italic text-base-content/40">No balls yet</p>
+          )}
         </div>
 
         {/* scoring buttons */}
