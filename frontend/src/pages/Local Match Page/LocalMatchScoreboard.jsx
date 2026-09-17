@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { ChevronDown, Pencil } from "lucide-react";
+import { ChevronDown, Pencil, Download, Loader2 } from "lucide-react";
 import { RenamePlayerModal } from "../../components/modals/RenamePlayerModal";
+import { generateMatchPDF } from "../../utils/generateMatchPDF";
 
 const formatOvers = (legalBalls = 0) =>
   `${Math.floor(legalBalls / 6)}.${legalBalls % 6}`;
@@ -480,6 +481,39 @@ const InningSection = ({
   );
 };
 
+const DownloadPDFButton = ({ matchData }) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleDownload = async () => {
+    if (!matchData || loading) return;
+    setLoading(true);
+    try {
+      // Small timeout so the loading state renders before heavy PDF work
+      await new Promise((r) => setTimeout(r, 50));
+      generateMatchPDF(matchData);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      id="download-match-pdf-btn"
+      type="button"
+      onClick={handleDownload}
+      disabled={loading || !matchData}
+      className="flex items-center gap-2 rounded-xl border border-primary/40 bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary transition-all hover:bg-primary hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {loading ? (
+        <Loader2 size={16} className="animate-spin" />
+      ) : (
+        <Download size={16} />
+      )}
+      {loading ? "Generating PDF…" : "Download Scorecard PDF"}
+    </button>
+  );
+};
+
 export const LocalMatchScoreboard = ({
   matchData = null,
   readOnly = false,
@@ -535,6 +569,9 @@ export const LocalMatchScoreboard = ({
               }
             />
           ))}
+
+        {/* PDF Download button */}
+        <DownloadPDFButton matchData={currentMatchData} />
 
         {showBackLink && (
           <Link
