@@ -7,6 +7,7 @@ import { MoreOptionScoringModal } from "../components/modals/MoreOptionScoringMo
 import { AddNewBowlerModal } from "../components/modals/AddNewBowlerModal";
 import { StartSecondInningModal } from "../components/modals/StartSecondInningModal";
 import { UndoConfirmModal } from "../components/modals/UndoConfirmModal";
+import { SwapConfirmModal } from "../components/modals/SwapConfirmModal";
 import { useDispatch, useSelector } from "react-redux";
 import { recordDelivery } from "../store/scoreSlice";
 import { persistScoreState } from "../store/persistMatch";
@@ -24,6 +25,7 @@ export const ScoringPage = () => {
   const [openAddBowlerModal, setOpenAddBowlerModal] = useState(false);
   const [openMoreMotionModal, setOpenMoreOptionModal] = useState(false);
   const [showUndoConfirmModal, setShowUndoConfirmModal] = useState(false);
+  const [showSwapConfirmModal, setShowSwapConfirmModal] = useState(false);
   const [showStartSecondInningModal, setShowStartSecondInningModal] =
     useState(false);
 
@@ -203,6 +205,10 @@ export const ScoringPage = () => {
     }
     if (val === "UNDO") {
       setShowUndoConfirmModal(true);
+      return;
+    }
+    if (val === "SWAP") {
+      setShowSwapConfirmModal(true);
       return;
     }
     dispatch(recordDelivery(val));
@@ -677,6 +683,18 @@ export const ScoringPage = () => {
             setShowUndoConfirmModal(false);
           }}
           onCancel={() => setShowUndoConfirmModal(false)}
+        />
+      )}
+      {/* SWAP CONFIRM */}
+      {showSwapConfirmModal && (
+        <SwapConfirmModal
+          striker={currentMatchData?.currentPlayers?.striker?.name}
+          nonStriker={currentMatchData?.currentPlayers?.nonStriker?.name}
+          onConfirm={() => {
+            dispatch(recordDelivery("SWAP"));
+            setShowSwapConfirmModal(false);
+          }}
+          onCancel={() => setShowSwapConfirmModal(false)}
         />
       )}
       {/* <button onClick={handleTestBtn} className="btn">
