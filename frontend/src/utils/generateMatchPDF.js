@@ -116,9 +116,7 @@ const SUCCESS_CLR  = [34, 197, 94];
 const WARNING_CLR  = [234, 179, 8];
 const SECTION_BG   = [230, 238, 250];
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Main export
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
 
 /**
  * generateMatchPDF(matchData)
@@ -137,7 +135,7 @@ export const generateMatchPDF = (matchData) => {
   const CONTENT_W = W - MARGIN * 2;
   let y = 0;
 
-  // â”€â”€ draw background on current page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  
   const drawBg = () => {
     doc.setFillColor(...DARK);
     doc.rect(0, 0, W, 18, "F");
@@ -145,7 +143,7 @@ export const generateMatchPDF = (matchData) => {
     doc.rect(0, 18, W, H - 18, "F");
   };
 
-  // â”€â”€ draw branded top bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+ 
   const drawTopBar = () => {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
@@ -158,7 +156,7 @@ export const generateMatchPDF = (matchData) => {
     doc.text("Match Scorecard", W - MARGIN, 12, { align: "right" });
   };
 
-  // â”€â”€ page setup for new pages added manually â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  
   const newPage = () => {
     doc.addPage();
     drawBg();
@@ -166,12 +164,12 @@ export const generateMatchPDF = (matchData) => {
     y = 26;
   };
 
-  // â”€â”€ ensure there's enough vertical room, add page if not â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  
   const ensureSpace = (needed) => {
     if (y + needed > H - 14) newPage();
   };
 
-  // â”€â”€ coloured section title bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
   const sectionBar = (text, color = BRAND) => {
     ensureSpace(9);
     doc.setFillColor(...color);
@@ -183,7 +181,7 @@ export const generateMatchPDF = (matchData) => {
     y += 9;
   };
 
-  // â”€â”€ sub-heading (e.g. "BATTING â€“ Team A") â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+ 
   const subHeading = (text) => {
     ensureSpace(7);
     doc.setFont("helvetica", "bold");
@@ -193,7 +191,7 @@ export const generateMatchPDF = (matchData) => {
     y += 4.5;
   };
 
-  // â”€â”€ small label + value pair inline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
   const inlineStat = (label, value, xOffset = 0, yOffset = 0) => {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(6.5);
@@ -205,7 +203,6 @@ export const generateMatchPDF = (matchData) => {
     doc.text(String(value ?? "-"), MARGIN + xOffset, y + yOffset + 4);
   };
 
-  // â”€â”€ autoTable wrapper (willDrawPage = safe background before rows) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const addTable = (head, body, colStyles = {}, opts = {}) => {
     if (!body || body.length === 0) return;
     ensureSpace(12);
@@ -242,9 +239,7 @@ export const generateMatchPDF = (matchData) => {
     y = doc.lastAutoTable.finalY + 4;
   };
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // PAGE 1 â€“ MATCH SUMMARY CARD
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+ 
 
   drawBg();
   drawTopBar();
@@ -259,7 +254,7 @@ export const generateMatchPDF = (matchData) => {
   const currentInning   = Number(matchData.currentInning) || 1;
   const currentPlayers  = matchData.currentPlayers;
 
-  // â”€â”€ White hero card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  
   const CARD_H = 62;
   doc.setFillColor(...WHITE);
   doc.roundedRect(MARGIN, y, CONTENT_W, CARD_H, 3, 3, "F");
@@ -340,9 +335,7 @@ export const generateMatchPDF = (matchData) => {
     y += 13;
   }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // INNINGS LOOP â€“ mirrors InningSection in LocalMatchScoreboard.jsx
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+ 
 
   innings.forEach((inning, idx) => {
     const isCurrent    = idx + 1 === currentInning;
@@ -364,7 +357,7 @@ export const generateMatchPDF = (matchData) => {
       (extras.legByes     || 0) +
       (extras.overthrow   || 0);
 
-    // â”€â”€ Inning header bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   
     y += 5;
     ensureSpace(30);
 
@@ -416,7 +409,7 @@ export const generateMatchPDF = (matchData) => {
 
     y += 26;
 
-    // â”€â”€ Summary stats row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    
     const summaryStats = [
       ["Overs",    formatOvers(totalBalls)],
       ["Run Rate", runRate],
@@ -443,7 +436,7 @@ export const generateMatchPDF = (matchData) => {
     });
     y += 16;
 
-    // â”€â”€ Batting card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  
     const battingCard = getBattingCard(inning, currentPlayers, isCurrent);
 
     if (battingCard.length > 0) {
@@ -477,7 +470,7 @@ export const generateMatchPDF = (matchData) => {
       );
     }
 
-    // â”€â”€ Extras row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    
     ensureSpace(8);
     doc.setFillColor(...WHITE);
     doc.roundedRect(MARGIN, y, CONTENT_W, 8, 1.5, 1.5, "F");
@@ -495,7 +488,7 @@ export const generateMatchPDF = (matchData) => {
     );
     y += 12;
 
-    // â”€â”€ Bowling card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+ 
     const bowlingCard = getBowlingCard(inning, currentPlayers, isCurrent);
 
     if (bowlingCard.length > 0) {
@@ -522,7 +515,7 @@ export const generateMatchPDF = (matchData) => {
       );
     }
 
-    // â”€â”€ Fall of wickets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    
     const fow = (inning.outPlayers || []).map((p, i) => ({
       wicket: p.teamWickets  ?? i + 1,
       name:   p.name         || "-",
@@ -547,7 +540,7 @@ export const generateMatchPDF = (matchData) => {
       );
     }
 
-    // â”€â”€ Footnote for live inning â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+ 
     if (isCurrent && !inning.battingCard) {
       ensureSpace(6);
       doc.setFont("helvetica", "italic");
@@ -558,9 +551,7 @@ export const generateMatchPDF = (matchData) => {
     }
   });
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // FOOTER on every page
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
 
   const pageCount = doc.internal.getNumberOfPages();
   const genTime   = new Date().toLocaleString("en-IN");
@@ -581,7 +572,7 @@ export const generateMatchPDF = (matchData) => {
     );
   }
 
-  // â”€ Save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  
   const safe = (s) => String(s || "").replace(/\s+/g, "_").replace(/[^\w_-]/g, "");
   const fileName = `HCA_${safe(matchData.firstTeam?.name) || "Team1"}_vs_${safe(matchData.secondTeam?.name) || "Team2"}_${new Date().toISOString().slice(0, 10)}.pdf`;
   doc.save(fileName);
