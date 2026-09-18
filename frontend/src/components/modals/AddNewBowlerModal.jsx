@@ -5,7 +5,7 @@ import { nanoid } from "nanoid";
 import { addPlayerToTeam } from "../../store/localTeamSlice";
 import { setNewBowler } from "../../store/scoreSlice";
 
-export const AddNewBowlerModal = ({ onClose }) => {
+export const AddNewBowlerModal = ({ onClose, onCloseWithUndo }) => {
   const [selectedBowler, setSelectedBowler] = useState(null);
   const [search, setSearch] = useState("");
 
@@ -136,7 +136,11 @@ export const AddNewBowlerModal = ({ onClose }) => {
             </p>
           </div>
 
-          <button onClick={onClose} className="btn btn-circle btn-ghost btn-sm">
+          <button
+            onClick={onCloseWithUndo ?? onClose}
+            className="btn btn-circle btn-ghost btn-sm"
+            title="Close and undo last delivery"
+          >
             <X size={18} />
           </button>
         </div>

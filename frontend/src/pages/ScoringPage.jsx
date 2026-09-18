@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ExtraRunCountModal } from "../components/modals/ExtraRunCountModal";
 import { ArrowLeft, Trophy } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -26,6 +26,15 @@ export const ScoringPage = () => {
   const [showUndoConfirmModal, setShowUndoConfirmModal] = useState(false);
   const [showStartSecondInningModal, setShowStartSecondInningModal] =
     useState(false);
+
+  // Track the last legalBalls boundary that already triggered the bowler modal.
+  // Initialized to the current legalBalls so that on mount (e.g. navigating
+  // back from the scoreboard) we never re-open for an already-handled over.
+  const bowlerModalTriggeredAtRef = useRef(
+    currentMatchData?.innings?.[
+      Number(currentMatchData?.currentInning) - 1
+    ]?.legalBalls ?? 0
+  );
 
   // scoring buttons
   const scoringButton = [
@@ -229,10 +238,14 @@ export const ScoringPage = () => {
     if (legalBalls <= 0 || legalBalls % 6 !== 0) return;
     if (isMatchCompleted || showStartSecondInningModal) return;
 
+    // Already handled this exact over boundary (e.g. returned from scoreboard).
+    if (bowlerModalTriggeredAtRef.current === legalBalls) return;
+
     // Inning 1: over change (not the last over — that's handled above)
     if (currentInningNumber === 1) {
       const allOversCompleted = totalOvers > 0 && legalBalls >= totalOvers * 6;
       if (!allOversCompleted) {
+        bowlerModalTriggeredAtRef.current = legalBalls;
         setOpenAddBowlerModal(true);
       }
       return;
@@ -242,6 +255,7 @@ export const ScoringPage = () => {
     if (currentInningNumber === 2) {
       const finalOverDone = totalOvers > 0 && legalBalls >= totalOvers * 6;
       if (!finalOverDone) {
+        bowlerModalTriggeredAtRef.current = legalBalls;
         setOpenAddBowlerModal(true);
       }
     }
@@ -633,7 +647,17 @@ export const ScoringPage = () => {
 
       {/* NEW BOWLER (mid-match over change) */}
       {openAddBowlerModal && (
-        <AddNewBowlerModal onClose={() => setOpenAddBowlerModal(false)} />
+        <AddNewBowlerModal
+          onClose={() => setOpenAddBowlerModal(false)}
+          onCloseWithUndo={() => {
+            // Undo the last delivery so the scorer goes back to the 6th ball.
+            // Also reset the ref so that when the 6th ball is re-scored the
+            // effect can detect the boundary again and re-open the modal.
+            bowlerModalTriggeredAtRef.current = 0;
+            dispatch(recordDelivery("UNDO"));
+            setOpenAddBowlerModal(false);
+          }}
+        />
       )}
 
       {/* START 2ND INNING */}
