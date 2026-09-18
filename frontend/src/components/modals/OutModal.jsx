@@ -381,7 +381,7 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
 
       fielder: selectedFielder,
 
-      completedRuns: Number(completedRuns) || 0,
+      completedRuns: selectedWicketType === "Caught" ? 0 : (Number(completedRuns) || 0),
 
       /*
        * Existing player => existing id.
@@ -678,20 +678,15 @@ export const OutModal = ({ pendingData = null, onClose, onSubmit }) => {
             </div>
           )}
 
-          {/* COMPLETED RUNS */}
-          {!pendingData &&
-            (selectedWicketType === "Run Out" ||
-              selectedWicketType === "Caught") && (
+          {/* COMPLETED RUNS — Run Out only (runs before catch never count) */}
+          {!pendingData && selectedWicketType === "Run Out" && (
             <div className="rounded-2xl border border-base-content/10 bg-base-200/30 p-4">
               <label
                 htmlFor="completedRuns"
                 className="mb-2 flex items-center gap-2 text-sm font-medium"
               >
                 <Trophy size={16} className="opacity-60" />
-
-                {selectedWicketType === "Caught"
-                  ? "Runs completed before catch"
-                  : "Runs completed before run out"}
+                Runs completed before run out
               </label>
 
               <input

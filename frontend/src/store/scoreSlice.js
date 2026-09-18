@@ -32,6 +32,8 @@ const recordBallInOver = (state, ballData) => {
     bowlerId: match.currentPlayers?.bowler?.playerId,
     bowlerName: match.currentPlayers?.bowler?.name,
     type: ballData.type || "NORMAL", // NORMAL, WD, NB, LB, BYE, WICKET
+    extraType: ballData.extraType || null, // WD/NB/LB/BYE when wicket on an extra
+    extraBatRuns: ballData.extraBatRuns ?? 0, // user-chosen runs on an extra delivery (excl. penalty)
     isLegal: ballData.isLegal ?? true,
     extras: ballData.extras || 0,
     totalRuns: ballData.totalRuns ?? ballData.runs ?? 0,
@@ -669,9 +671,13 @@ const recordWicketData = (state, data) => {
 
   // 7. Record ball in over history
   const ballTotalRuns = completedRuns + extraPenaltyRuns;
+  // extraRuns is the user-chosen bat/bye runs (not including the penalty run)
+  const extraBatRuns = isExtraWicket ? (data.runs || 0) : 0;
   recordBallInOver(state, {
     runs: completedRuns,
     type: "WICKET",
+    extraType: isExtraWicket ? extraType : null, // preserve WD/NB/LB/BYE for display
+    extraBatRuns,                                // user-chosen runs (e.g. 1 for WD+1)
     isLegal: isLegalDelivery,
     extras: extraPenaltyRuns,
     totalRuns: ballTotalRuns,
