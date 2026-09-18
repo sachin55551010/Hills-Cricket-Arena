@@ -13,19 +13,36 @@ const getTeamNameById = (match, teamId) => {
 
 // Mirrors the per-ball styling used on the scoring page
 const getBallStyle = (ball) => {
-  if (ball.type === "WICKET")
+  if (ball.type === "WICKET") {
+    // Extra + wicket (WD/NB/LB/BYE + out): red circle with "W",
+    // sub-label shows the extra prefix and user-chosen runs
+    if (ball.extraType) {
+      const prefix = ball.extraType;
+      const userRuns = ball.extraBatRuns ?? 0;
+      return {
+        bg: "bg-red-500",
+        text: "text-white",
+        label: "W",
+        subLabel: userRuns > 0 ? `${prefix}+${userRuns}` : prefix,
+      };
+    }
+    // Normal wicket
     return {
       bg: "bg-red-500",
       text: "text-white",
       label: "W",
     };
+  }
 
   if (ball.type === "WD")
     return {
       bg: "bg-yellow-500",
       text: "text-black",
       label: "WD",
-      runs: Math.max((ball.totalRuns ?? 1) - 1, 0),
+      subLabel:
+        (ball.totalRuns ?? 1) > 1
+          ? `+${Math.max((ball.totalRuns ?? 1) - 1, 0)}`
+          : null,
     };
 
   if (ball.type === "NB")
@@ -33,7 +50,10 @@ const getBallStyle = (ball) => {
       bg: "bg-yellow-500",
       text: "text-black",
       label: "NB",
-      runs: Math.max((ball.totalRuns ?? 1) - 1, 0),
+      subLabel:
+        (ball.totalRuns ?? 1) > 1
+          ? `+${Math.max((ball.totalRuns ?? 1) - 1, 0)}`
+          : null,
     };
 
   if (ball.type === "LB")
@@ -41,7 +61,7 @@ const getBallStyle = (ball) => {
       bg: "bg-purple-500",
       text: "text-white",
       label: "LB",
-      runs: ball.runs ?? 0,
+      subLabel: (ball.runs ?? 0) > 0 ? `+${ball.runs}` : null,
     };
 
   if (ball.type === "BYE")
@@ -49,7 +69,7 @@ const getBallStyle = (ball) => {
       bg: "bg-purple-500",
       text: "text-white",
       label: "B",
-      runs: ball.runs ?? 0,
+      subLabel: (ball.runs ?? 0) > 0 ? `+${ball.runs}` : null,
     };
 
   if (ball.runs === 6)
@@ -142,8 +162,7 @@ const OverCard = ({ over, isCurrent }) => {
         {balls.length > 0 ? (
           balls.map((ball, index) => {
             const style = getBallStyle(ball);
-
-            const isExtra = ["WD", "NB", "LB", "BYE"].includes(ball.type);
+            const showSubLabel = Boolean(style.subLabel);
 
             return (
               <div
@@ -165,10 +184,10 @@ const OverCard = ({ over, isCurrent }) => {
                   {style.label}
                 </div>
 
-                {/* Only show runs for extra deliveries */}
-                {isExtra && (
+                {/* Sub-label: extra runs or extra+wicket info */}
+                {showSubLabel && (
                   <span className="mt-1 text-[10px] font-semibold leading-none text-base-content/60">
-                    {style.runs}
+                    {style.subLabel}
                   </span>
                 )}
               </div>
