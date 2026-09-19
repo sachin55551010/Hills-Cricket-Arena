@@ -1,9 +1,6 @@
 ﻿import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Pure helpers  (same logic as LocalMatchScoreboard.jsx)
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const fmt = (v, decimals = 1) =>
   v != null && !isNaN(v) ? Number(v).toFixed(decimals) : "-";
@@ -103,9 +100,7 @@ const getBowlingCard = (inning, currentPlayers, isCurrent) => {
   }));
 };
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Colour palette
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
 const BRAND        = [42, 120, 214];
 const ACCENT       = [239, 68, 68];
 const DARK         = [18, 24, 38];
@@ -170,16 +165,16 @@ export const generateMatchPDF = (matchData) => {
   };
 
 
-  const sectionBar = (text, color = BRAND) => {
-    ensureSpace(9);
-    doc.setFillColor(...color);
-    doc.roundedRect(MARGIN, y, CONTENT_W, 6.5, 1.2, 1.2, "F");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7.5);
-    doc.setTextColor(...WHITE);
-    doc.text(text.toUpperCase(), MARGIN + 3, y + 4.5);
-    y += 9;
-  };
+  // const sectionBar = (text, color = BRAND) => {
+  //   ensureSpace(9);
+  //   doc.setFillColor(...color);
+  //   doc.roundedRect(MARGIN, y, CONTENT_W, 6.5, 1.2, 1.2, "F");
+  //   doc.setFont("helvetica", "bold");
+  //   doc.setFontSize(7.5);
+  //   doc.setTextColor(...WHITE);
+  //   doc.text(text.toUpperCase(), MARGIN + 3, y + 4.5);
+  //   y += 9;
+  // };
 
  
   const subHeading = (text) => {
@@ -192,16 +187,16 @@ export const generateMatchPDF = (matchData) => {
   };
 
 
-  const inlineStat = (label, value, xOffset = 0, yOffset = 0) => {
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(6.5);
-    doc.setTextColor(...MID_GRAY);
-    doc.text(label, MARGIN + xOffset, y + yOffset);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7.5);
-    doc.setTextColor(...DARK);
-    doc.text(String(value ?? "-"), MARGIN + xOffset, y + yOffset + 4);
-  };
+  // const inlineStat = (label, value, xOffset = 0, yOffset = 0) => {
+  //   doc.setFont("helvetica", "normal");
+  //   doc.setFontSize(6.5);
+  //   doc.setTextColor(...MID_GRAY);
+  //   doc.text(label, MARGIN + xOffset, y + yOffset);
+  //   doc.setFont("helvetica", "bold");
+  //   doc.setFontSize(7.5);
+  //   doc.setTextColor(...DARK);
+  //   doc.text(String(value ?? "-"), MARGIN + xOffset, y + yOffset + 4);
+  // };
 
   const addTable = (head, body, colStyles = {}, opts = {}) => {
     if (!body || body.length === 0) return;

@@ -54,6 +54,7 @@ import { LocalMatchScoreboard } from "./pages/Local Match Page/LocalMatchScorebo
 import { LocalMatchOvers } from "./pages/Local Match Page/LocalMatchOvers";
 import { LocalMatchHistoryScoreboard } from "./pages/Local Match Page/LocalMatchHistoryScoreboard";
 import { LocalMatchSummary } from "./pages/Local Match Page/LocalMatchSummary";
+import { SuperAdmin } from "./dashboard/SuperAdmin";
 
 function App() {
   const { authUser } = useSelector((state) => state.auth);
@@ -68,6 +69,10 @@ function App() {
       console.log("Socket connected:");
     });
   }, [socket]);
+
+  const admin_email = authUser?.player?.playerId?.email;
+
+  const isAdmin = admin_email === import.meta.env.VITE_ADMIN_EMAIL_ID;
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -90,6 +95,9 @@ function App() {
 
         {/* routes  */}
         <Routes>
+          {/* admin dashboard route*/}
+
+          <Route path="/admin-dashboard" element={isAdmin && <SuperAdmin />} />
           {/*
            * user dashboard // app main page
            * contain home page
