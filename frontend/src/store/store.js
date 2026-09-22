@@ -2,7 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./authSlice";
 import { authApi } from "./authApi";
 import themeReducer from "./themeSlice";
-import slicerReducer from "./scoreSlice"
+import slicerReducer from "./scoreSlice";
 import { tournamentApi } from "./tournamentApi";
 import { teamApi } from "./teamApi";
 import { inviteLinkApi } from "./inviteTeamLinkApi";
@@ -10,6 +10,7 @@ import { matchApi } from "./matchApi";
 import { newsApi } from "./newsApi";
 import localTeamReducer from "./localTeamSlice";
 import { persistMatchMiddleware } from "./persistMatch";
+import { superAdminApi } from "./superAdminApi";
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -23,6 +24,7 @@ export const store = configureStore({
     [inviteLinkApi.reducerPath]: inviteLinkApi.reducer,
     [matchApi.reducerPath]: matchApi.reducer,
     [newsApi.reducerPath]: newsApi.reducer,
+    [superAdminApi.reducerPath]: superAdminApi.reducer,
   },
   middleware: (getDefaultMiddleware) => {
     return getDefaultMiddleware().concat(
@@ -32,6 +34,7 @@ export const store = configureStore({
       inviteLinkApi.middleware,
       matchApi.middleware,
       newsApi.middleware,
+      superAdminApi.middleware,
       persistMatchMiddleware,
     );
   },

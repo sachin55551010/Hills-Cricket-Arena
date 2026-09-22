@@ -150,7 +150,13 @@ function App() {
           <Route
             path="/my-tournament"
             element={
-              authUser?.player?.role === "organiser" && <OrganiserDashBoard />
+              !authUser ? (
+                <Navigate to="/login" />
+              ) : authUser?.player?.role?.includes("organiser") ? (
+                <OrganiserDashBoard />
+              ) : (
+                <Navigate to="/" />
+              )
             }
           />
           {/* my profile page  */}

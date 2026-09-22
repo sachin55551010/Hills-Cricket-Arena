@@ -184,7 +184,7 @@ export const SideMenuBar = () => {
             </li>
 
             {/* My Tournaments */}
-            {authUser?.player?.role === "organiser" && (
+            {authUser?.player?.role?.includes("organiser") && (
               <li>
                 <NavLink to="my-tournament" className={navItemClass}>
                   <Target size={18} strokeWidth={1.8} />

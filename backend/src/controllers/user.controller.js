@@ -6,25 +6,40 @@ import { CustomErrHandler } from "../utils/CustomErrHandler.js";
 
 export const checkAuth = async (req, res, next) => {
   try {
-    const { id } = req.user;
-    const player = await Player.findById(id).populate("playerId");
+    const { id } = req.user; // id = Player._id (from JWT)
+    let player = await Player.findById(id).populate("playerId");
     if (!player) return next(new CustomErrHandler(404, "User not found"));
 
-    const myTournament = await Tournament.find({ createdBy: id });
-    if (
-      !myTournament ||
-      myTournament.length === 0 ||
-      myTournament === undefined
-    ) {
-      await Player.findByIdAndUpdate(id, { role: "user" });
+    // ── Normalize role field ─────────────────────────────────────────────────
+    // Handles 3 legacy shapes found in MongoDB:
+    //   1. undefined  → player created before role field existed
+    //   2. "user"     → string (old schema before we changed to [String])
+    //   3. ["user"]   → correct array (current schema)
+    const rawRole = player.role;
+    const needsMigration =
+      rawRole === undefined || rawRole === null || !Array.isArray(rawRole);
+
+    if (needsMigration) {
+      // Safely coerce to array — if it's a non-empty string keep it, else default to "user"
+      const safeRole =
+        typeof rawRole === "string" && rawRole.length > 0 ? [rawRole] : ["user"];
+
+      await Player.findByIdAndUpdate(
+        id,
+        { $set: { role: safeRole } },
+        { new: true },
+      );
+      player = await Player.findById(id).populate("playerId");
     }
+    // ─────────────────────────────────────────────────────────────────────────
 
     return res.status(200).json({ player, success: true });
   } catch (error) {
-    console.log("MyProfile error : ", error);
+    console.error("checkAuth (/me) Error:", error);
     next(error);
   }
 };
+
 
 export const logout = async (req, res, next) => {
   try {
@@ -60,8 +75,6 @@ export const updatePlayer = async (req, res, next) => {
       return next(new CustomErrHandler(403, "unatherised or invalid request"));
     let player = await Player.findById(req.user.id);
 
-    
-
     if (
       req.body.profilePicture &&
       req.body.profilePicture.startsWith("data:image")
@@ -80,8 +93,8 @@ export const updatePlayer = async (req, res, next) => {
       return next(
         new CustomErrHandler(
           400,
-          "This Number is already in used with different account! please enter different number"
-        )
+          "This Number is already in used with different account! please enter different number",
+        ),
       );
     player = await Player.findByIdAndUpdate(
       player._id,
@@ -95,7 +108,7 @@ export const updatePlayer = async (req, res, next) => {
         battingStyle: battingStyle || "",
         bowlingStyle: bowlingStyle || "",
       },
-      { new: true }
+      { new: true },
     ).populate("playerId");
 
     return res
@@ -112,18 +125,18 @@ export const removeProfilePic = async (req, res, next) => {
     const { playerId } = req.params;
     if (!playerId || !mongoose.Types.ObjectId.isValid(playerId))
       return next(
-        new CustomErrHandler(404, "No user found or invalid user id")
+        new CustomErrHandler(404, "No user found or invalid user id"),
       );
 
     if (req.user.id !== playerId)
       return next(
-        new CustomErrHandler(400, "Unatherised request. Access denied!")
+        new CustomErrHandler(400, "Unatherised request. Access denied!"),
       );
 
     await Player.findByIdAndUpdate(
       req.user.id,
       { profilePicture: "" },
-      { new: true }
+      { new: true },
     );
     res.status(200).json({
       success: true,

@@ -15,6 +15,7 @@ passport.use(
       try {
         let user = await User.findOne({ googleId: profile.id });
         if (!user) {
+          // New user — create User document
           user = await User.create({
             googleId: profile.id,
             name: profile.displayName,
@@ -22,13 +23,19 @@ passport.use(
             profileImg: profile.photos[0].value,
             isLoggedIn: true,
           });
+        } else {
+          // Returning user — mark as logged in
+          await User.findByIdAndUpdate(user._id, { isLoggedIn: true });
         }
+
         let player = await Player.findOne({ playerId: user._id });
         if (!player) {
+          // New player — explicitly set role as array so it's never undefined
           player = await Player.create({
             playerName: user.name,
             playerId: user._id,
             isVarified: true,
+            role: ["user"],
           });
         }
 

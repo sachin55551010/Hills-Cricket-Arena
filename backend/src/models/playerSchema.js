@@ -79,9 +79,9 @@ const playerSchema = new mongoose.Schema(
       default: false,
     },
     role: {
-      type: String,
+      type: [String],
       enum: ["user", "organiser", "superadmin"],
-      default: "user",
+      default: ["user"],
     },
 
     careerStats: {
@@ -124,7 +124,7 @@ const playerSchema = new mongoose.Schema(
       },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const Player = mongoose.model("Player", playerSchema);

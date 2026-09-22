@@ -88,10 +88,13 @@ export const addTournament = async (req, res, next) => {
       maxChangesAllowed: parsedMaxChanges,
     });
 
-    if (req.body.role !== "organiser") {
+    // req.user.id = Player._id (JWT stores Player._id, not User._id)
+    // Use $addToSet to safely add "organiser" without overwriting other roles (e.g. "superadmin")
+    const player = await Player.findById(req.user.id);
+    if (player && !player.role.includes("organiser")) {
       await Player.findByIdAndUpdate(
         req.user.id,
-        { role: "organiser" },
+        { $addToSet: { role: "organiser" } },
         { new: true },
       );
     }

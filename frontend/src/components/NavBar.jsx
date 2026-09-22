@@ -171,7 +171,7 @@ export const NavBar = () => {
           <div className="mx-1 h-6 w-px bg-base-content/10" />
 
           {/* My Tournaments */}
-          {authUser?.player?.role === "organiser" && (
+          {authUser?.player?.role?.includes("organiser") && (
             <NavLink to="my-tournament" className={navItemClass}>
               <Target size={18} strokeWidth={1.8} />
 
