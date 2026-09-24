@@ -4,6 +4,7 @@ import { CustomErrHandler } from "../utils/CustomErrHandler.js";
 import { io } from "../utils/socket.js";
 import mongoose from "mongoose";
 import { updateTournamentService } from "../services/updateTournamentStatus.service.js";
+import cloudinary from "../utils/cloudinary.js";
 
 //function to create new tournament
 export const addTournament = async (req, res, next) => {
@@ -21,6 +22,7 @@ export const addTournament = async (req, res, next) => {
       additionalInfo,
       maxChangesAllowed,
       pitchType,
+      tournamentBanner,
     } = req.body;
 
     if (
@@ -72,6 +74,17 @@ export const addTournament = async (req, res, next) => {
       parsedMaxChanges = num;
     }
 
+    // ── upload banner to cloudinary if provided ────────────────────────────
+    let bannerUrl = "";
+
+    if (tournamentBanner && tournamentBanner.startsWith("data:image")) {
+      const bannerUpload = await cloudinary.uploader.upload(tournamentBanner, {
+        folder: "tournament_images",
+      });
+      bannerUrl = bannerUpload.secure_url;
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
     const tournament = await Tournament.create({
       tournamentName,
       organiserName,
@@ -86,6 +99,7 @@ export const addTournament = async (req, res, next) => {
       startDate: startDate || null,
       endDate: endDate || null,
       maxChangesAllowed: parsedMaxChanges,
+      tournamentBanner: bannerUrl,
     });
 
     // req.user.id = Player._id (JWT stores Player._id, not User._id)
@@ -156,7 +170,10 @@ export const getTournamentInfo = async (req, res, next) => {
 export const updateTournamentInfo = async (req, res, next) => {
   try {
     const { tournamentId } = req.params;
-    const updatedFields = req.body;
+
+    // destructure banner out so raw base64 is not passed to Mongo
+    const { tournamentBanner, ...restFields } = req.body;
+    const updatedFields = { ...restFields };
 
     if (!tournamentId)
       return next(new CustomErrHandler(404, "No tournament found!"));
@@ -183,6 +200,18 @@ export const updateTournamentInfo = async (req, res, next) => {
       return next(
         new CustomErrHandler(403, "Sorry you cannot update this tournament"),
       );
+
+    // ── upload banner to cloudinary if new base64 string provided ─────────
+    if (tournamentBanner && tournamentBanner.startsWith("data:image")) {
+      const bannerUpload = await cloudinary.uploader.upload(tournamentBanner, {
+        folder: "tournament_images",
+      });
+      updatedFields.tournamentBanner = bannerUpload.secure_url;
+    } else if (typeof tournamentBanner === "string" && !tournamentBanner.startsWith("data:image")) {
+      // existing Cloudinary URL or empty string — pass through as-is
+      updatedFields.tournamentBanner = tournamentBanner;
+    }
+    // ──────────────────────────────────────────────────────────────────────
 
     const updatedTournament = await Tournament.findByIdAndUpdate(
       tournamentId,
@@ -239,6 +268,65 @@ export const deleteTournament = async (req, res, next) => {
     });
   } catch (error) {
     console.log("tournament delete error : ", error);
+    next(error);
+  }
+};
+
+// function to upload tournament logo and banner images
+export const uploadTournamentImages = async (req, res, next) => {
+  try {
+    const { tournamentId } = req.params;
+    let { TournamentLogo, tournamentBanner } = req.body;
+
+    if (!tournamentId || !mongoose.Types.ObjectId.isValid(tournamentId))
+      return next(new CustomErrHandler(400, "Invalid tournament id"));
+
+    const tournament = await Tournament.findById(tournamentId);
+    if (!tournament)
+      return next(new CustomErrHandler(404, "Tournament not found"));
+
+    // OWNERSHIP CHECK
+    if (!tournament.createdBy.equals(req.user.id))
+      return next(new CustomErrHandler(403, "Access denied"));
+
+    const updateFields = {};
+
+    if (TournamentLogo && TournamentLogo.startsWith("data:image")) {
+      const uploadResponse = await cloudinary.uploader.upload(TournamentLogo, {
+        folder: "tournament_images",
+      });
+      updateFields.TournamentLogo = uploadResponse.secure_url;
+    } else if (TournamentLogo === "") {
+      updateFields.TournamentLogo = "";
+    }
+
+    if (tournamentBanner && tournamentBanner.startsWith("data:image")) {
+      const uploadResponse = await cloudinary.uploader.upload(tournamentBanner, {
+        folder: "tournament_images",
+      });
+      updateFields.tournamentBanner = uploadResponse.secure_url;
+    } else if (tournamentBanner === "") {
+      updateFields.tournamentBanner = "";
+    }
+
+    if (Object.keys(updateFields).length === 0)
+      return next(new CustomErrHandler(400, "No images provided"));
+
+    const updatedTournament = await Tournament.findByIdAndUpdate(
+      tournamentId,
+      updateFields,
+      { new: true },
+    );
+
+    io.emit("updatedTournament", updatedTournament);
+
+    return res.status(200).json({
+      updatedTournament,
+      success: true,
+      message: "Tournament images updated successfully",
+    });
+  } catch (error) {
+    console.log("upload tournament images error : ", error);
     next(error);
   }
 };

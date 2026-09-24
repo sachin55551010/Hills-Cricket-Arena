@@ -95,6 +95,27 @@ export const tournamentApi = createApi({
         }
       },
     }),
+
+    uploadTournamentImages: builder.mutation({
+      query: ({ tournamentId, TournamentLogo, tournamentBanner }) => ({
+        url: `/upload-images/${tournamentId}`,
+        method: "PATCH",
+        body: { TournamentLogo, tournamentBanner },
+      }),
+      invalidatesTags: ["Tournament"],
+      async onQueryStarted(arg, { queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          toast.success(data.message, { autoClose: 1500, theme: "colored" });
+        } catch (error) {
+          console.log(error);
+          toast.error(error?.error?.data?.message || "Image upload failed", {
+            autoClose: 1500,
+            theme: "colored",
+          });
+        }
+      },
+    }),
   }),
 });
 
@@ -105,4 +126,5 @@ export const {
   useUpdateTournamentInfoMutation,
   useDeleteTournamentMutation,
   useGetAllTournamentsQuery,
+  useUploadTournamentImagesMutation,
 } = tournamentApi;

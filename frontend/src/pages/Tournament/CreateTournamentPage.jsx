@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { Header } from "../../components/Header";
 import { BALL_TYPE } from "../../constant/ballType";
@@ -20,6 +20,10 @@ export const CreateTournamentPage = ({ mode }) => {
     skip: !tournamentId,
   });
 
+  // ─── image upload state ───────────────────────────────────────────────────
+  const [tournamentBanner, setTournamentBanner] = useState("");
+  const bannerInputRef = useRef(null);
+
   //get all the fields from server
   useEffect(() => {
     if (mode === "edit" && data) {
@@ -37,6 +41,8 @@ export const CreateTournamentPage = ({ mode }) => {
         pitchType: data?.myTournament?.pitchType,
         maxChangesAllowed: data?.myTournament?.maxChangesAllowed || "",
       });
+      // pre-fill existing banner URL as preview
+      setTournamentBanner(data?.myTournament?.tournamentBanner || "");
     }
   }, [mode, data]);
 
@@ -73,6 +79,26 @@ export const CreateTournamentPage = ({ mode }) => {
     setTournamentInfo((prev) => ({ ...prev, [type]: val }));
   };
 
+  // ─── banner file handler ───────────────────────────────────────────────────
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be smaller than 5 MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setTournamentBanner(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+
   const todayDate = new Date().toISOString().split("T")[0];
 
   // check if user entering ending date before starting date
@@ -91,13 +117,14 @@ export const CreateTournamentPage = ({ mode }) => {
       e.preventDefault();
       if (!validateDates()) return;
 
-      // ✅ convert maxChangesAllowed properly
+      // ✅ convert maxChangesAllowed properly, include banner in payload
       const payload = {
         ...tournamentInfo,
         maxChangesAllowed:
           tournamentInfo.maxChangesAllowed === ""
             ? null
             : Number(tournamentInfo.maxChangesAllowed),
+        tournamentBanner,
       };
 
       if (mode === "edit" && data) {
@@ -602,6 +629,58 @@ export const CreateTournamentPage = ({ mode }) => {
                       placeholder="Enter 1–6"
                     />
                   </label>
+                </section>
+
+                {/* Tournament Banner */}
+                <section>
+                  <div className="mb-5">
+                    <h2 className="text-base font-bold sm:text-lg">
+                      Tournament Banner
+                    </h2>
+                    <p className="mt-1 text-xs text-base-content/50 sm:text-sm">
+                      Upload a banner image for your tournament. (Optional)
+                    </p>
+                  </div>
+
+                  <input
+                    ref={bannerInputRef}
+                    type="file"
+                    accept="image/*"
+                    id="tournament-banner-input"
+                    className="hidden"
+                    onChange={handleImageChange}
+                  />
+
+                  {tournamentBanner ? (
+                    <div className="group relative h-44 w-full overflow-hidden rounded-xl border border-base-content/10">
+                      <img
+                        src={tournamentBanner}
+                        alt="Tournament Banner"
+                        className="h-full w-full object-cover bg-base-200/40"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTournamentBanner("");
+                          if (bannerInputRef.current) bannerInputRef.current.value = "";
+                        }}
+                        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-error/90 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                        title="Remove banner"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => bannerInputRef.current?.click()}
+                      className="flex h-44 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-base-content/15 bg-base-200/40 text-base-content/40 transition-all hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
+                    >
+                      <span className="text-3xl">🏟️</span>
+                      <span className="text-xs font-medium">Click to upload banner</span>
+                      <span className="text-[10px] text-base-content/30">PNG, JPG, WEBP · Max 5 MB</span>
+                    </button>
+                  )}
                 </section>
 
                 {/* Additional Information */}

@@ -7,6 +7,7 @@ import {
   getMyTournaments,
   getTournamentInfo,
   updateTournamentInfo,
+  uploadTournamentImages,
 } from "../controllers/tournament.controller.js";
 
 export const tournament_route = express.Router();
@@ -30,3 +31,9 @@ tournament_route.delete(
 );
 
 tournament_route.get("/all-tournaments/:tournamentCategory", getAllTournaments);
+
+tournament_route.patch(
+  "/upload-images/:tournamentId",
+  isAuthenticated,
+  uploadTournamentImages,
+);
