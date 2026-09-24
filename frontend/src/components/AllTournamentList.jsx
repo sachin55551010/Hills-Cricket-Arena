@@ -145,20 +145,10 @@ export const AllTournamentList = () => {
           <li
             onClick={() => handleGetTournamentInfoBtn(tournament._id)}
             key={tournament._id}
-            className="relative flex flex-col rounded-xl h-55 bg-base-100 cursor-pointer border border-base-content/10 hover:border-base-content/30 hover:shadow-lg transition-all duration-200 overflow-hidden"
+            className="relative flex flex-col rounded-xl h-55 bg-base-100 cursor-pointer border border-base-content/10 hover:border-base-content/30 hover:shadow-lg transition-all duration-200"
           >
-            {/* Banner background image — shown at low opacity so text stays readable */}
-            {tournament.tournamentBanner && (
-              <img
-                src={tournament.tournamentBanner}
-                alt=""
-                aria-hidden="true"
-                className="absolute inset-0 h-full w-full object-cover opacity-20 pointer-events-none select-none"
-              />
-            )}
-
             {/* Header */}
-            <div className="relative h-[70%] px-4 py-3 flex flex-col justify-around">
+            <div className="h-[70%] px-4 py-3 flex flex-col justify-around">
               <h1 className="text-sm font-semibold capitalize  tracking-tight badge badge-soft badge-info">
                 {tournament.tournamentName}
               </h1>
@@ -215,7 +205,7 @@ export const AllTournamentList = () => {
             </div>
 
             {/* Footer */}
-            <div className="relative border-t border-base-content/8 flex flex-col gap-1.5 rounded-b-xl h-[30%] px-4 py-2.5 text-[.7rem] bg-base-200/40">
+            <div className="border-t border-base-content/8 flex flex-col gap-1.5 rounded-b-xl h-[30%] px-4 py-2.5 text-[.7rem] bg-base-200/40">
               <div className="flex gap-1 text-base-content/40 items-center">
                 <span>Created</span>
                 <span className="text-base-content/60 font-medium">

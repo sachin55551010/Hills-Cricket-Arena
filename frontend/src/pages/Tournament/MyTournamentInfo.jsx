@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import { NavLink, useParams, Link } from "react-router-dom";
 import { useGetTournamentInfoQuery } from "../../store/tournamentApi";
@@ -14,6 +15,8 @@ import {
   LayoutGrid,
   Info,
   Settings,
+  Expand,
+  X,
 } from "lucide-react";
 import { defaultAvatar } from "../../utils/noprofilePicHelper";
 
@@ -24,10 +27,106 @@ export const MyTournamentInfo = () => {
 
   //format Date
   const options = { day: "2-digit", month: "short", year: "numeric" };
+
+  // lightbox state
+  const [bannerOpen, setBannerOpen] = useState(false);
+
   return (
-    <div className="h-dvh bg-base-200/30 pt-26 pb-8 px-4 flex flex-col items-center overflow-y-scroll">
-      <div className="w-full md:w-[65%] flex flex-col gap-6">
+    <div className="min-h-dvh bg-base-200/30 pb-8 flex flex-col items-center overflow-y-auto pt-20 md:pt-24">
+    <div className="w-full md:w-[65%] flex flex-col gap-6">
+
+      {/* ── Banner Hero ────────────────────────────────────────────────── */}
+      {data?.myTournament?.tournamentBanner && (
+        <>
+          {/* Clickable banner card */}
+          <div
+            onClick={() => setBannerOpen(true)}
+            className="relative w-full h-52 sm:h-64 overflow-hidden rounded-b-3xl shadow-xl cursor-pointer group"
+          >
+            {/* Banner image */}
+            <img
+              src={data.myTournament.tournamentBanner}
+              alt={`${data.myTournament.tournamentName} banner`}
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
+            {/* Expand hint icon — top-right */}
+            <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm text-white/80 rounded-full px-2.5 py-1.5 text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <Expand size={11} />
+              <span>View</span>
+            </div>
+
+            {/* Text content */}
+            <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-5 pb-4 sm:pb-5 flex flex-col gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span
+                  className={`badge badge-sm font-semibold px-2.5 py-1 ${
+                    {
+                      Upcoming: "badge-info",
+                      Ongoing: "badge-warning",
+                      Completed: "badge-success",
+                      Cancelled: "badge-error",
+                      Abandoned: "badge-error",
+                      Postponed: "badge-neutral",
+                      Inactive: "badge-error",
+                    }[data.myTournament.status] ?? "badge-neutral"
+                  }`}
+                >
+                  {data.myTournament.status}
+                </span>
+
+                <span className="badge badge-sm badge-ghost bg-white/10 text-white/80 capitalize border-0 font-medium px-2.5 py-1">
+                  {data.myTournament.tournamentCategory}
+                </span>
+              </div>
+
+              <h1 className="text-lg sm:text-2xl font-extrabold text-white tracking-tight capitalize leading-tight drop-shadow">
+                {data.myTournament.tournamentName}
+              </h1>
+
+              <p className="text-xs sm:text-sm text-white/60 font-medium truncate">
+                {data.myTournament.city} · {data.myTournament.ground}
+              </p>
+            </div>
+          </div>
+
+          {/* ── Lightbox modal ───────────────────────────────────────────── */}
+          {bannerOpen && (
+            <div
+              onClick={() => setBannerOpen(false)}
+              className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
+            >
+              {/* Close button */}
+              <button
+                onClick={(e) => { e.stopPropagation(); setBannerOpen(false); }}
+                className="absolute top-4 right-4 flex items-center justify-center h-9 w-9 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors duration-200"
+                aria-label="Close image"
+              >
+                <X size={18} />
+              </button>
+
+              {/* Image — click doesn't close so users can interact */}
+              <img
+                onClick={(e) => e.stopPropagation()}
+                src={data.myTournament.tournamentBanner}
+                alt={`${data.myTournament.tournamentName} banner`}
+                className="max-h-[90dvh] max-w-full rounded-2xl shadow-2xl object-contain"
+              />
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Top padding when no banner */}
+      {!data?.myTournament?.tournamentBanner && (
+        <div className="h-4" />
+      )}
+
         {/* Organiser Detail */}
+        <div className="px-4 flex flex-col gap-6">
         <div className="rounded-2xl border border-base-content/10 bg-base-100 shadow-sm overflow-hidden">
           <div className="flex items-center gap-2 px-5 py-3 border-b border-base-content/10 bg-base-50">
             <Shield size={14} className="text-base-content/40" />
@@ -228,6 +327,7 @@ export const MyTournamentInfo = () => {
             )}
           </div>
         </div>
+        </div>{/* end px-4 wrapper */}
       </div>
     </div>
   );
