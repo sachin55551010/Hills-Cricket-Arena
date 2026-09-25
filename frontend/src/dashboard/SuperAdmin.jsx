@@ -4,5 +4,5 @@ export const SuperAdmin = () => {
   const { getAllData } = useGetAllDataQuery();
   console.log(getAllData);
 
-  return <div className="bg-base-100 h-dvh w-dvh pt-12">SuperAdmin</div>;
+  return <div className="bg-base-100 pt-12">SuperAdmin</div>;
 };
