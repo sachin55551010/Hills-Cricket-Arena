@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import { Player } from "../models/playerSchema.js";
-import { Tournament } from "../models/tournamentSchema.js";
 import cloudinary from "../utils/cloudinary.js";
 import { CustomErrHandler } from "../utils/CustomErrHandler.js";
 
@@ -22,13 +21,25 @@ export const checkAuth = async (req, res, next) => {
     if (needsMigration) {
       // Safely coerce to array — if it's a non-empty string keep it, else default to "user"
       const safeRole =
-        typeof rawRole === "string" && rawRole.length > 0 ? [rawRole] : ["user"];
+        typeof rawRole === "string" && rawRole.length > 0
+          ? [rawRole]
+          : ["user"];
 
       await Player.findByIdAndUpdate(
         id,
         { $set: { role: safeRole } },
         { new: true },
       );
+      player = await Player.findById(id).populate("playerId");
+    }
+
+    if (
+      player.playerId?.email === process.env.ADMIN_EMAIL_ID &&
+      !player.role.includes("superadmin")
+    ) {
+      await Player.findByIdAndUpdate(id, {
+        $addToSet: { role: "superadmin" },
+      });
       player = await Player.findById(id).populate("playerId");
     }
     // ─────────────────────────────────────────────────────────────────────────
@@ -39,7 +50,6 @@ export const checkAuth = async (req, res, next) => {
     next(error);
   }
 };
-
 
 export const logout = async (req, res, next) => {
   try {
@@ -162,5 +172,15 @@ export const profile = async (req, res, next) => {
   } catch (error) {
     console.log("Profile error : ", error);
     next(error);
+  }
+};
+
+export const getAllPlayers = async (req, res, next) => {
+  try {
+    const allPlayers = await Player.countDocuments();
+    console.log(allPlayers);
+    return res.status(200).json({ allPlayers, success: true });
+  } catch (error) {
+    console.log("get all players", error);
   }
 };

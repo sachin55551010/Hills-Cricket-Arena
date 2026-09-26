@@ -1,4 +1,3 @@
-
 export const createPlayer = async (req, res, next) => {
   try {
     const { id } = req.user;

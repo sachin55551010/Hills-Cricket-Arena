@@ -8,13 +8,14 @@ export const superAdminApi = createApi({
   }),
   tagTypes: ["Team", "Player", "Tournament"],
   endpoints: (builder) => ({
-    getAllData: builder.query({
+    getAllDataInNumber: builder.query({
       query: () => ({
-        url: "/dashboard",
+        url: "/admin-dashboard",
+        method: "GET",
       }),
       providesTags: ["Team", "Player", "Tournament"],
     }),
   }),
 });
 
-export const { useGetAllDataQuery } = superAdminApi;
+export const { useGetAllDataInNumberQuery } = superAdminApi;

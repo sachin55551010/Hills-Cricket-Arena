@@ -207,7 +207,10 @@ export const updateTournamentInfo = async (req, res, next) => {
         folder: "tournament_images",
       });
       updatedFields.tournamentBanner = bannerUpload.secure_url;
-    } else if (typeof tournamentBanner === "string" && !tournamentBanner.startsWith("data:image")) {
+    } else if (
+      typeof tournamentBanner === "string" &&
+      !tournamentBanner.startsWith("data:image")
+    ) {
       // existing Cloudinary URL or empty string — pass through as-is
       updatedFields.tournamentBanner = tournamentBanner;
     }
@@ -301,9 +304,12 @@ export const uploadTournamentImages = async (req, res, next) => {
     }
 
     if (tournamentBanner && tournamentBanner.startsWith("data:image")) {
-      const uploadResponse = await cloudinary.uploader.upload(tournamentBanner, {
-        folder: "tournament_images",
-      });
+      const uploadResponse = await cloudinary.uploader.upload(
+        tournamentBanner,
+        {
+          folder: "tournament_images",
+        },
+      );
       updateFields.tournamentBanner = uploadResponse.secure_url;
     } else if (tournamentBanner === "") {
       updateFields.tournamentBanner = "";
@@ -371,11 +377,9 @@ export const getAllTournaments = async (req, res, next) => {
       createdAt: -1,
     });
 
-    /**
-       const totalDocuments = await Tournament.countDocuments();
-    const hasMore = skip + allTournaments.length < totalDocuments;
-    console.log("hasMore", hasMore);
-       */
+    const totalDocuments = await Tournament.countDocuments();
+
+    console.log(totalDocuments);
 
     res.status(200).json({ allTournaments, success: true });
   } catch (error) {
