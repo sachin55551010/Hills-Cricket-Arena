@@ -3,7 +3,8 @@ import { useGetMyTournamentQuery } from "../../store/tournamentApi";
 import { useNavigate } from "react-router-dom";
 import noData from "../../../assets/No data-amico.svg";
 // eslint-disable-next-line no-unused-vars
-import {motion} from "motion/react"
+import { motion } from "motion/react";
+import { Phone, User } from "lucide-react";
 export const MyTournamentList = () => {
   const { data, isLoading } = useGetMyTournamentQuery();
   const navigate = useNavigate();
@@ -81,39 +82,93 @@ export const MyTournamentList = () => {
                </motion.div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 w-full md:grid-cols-2 lg:grid-cols-3">
-              {data?.myTournaments?.map((tournament) => {
-                return (
+            <div className="grid grid-cols-1 gap-3 w-full md:grid-cols-2 lg:grid-cols-3">
+              {data?.myTournaments?.map((tournament) => (
+                <li
+                  onClick={() => handleOnClickBtn(tournament._id)}
+                  key={tournament._id}
+                  className="relative flex flex-col rounded-xl h-55 bg-base-100 cursor-pointer border border-base-content/10 hover:border-base-content/30 hover:shadow-lg transition-all duration-200 list-none"
+                >
+                  {/* Status badge — top right */}
                   <div
-                    onClick={() => handleOnClickBtn(tournament._id)}
-                    key={tournament._id}
-                    className="group relative flex flex-col rounded-2xl h-50 bg-base-100 cursor-pointer border border-base-content/8 hover:border-base-content/20 hover:shadow-lg hover:shadow-base-content/5 transition-all duration-300"
+                    className={`absolute badge badge-soft ${
+                      {
+                        Upcoming: "badge-info",
+                        Ongoing: "badge-warning",
+                        Completed: "badge-success",
+                        Cancelled: "badge-warning",
+                        Abandoned: "badge-error",
+                        Postponed: "badge-neutral",
+                        Inactive: "badge-error",
+                      }[tournament.status]
+                    } top-3 right-3 text-[.65rem] font-medium rounded-full px-2`}
                   >
-                    {/* header */}
-                    <div className="flex-1 p-5 flex flex-col justify-end">
-                      <span className="absolute top-4 right-4 text-xs font-medium px-2.5 py-1 rounded-full bg-warning/15 text-warning border border-warning/25 tracking-wide uppercase">
-                        {tournament.status}
+                    {tournament.status}
+                  </div>
+
+                  {/* Body */}
+                  <div className="h-[70%] px-4 py-3 flex flex-col justify-around">
+                    <h1 className="text-sm font-semibold capitalize tracking-tight badge badge-soft badge-info">
+                      {tournament.tournamentName}
+                    </h1>
+
+                    <div className="flex gap-2 text-[.7rem] text-base-content/50 items-center">
+                      <User size={13} />
+                      <span className="text-base-content/40">Organiser</span>
+                      <span className="font-medium text-base-content/70">
+                        {tournament.organiserName}
                       </span>
-                      <h1 className="font-semibold text-base capitalize text-base-content leading-snug">
-                        {tournament.tournamentName}
-                      </h1>
                     </div>
 
-                    {/* footer */}
-                    <div className="px-5 py-3 border-t border-base-content/6 flex justify-between items-center text-xs text-base-content/40 font-medium">
-                      <span className="capitalize">
-                        {tournament.city} · {tournament.ground}
-                      </span>
-                      <span>
-                        {new Date(tournament.createdAt).toLocaleDateString(
-                          "en",
-                          options,
-                        )}
+                    <div className="flex gap-2 text-[.7rem] text-base-content/50 items-center">
+                      <Phone size={13} />
+                      <span className="text-base-content/40">Contact</span>
+                      <span className="font-medium text-base-content/70">
+                        {tournament.phone}
                       </span>
                     </div>
+
+                    <div className="flex justify-between text-[.7rem] text-base-content/50">
+                      <div className="flex gap-1 items-center">
+                        <span className="text-base-content/40">Start</span>
+                        <span className="font-medium text-base-content/70">
+                          {tournament.startDate
+                            ? new Date(tournament.startDate).toLocaleDateString("en", options)
+                            : "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex gap-1 items-center">
+                        <span className="text-base-content/40">End</span>
+                        <span className="font-medium text-base-content/70">
+                          {tournament.endDate
+                            ? new Date(tournament.endDate).toLocaleDateString("en", options)
+                            : "N/A"}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                );
-              })}
+
+                  {/* Footer */}
+                  <div className="border-t border-base-content/8 flex flex-col gap-1.5 rounded-b-xl h-[30%] px-4 py-2.5 text-[.7rem] bg-base-200/40">
+                    <div className="flex gap-1 text-base-content/40 items-center">
+                      <span>Created</span>
+                      <span className="text-base-content/60 font-medium">
+                        {new Date(tournament.createdAt).toLocaleDateString("en", options)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <div className="flex gap-1 items-center text-base-content/50 font-medium">
+                        <span className="text-base-content/35">City</span>
+                        <span className="capitalize text-base-content/65">{tournament.city}</span>
+                      </div>
+                      <div className="flex gap-1 items-center text-base-content/50 font-medium">
+                        <span className="text-base-content/35">Ground</span>
+                        <span className="capitalize text-base-content/65">{tournament.ground}</span>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              ))}
             </div>
           )}
         </div>
