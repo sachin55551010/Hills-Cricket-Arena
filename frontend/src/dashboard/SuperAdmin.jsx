@@ -12,17 +12,26 @@ import {
   Shield,
 } from "lucide-react";
 import { useGetAllDataInNumberQuery } from "../store/superAdminApi";
+import { Header } from "../components/Header";
 
 /* ─── menu items config ─────────────────────────────────────── */
 const NAV_ITEMS = [
   { id: "recent-activities", label: "Recent Activities", icon: Activity },
-  { id: "tournaments",       label: "Tournaments",       icon: Trophy  },
-  { id: "matches",           label: "Matches",           icon: Swords  },
-  { id: "players",           label: "Players",           icon: Users   },
+  { id: "tournaments", label: "Tournaments", icon: Trophy },
+  { id: "matches", label: "Matches", icon: Swords },
+  { id: "players", label: "Players", icon: Users },
 ];
 
 /* ─── Sidebar ────────────────────────────────────────────────── */
-function Sidebar({ expanded, selected, onSelect, onToggle, isMobile, mobileOpen, onMobileClose }) {
+function Sidebar({
+  expanded,
+  selected,
+  onSelect,
+  onToggle,
+  isMobile,
+  mobileOpen,
+  onMobileClose,
+}) {
   const sidebarClasses = isMobile
     ? `fixed inset-y-0 left-0 z-50 flex flex-col bg-base-200 border-r border-base-300 shadow-2xl
        transition-transform duration-300 ease-in-out w-64
@@ -40,10 +49,7 @@ function Sidebar({ expanded, selected, onSelect, onToggle, isMobile, mobileOpen,
         />
       )}
 
-      <aside
-        className={sidebarClasses}
-        style={{ top: "var(--nav-h, 3rem)" }}
-      >
+      <aside className={sidebarClasses} style={{ top: "var(--nav-h, 3rem)" }}>
         {/* Header */}
         <div
           className={`flex items-center border-b border-base-300 px-3 py-3 ${
@@ -65,7 +71,11 @@ function Sidebar({ expanded, selected, onSelect, onToggle, isMobile, mobileOpen,
               className="btn btn-ghost btn-xs btn-circle text-base-content/60 hover:text-primary"
               title={expanded ? "Collapse" : "Expand"}
             >
-              {expanded ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+              {expanded ? (
+                <ChevronLeft size={16} />
+              ) : (
+                <ChevronRight size={16} />
+              )}
             </button>
           )}
 
@@ -94,9 +104,10 @@ function Sidebar({ expanded, selected, onSelect, onToggle, isMobile, mobileOpen,
                 className={`
                   w-full flex items-center gap-3 rounded-xl px-3 py-2.5
                   transition-all duration-200 group relative
-                  ${isActive
-                    ? "bg-primary text-primary-content shadow-md"
-                    : "text-base-content/70 hover:bg-base-300 hover:text-base-content"
+                  ${
+                    isActive
+                      ? "bg-primary text-primary-content shadow-md"
+                      : "text-base-content/70 hover:bg-base-300 hover:text-base-content"
                   }
                   ${!expanded && !isMobile ? "justify-center" : ""}
                 `}
@@ -114,12 +125,14 @@ function Sidebar({ expanded, selected, onSelect, onToggle, isMobile, mobileOpen,
 
                 {/* Tooltip when collapsed */}
                 {!expanded && !isMobile && (
-                  <span className="
+                  <span
+                    className="
                     absolute left-full ml-2 px-2 py-1 rounded-md text-xs font-medium
                     bg-base-300 text-base-content shadow-lg
                     opacity-0 group-hover:opacity-100 pointer-events-none
                     transition-opacity duration-150 whitespace-nowrap z-50
-                  ">
+                  "
+                  >
                     {label}
                   </span>
                 )}
@@ -130,7 +143,9 @@ function Sidebar({ expanded, selected, onSelect, onToggle, isMobile, mobileOpen,
 
         {(expanded || isMobile) && (
           <div className="px-3 py-3 border-t border-base-300">
-            <p className="text-xs text-base-content/40 text-center">Hills Cricket Arena</p>
+            <p className="text-xs text-base-content/40 text-center">
+              Hills Cricket Arena
+            </p>
           </div>
         )}
       </aside>
@@ -145,7 +160,9 @@ function StatCard({ icon: Icon, label, count, gradient, isLoading }) {
       <div className="card-body p-4 md:p-5">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-base-content/50 font-medium mb-1 uppercase tracking-wide">{label}</p>
+            <p className="text-xs text-base-content/50 font-medium mb-1 uppercase tracking-wide">
+              {label}
+            </p>
             {isLoading ? (
               <div className="skeleton h-9 w-20 rounded-lg" />
             ) : (
@@ -154,7 +171,9 @@ function StatCard({ icon: Icon, label, count, gradient, isLoading }) {
               </p>
             )}
           </div>
-          <div className={`p-2.5 rounded-xl bg-gradient-to-br ${gradient} shadow`}>
+          <div
+            className={`p-2.5 rounded-xl bg-gradient-to-br ${gradient} shadow`}
+          >
             <Icon className="text-white" size={20} />
           </div>
         </div>
@@ -208,7 +227,9 @@ function StatsBar() {
 function ComingSoon({ label, icon: Icon, gradient }) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-16 px-8 text-center">
-      <div className={`p-5 rounded-3xl bg-gradient-to-br ${gradient} shadow-lg`}>
+      <div
+        className={`p-5 rounded-3xl bg-gradient-to-br ${gradient} shadow-lg`}
+      >
         <Icon className="text-white" size={36} />
       </div>
       <h2 className="text-xl font-bold text-base-content">{label}</h2>
@@ -229,27 +250,49 @@ function TabContent({ selected }) {
             <Activity className="text-white" size={18} />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-base-content">Recent Activities</h1>
-            <p className="text-xs text-base-content/50">Platform-wide overview</p>
+            <h1 className="text-lg font-bold text-base-content">
+              Recent Activities
+            </h1>
+            <p className="text-xs text-base-content/50">
+              Platform-wide overview
+            </p>
           </div>
         </div>
       </div>
     );
   }
   if (selected === "tournaments")
-    return <ComingSoon label="Tournaments" icon={Trophy} gradient="from-amber-500 to-orange-500" />;
+    return (
+      <ComingSoon
+        label="Tournaments"
+        icon={Trophy}
+        gradient="from-amber-500 to-orange-500"
+      />
+    );
   if (selected === "matches")
-    return <ComingSoon label="Matches" icon={Swords} gradient="from-emerald-500 to-teal-500" />;
+    return (
+      <ComingSoon
+        label="Matches"
+        icon={Swords}
+        gradient="from-emerald-500 to-teal-500"
+      />
+    );
   if (selected === "players")
-    return <ComingSoon label="Players" icon={Users} gradient="from-sky-500 to-blue-600" />;
+    return (
+      <ComingSoon
+        label="Players"
+        icon={Users}
+        gradient="from-sky-500 to-blue-600"
+      />
+    );
   return null;
 }
 
 /* ─── SuperAdmin Page ────────────────────────────────────────── */
 export const SuperAdmin = () => {
-  const [expanded, setExpanded]   = useState(true);
+  const [expanded, setExpanded] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [selected, setSelected]   = useState("recent-activities");
+  const [selected, setSelected] = useState("recent-activities");
 
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && setMobileOpen(false);
@@ -258,10 +301,15 @@ export const SuperAdmin = () => {
   }, []);
 
   return (
-    <div
-      className="flex"
-      style={{ minHeight: "calc(100dvh - var(--nav-h, 3rem))", paddingTop: "var(--nav-h, 3rem)" }}
-    >
+    <>
+      <Header data="Super Admin" backTo="/" />
+      <div
+        className="flex"
+        style={{
+          minHeight: "calc(100dvh - var(--nav-h, 3rem))",
+          paddingTop: "var(--nav-h, 3rem)",
+        }}
+      >
       {/* Desktop sidebar */}
       <Sidebar
         expanded={expanded}
@@ -298,7 +346,9 @@ export const SuperAdmin = () => {
           </button>
           <div className="flex items-center gap-2">
             <Shield size={16} className="text-primary" />
-            <span className="font-bold text-sm text-base-content">Super Admin</span>
+            <span className="font-bold text-sm text-base-content">
+              Super Admin
+            </span>
           </div>
           <div className="ml-auto">
             {(() => {
@@ -322,6 +372,7 @@ export const SuperAdmin = () => {
           <TabContent selected={selected} />
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };

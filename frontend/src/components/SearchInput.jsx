@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Search, ChevronDown, X } from "lucide-react";
 
 export const SearchInput = ({ onSearch }) => {
   const [filter, setFilter] = useState({
@@ -6,65 +7,74 @@ export const SearchInput = ({ onSearch }) => {
     value: "",
     status: "",
   });
-  
 
-  const handleSearchBtn = (value) => {
-    const newFilter = { ...filter, value };
-    setFilter(newFilter);
+  const handleSearchBtn = (key) => {
+    const newFilter = { ...filter, value: key };
     onSearch(newFilter);
-    setFilter((prev) => ({ ...prev, search: "" }));
+    setFilter({ ...newFilter, search: "" });
   };
 
-  const handleOnChange = (e) => {
+  const handleClear = () => {
+    const reset = { search: "", value: "", status: filter.status };
+    setFilter(reset);
+    onSearch(reset);
+  };
+
+  const handleStatusChange = (e) => {
     const newFilter = { ...filter, status: e.target.value };
     setFilter(newFilter);
     onSearch(newFilter);
   };
-  return (
-    <div className="flex items-center justify-between px-4 py-2 gap-4">
-      {/* Search */}
-      <div className="flex-1 max-w-sm relative">
-        <div className="relative">
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/40 pointer-events-none"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
-            />
-          </svg>
-          <input
-            onChange={(e) => setFilter({ ...filter, search: e.target.value })}
-            value={filter.search}
-            type="text"
-            className="w-full h-9 pl-9 pr-3 rounded-xl bg-base-200 border border-transparent focus:border-base-content/20 focus:bg-base-100 outline-none text-sm transition-all duration-200 placeholder:text-base-content/40"
-            placeholder="Search tournaments..."
-          />
-        </div>
 
-        {/* Dropdown */}
+  return (
+    <div className="flex items-center gap-2 px-3 py-2">
+      {/* ── Search bar ── */}
+      <div className="flex-1 relative">
+        <Search
+          size={15}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/35 pointer-events-none"
+        />
+
+        <input
+          onChange={(e) => setFilter({ ...filter, search: e.target.value })}
+          value={filter.search}
+          type="text"
+          className="w-full h-9 pl-9 pr-8 rounded-xl bg-base-200/80 border border-base-content/8 focus:border-primary/40 focus:bg-base-100 focus:shadow-sm outline-none text-sm transition-all duration-200 placeholder:text-base-content/35"
+          placeholder="Search tournaments…"
+        />
+
+        {/* Clear button */}
         {filter.search && (
-          <div className="absolute top-[calc(100%+6px)] left-0 w-full bg-base-100 border border-base-content/10 rounded-xl shadow-lg overflow-hidden z-50">
+          <button
+            onClick={handleClear}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-base-content/30 hover:text-base-content/60 transition-colors"
+          >
+            <X size={13} />
+          </button>
+        )}
+
+        {/* Suggestions dropdown */}
+        {filter.search && (
+          <div className="absolute top-[calc(100%+6px)] left-0 w-full bg-base-100 border border-base-content/10 rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+            <p className="px-3 pt-2.5 pb-1 text-[0.65rem] font-semibold uppercase tracking-widest text-base-content/30">
+              Search by
+            </p>
             {[
-              { label: "Organiser", key: "organiserName" },
               { label: "Tournament", key: "tournamentName" },
-              { label: "Ground", key: "ground" },
+              { label: "Organiser", key: "organiserName" },
               { label: "City", key: "city" },
+              { label: "Ground", key: "ground" },
             ].map(({ label, key }) => (
               <button
                 key={key}
                 onClick={() => handleSearchBtn(key)}
-                className="flex items-center gap-3 w-full px-4 py-2.5 text-sm hover:bg-base-200 transition-colors text-left group"
+                className="flex items-center gap-3 w-full px-3 py-2.5 text-sm hover:bg-base-200/70 transition-colors text-left group"
               >
-                <span className="text-base-content/50 group-hover:text-base-content/70 transition-colors truncate flex-1">
+                <Search size={12} className="text-base-content/30 shrink-0 group-hover:text-primary transition-colors" />
+                <span className="text-base-content/55 group-hover:text-base-content/80 transition-colors truncate flex-1 text-xs">
                   {filter.search}
                 </span>
-                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent/10 text-accent shrink-0">
+                <span className="text-[0.65rem] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">
                   {label}
                 </span>
               </button>
@@ -73,12 +83,13 @@ export const SearchInput = ({ onSearch }) => {
         )}
       </div>
 
-      {/* Status Filter */}
-      <div className="shrink-0">
+      {/* ── Status filter ── */}
+      <div className="relative shrink-0">
         <select
-          id="status"
-          className="h-9 px-3 pr-8 rounded-xl bg-base-200 border border-transparent focus:border-base-content/20 focus:bg-base-100 outline-none text-sm transition-all duration-200 appearance-none cursor-pointer"
-          onChange={handleOnChange}
+          id="status-filter"
+          value={filter.status}
+          onChange={handleStatusChange}
+          className="h-9 pl-3 pr-8 rounded-xl bg-base-200/80 border border-base-content/8 focus:border-primary/40 focus:bg-base-100 outline-none text-xs font-medium transition-all duration-200 appearance-none cursor-pointer text-base-content/70"
         >
           <option value="">All Status</option>
           <option value="Upcoming">Upcoming</option>
@@ -89,6 +100,10 @@ export const SearchInput = ({ onSearch }) => {
           <option value="Abandoned">Abandoned</option>
           <option value="Postponed">Postponed</option>
         </select>
+        <ChevronDown
+          size={13}
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-base-content/35 pointer-events-none"
+        />
       </div>
     </div>
   );

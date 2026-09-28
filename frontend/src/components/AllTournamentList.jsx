@@ -14,7 +14,7 @@ import { Phone, User } from "lucide-react";
 import { NoDataFoundPage } from "./NoDataFoundPage";
 
 export const AllTournamentList = () => {
-  const { searchData } = useOutletContext();
+  const { searchData, setHasTournaments } = useOutletContext();
 
   const dispatch = useDispatch();
   const location = useLocation();
@@ -32,6 +32,15 @@ export const AllTournamentList = () => {
   );
 
   const { data, isLoading } = useGetAllTournamentsQuery(queryArgs);
+
+  // Inform parent whether to show search/filter bar
+  useEffect(() => {
+    if (!isLoading) {
+      setHasTournaments?.(
+        !!(data?.allTournaments && data.allTournaments.length > 0),
+      );
+    }
+  }, [data, isLoading, setHasTournaments]);
 
   useEffect(() => {
     const socket = getSocket();

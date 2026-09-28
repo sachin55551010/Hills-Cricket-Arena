@@ -9,55 +9,39 @@ export const AllTournaments = () => {
     status: "",
   });
 
+  // Child sets this to false when data is loaded and empty
+  const [hasTournaments, setHasTournaments] = useState(true);
+
   return (
-    <div className="">
+    <div>
       <div className="flex flex-col fixed z-[70] w-full bg-base-100">
+        {/* ── Category tab bar ── */}
         <nav className="w-full bg-base-100 flex justify-around pt-18 text-[.8rem]">
-          <NavLink
-            to="open"
-            className={({ isActive }) =>
-              `${
-                isActive && "border-b-2 font-extrabold text-success"
-              } text-center flex-1 pb-2`
-            }
-          >
-            Open
-          </NavLink>
-          <NavLink
-            to="panchayat"
-            className={({ isActive }) =>
-              `${
-                isActive && "border-b-2 font-extrabold text-success"
-              } text-center flex-1 pb-2`
-            }
-          >
-            Panchayat
-          </NavLink>
-          <NavLink
-            to="panchayat+open"
-            className={({ isActive }) =>
-              `${
-                isActive && "border-b-2 font-extrabold text-success"
-              } text-center flex-1 pb-2`
-            }
-          >
-            P + O
-          </NavLink>
-          <NavLink
-            to="corporate"
-            className={({ isActive }) =>
-              `${
-                isActive && "border-b-2 font-extrabold text-success"
-              } text-center flex-1 pb-2`
-            }
-          >
-            Corporate
-          </NavLink>
+          {[
+            { to: "open", label: "Open" },
+            { to: "panchayat", label: "Panchayat" },
+            { to: "panchayat+open", label: "P + O" },
+            { to: "corporate", label: "Corporate" },
+          ].map(({ to, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                `${
+                  isActive && "border-b-2 border-success font-extrabold text-success"
+                } text-center flex-1 pb-2 transition-colors duration-150`
+              }
+            >
+              {label}
+            </NavLink>
+          ))}
         </nav>
-        <SearchInput onSearch={setSearchData} />
+
+        {/* ── Search + Filter — hidden when no tournaments ── */}
+        {hasTournaments && <SearchInput onSearch={setSearchData} />}
       </div>
 
-      <Outlet context={{ searchData }} />
+      <Outlet context={{ searchData, setHasTournaments }} />
     </div>
   );
 };
