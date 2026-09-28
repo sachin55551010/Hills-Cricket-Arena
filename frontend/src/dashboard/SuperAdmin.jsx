@@ -1,234 +1,327 @@
-import { useGetAllDataInNumberQuery } from "../store/superAdminApi";
+import { useState, useEffect } from "react";
 import {
-  CalendarDays,
-  MapPin,
-  ShieldCheck,
+  Activity,
   Trophy,
+  Swords,
   Users,
-  UsersRound,
+  ChevronLeft,
+  ChevronRight,
+  Menu,
+  X,
+  LayoutDashboard,
+  Shield,
 } from "lucide-react";
+import { useGetAllDataInNumberQuery } from "../store/superAdminApi";
 
-const tournamentCategories = [
-  { key: "open", label: "Open" },
-  { key: "panchayat", label: "Panchayat" },
-  { key: "panchayat+open", label: "Panchayat + Open" },
-  { key: "corporate", label: "Corporate" },
+/* ─── menu items config ─────────────────────────────────────── */
+const NAV_ITEMS = [
+  { id: "recent-activities", label: "Recent Activities", icon: Activity },
+  { id: "tournaments",       label: "Tournaments",       icon: Trophy  },
+  { id: "matches",           label: "Matches",           icon: Swords  },
+  { id: "players",           label: "Players",           icon: Users   },
 ];
 
-const formatDate = (date) =>
-  new Date(date).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+/* ─── Sidebar ────────────────────────────────────────────────── */
+function Sidebar({ expanded, selected, onSelect, onToggle, isMobile, mobileOpen, onMobileClose }) {
+  const sidebarClasses = isMobile
+    ? `fixed inset-y-0 left-0 z-50 flex flex-col bg-base-200 border-r border-base-300 shadow-2xl
+       transition-transform duration-300 ease-in-out w-64
+       ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`
+    : `hidden md:flex flex-col bg-base-200 border-r border-base-300 shadow-lg
+       transition-all duration-300 ease-in-out
+       ${expanded ? "w-64" : "w-16"}`;
 
-const EmptyList = ({ children }) => (
-  <p className="px-4 py-5 text-sm text-base-content/50">{children}</p>
-);
+  return (
+    <>
+      {isMobile && mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+          onClick={onMobileClose}
+        />
+      )}
 
-const RecentSection = ({ title, items, children }) => (
-  <section className="min-w-0 overflow-hidden rounded-lg border border-base-300 bg-base-100">
-    <header className="border-b border-base-300 px-4 py-3">
-      <h3 className="text-sm font-semibold text-base-content">{title}</h3>
-    </header>
-    {items.length ? (
-      <ul className="divide-y divide-base-300">
-        {items.map((item) => (
-          <li key={item._id} className="px-4 py-3">
-            {children(item)}
-          </li>
-        ))}
-      </ul>
-    ) : (
-      <EmptyList>No additions in the last 48 hours.</EmptyList>
-    )}
-  </section>
-);
+      <aside
+        className={sidebarClasses}
+        style={{ top: "var(--nav-h, 3rem)" }}
+      >
+        {/* Header */}
+        <div
+          className={`flex items-center border-b border-base-300 px-3 py-3 ${
+            expanded || isMobile ? "justify-between" : "justify-center"
+          }`}
+        >
+          {(expanded || isMobile) && (
+            <div className="flex items-center gap-2">
+              <Shield className="text-primary" size={20} />
+              <span className="font-bold text-base-content text-sm tracking-wide">
+                Super Admin
+              </span>
+            </div>
+          )}
 
-export const SuperAdmin = () => {
+          {!isMobile && (
+            <button
+              onClick={onToggle}
+              className="btn btn-ghost btn-xs btn-circle text-base-content/60 hover:text-primary"
+              title={expanded ? "Collapse" : "Expand"}
+            >
+              {expanded ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+            </button>
+          )}
+
+          {isMobile && (
+            <button
+              onClick={onMobileClose}
+              className="btn btn-ghost btn-xs btn-circle text-base-content/60 hover:text-error"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
+
+        {/* Nav items */}
+        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-1">
+          {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
+            const isActive = selected === id;
+            return (
+              <button
+                key={id}
+                onClick={() => {
+                  onSelect(id);
+                  if (isMobile) onMobileClose();
+                }}
+                title={!expanded && !isMobile ? label : undefined}
+                className={`
+                  w-full flex items-center gap-3 rounded-xl px-3 py-2.5
+                  transition-all duration-200 group relative
+                  ${isActive
+                    ? "bg-primary text-primary-content shadow-md"
+                    : "text-base-content/70 hover:bg-base-300 hover:text-base-content"
+                  }
+                  ${!expanded && !isMobile ? "justify-center" : ""}
+                `}
+              >
+                <Icon
+                  size={18}
+                  className={`shrink-0 transition-transform duration-200 ${
+                    isActive ? "scale-110" : "group-hover:scale-105"
+                  }`}
+                />
+
+                {(expanded || isMobile) && (
+                  <span className="text-sm font-medium truncate">{label}</span>
+                )}
+
+                {/* Tooltip when collapsed */}
+                {!expanded && !isMobile && (
+                  <span className="
+                    absolute left-full ml-2 px-2 py-1 rounded-md text-xs font-medium
+                    bg-base-300 text-base-content shadow-lg
+                    opacity-0 group-hover:opacity-100 pointer-events-none
+                    transition-opacity duration-150 whitespace-nowrap z-50
+                  ">
+                    {label}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        {(expanded || isMobile) && (
+          <div className="px-3 py-3 border-t border-base-300">
+            <p className="text-xs text-base-content/40 text-center">Hills Cricket Arena</p>
+          </div>
+        )}
+      </aside>
+    </>
+  );
+}
+
+/* ─── Stat Card ──────────────────────────────────────────────── */
+function StatCard({ icon: Icon, label, count, gradient, isLoading }) {
+  return (
+    <div className="card bg-base-200 border border-base-300 shadow-sm hover:shadow-md transition-all duration-300">
+      <div className="card-body p-4 md:p-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs text-base-content/50 font-medium mb-1 uppercase tracking-wide">{label}</p>
+            {isLoading ? (
+              <div className="skeleton h-9 w-20 rounded-lg" />
+            ) : (
+              <p className="text-3xl font-extrabold text-base-content tabular-nums">
+                {count?.toLocaleString() ?? "—"}
+              </p>
+            )}
+          </div>
+          <div className={`p-2.5 rounded-xl bg-gradient-to-br ${gradient} shadow`}>
+            <Icon className="text-white" size={20} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Persistent stats bar (always visible) ─────────────────── */
+function StatsBar() {
   const { data, isLoading, isError } = useGetAllDataInNumberQuery();
-  const totals = data?.data;
-  const recent = data?.recent;
-  const tournamentsByCategory = data?.tournamentsByCategory;
-  const metrics = [
+
+  const stats = [
     {
-      label: "Total Players",
-      value: totals?.totalPlayers,
-      icon: <Users size={22} strokeWidth={1.8} />,
-    },
-    {
-      label: "Total Teams",
-      value: totals?.totalTeams,
-      icon: <UsersRound size={22} strokeWidth={1.8} />,
-    },
-    {
+      icon: Trophy,
       label: "Total Tournaments",
-      value: totals?.totalTournaments,
-      icon: <Trophy size={22} strokeWidth={1.8} />,
+      count: data?.data?.totalTournaments,
+      gradient: "from-amber-500 to-orange-500",
+    },
+    {
+      icon: Shield,
+      label: "Total Teams",
+      count: data?.data?.totalTeams,
+      gradient: "from-emerald-500 to-teal-500",
+    },
+    {
+      icon: Users,
+      label: "Total Players",
+      count: data?.data?.totalPlayers,
+      gradient: "from-sky-500 to-blue-600",
     },
   ];
 
   return (
-    <main className="mx-auto min-h-[calc(100dvh-var(--nav-h))] w-full max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-      <header className="mb-6 flex items-center gap-3 border-b border-base-300 pb-5">
-        <span className="grid size-10 place-items-center rounded-lg bg-primary/10 text-primary">
-          <ShieldCheck size={22} />
-        </span>
-        <div>
-          <h1 className="text-xl font-bold text-base-content">
-            Admin Dashboard
-          </h1>
-          <p className="mt-1 text-sm text-base-content/60">Platform overview</p>
-        </div>
-      </header>
-
+    <div className="px-4 md:px-6 pt-4 md:pt-6 pb-4 border-b border-base-300">
       {isError && (
-        <p
-          role="alert"
-          className="mb-5 rounded-lg border border-error/30 bg-error/5 px-4 py-3 text-sm text-error"
-        >
-          Dashboard data could not be loaded. Please try again.
-        </p>
+        <div className="alert alert-error mb-4 shadow text-sm">
+          <span>Failed to load stats. Please refresh.</span>
+        </div>
       )}
-
-      <section
-        aria-label="Platform totals"
-        className="grid grid-cols-1 gap-3 sm:grid-cols-3"
-      >
-        {metrics.map(({ label, value, icon }) => (
-          <article
-            key={label}
-            className="flex min-h-32 items-center justify-between rounded-lg border border-base-300 bg-base-100 p-5 shadow-sm"
-          >
-            <div>
-              <p className="text-sm font-medium text-base-content/60">
-                {label}
-              </p>
-              <p className="mt-2 text-3xl font-bold tabular-nums text-base-content">
-                {isLoading ? "..." : (value ?? 0).toLocaleString()}
-              </p>
-            </div>
-            <span className="grid size-11 place-items-center rounded-lg bg-primary/10 text-primary">
-              {icon}
-            </span>
-          </article>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {stats.map((s) => (
+          <StatCard key={s.label} {...s} isLoading={isLoading} />
         ))}
-      </section>
+      </div>
+    </div>
+  );
+}
 
-      <section className="mt-8">
-        <div className="mb-3 flex items-center gap-2">
-          <CalendarDays size={17} className="text-primary" />
-          <h2 className="text-base font-bold text-base-content">
-            Recent additions
-          </h2>
-          <span className="text-xs text-base-content/50">Last 48 hours</span>
+/* ─── Coming Soon placeholder ────────────────────────────────── */
+function ComingSoon({ label, icon: Icon, gradient }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 py-16 px-8 text-center">
+      <div className={`p-5 rounded-3xl bg-gradient-to-br ${gradient} shadow-lg`}>
+        <Icon className="text-white" size={36} />
+      </div>
+      <h2 className="text-xl font-bold text-base-content">{label}</h2>
+      <p className="text-sm text-base-content/40 max-w-xs">
+        This section is coming soon. Check back later.
+      </p>
+    </div>
+  );
+}
+
+/* ─── Per-tab content (rendered below StatsBar) ─────────────── */
+function TabContent({ selected }) {
+  if (selected === "recent-activities") {
+    return (
+      <div className="px-4 md:px-6 py-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md">
+            <Activity className="text-white" size={18} />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-base-content">Recent Activities</h1>
+            <p className="text-xs text-base-content/50">Platform-wide overview</p>
+          </div>
         </div>
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-          <RecentSection title="Players" items={recent?.players ?? []}>
-            {(player) => (
-              <div className="flex items-center justify-between gap-3">
-                <p className="truncate text-sm font-medium capitalize text-base-content">
-                  {player.playerName}
-                </p>
-                <time className="shrink-0 text-xs text-base-content/50">
-                  {formatDate(player.createdAt)}
-                </time>
-              </div>
-            )}
-          </RecentSection>
+      </div>
+    );
+  }
+  if (selected === "tournaments")
+    return <ComingSoon label="Tournaments" icon={Trophy} gradient="from-amber-500 to-orange-500" />;
+  if (selected === "matches")
+    return <ComingSoon label="Matches" icon={Swords} gradient="from-emerald-500 to-teal-500" />;
+  if (selected === "players")
+    return <ComingSoon label="Players" icon={Users} gradient="from-sky-500 to-blue-600" />;
+  return null;
+}
 
-          <RecentSection title="Teams" items={recent?.teams ?? []}>
-            {(team) => (
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium capitalize text-base-content">
-                    {team.teamName}
-                  </p>
-                  <p className="mt-1 truncate text-xs text-base-content/50">
-                    {team.tournamentId?.tournamentName ?? team.city}
-                  </p>
+/* ─── SuperAdmin Page ────────────────────────────────────────── */
+export const SuperAdmin = () => {
+  const [expanded, setExpanded]   = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [selected, setSelected]   = useState("recent-activities");
+
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && setMobileOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  return (
+    <div
+      className="flex"
+      style={{ minHeight: "calc(100dvh - var(--nav-h, 3rem))", paddingTop: "var(--nav-h, 3rem)" }}
+    >
+      {/* Desktop sidebar */}
+      <Sidebar
+        expanded={expanded}
+        selected={selected}
+        onSelect={setSelected}
+        onToggle={() => setExpanded((p) => !p)}
+        isMobile={false}
+        mobileOpen={false}
+        onMobileClose={() => {}}
+      />
+
+      {/* Mobile drawer */}
+      <Sidebar
+        expanded={true}
+        selected={selected}
+        onSelect={setSelected}
+        onToggle={() => {}}
+        isMobile={true}
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+      />
+
+      {/* Main area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile top bar */}
+        <div className="flex md:hidden items-center gap-3 px-4 py-3 border-b border-base-300 bg-base-200 sticky top-[var(--nav-h,3rem)] z-30">
+          <button
+            id="mobile-menu-toggle"
+            onClick={() => setMobileOpen(true)}
+            className="btn btn-ghost btn-sm btn-square text-base-content/70 hover:text-primary"
+            aria-label="Open menu"
+          >
+            <Menu size={20} />
+          </button>
+          <div className="flex items-center gap-2">
+            <Shield size={16} className="text-primary" />
+            <span className="font-bold text-sm text-base-content">Super Admin</span>
+          </div>
+          <div className="ml-auto">
+            {(() => {
+              const item = NAV_ITEMS.find((n) => n.id === selected);
+              const Icon = item?.icon;
+              return Icon ? (
+                <div className="badge badge-primary badge-outline gap-1 text-xs">
+                  <Icon size={12} />
+                  {item.label}
                 </div>
-                <time className="shrink-0 text-xs text-base-content/50">
-                  {formatDate(team.createdAt)}
-                </time>
-              </div>
-            )}
-          </RecentSection>
-
-          <RecentSection title="Tournaments" items={recent?.tournaments ?? []}>
-            {(tournament) => (
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium capitalize text-base-content">
-                    {tournament.tournamentName}
-                  </p>
-                  <p className="mt-1 truncate text-xs capitalize text-base-content/50">
-                    {tournament.tournamentCategory.replace("+", " + ")}
-                  </p>
-                </div>
-                <time className="shrink-0 text-xs text-base-content/50">
-                  {formatDate(tournament.createdAt)}
-                </time>
-              </div>
-            )}
-          </RecentSection>
+              ) : null;
+            })()}
+          </div>
         </div>
-      </section>
 
-      <section className="mt-8">
-        <div className="mb-3 flex items-center gap-2">
-          <Trophy size={17} className="text-primary" />
-          <h2 className="text-base font-bold text-base-content">
-            All tournaments
-          </h2>
+        {/* Page content */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Stat cards — always visible on every tab */}
+          <StatsBar />
+          {/* Tab-specific content */}
+          <TabContent selected={selected} />
         </div>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          {tournamentCategories.map(({ key, label }) => {
-            const tournaments = tournamentsByCategory?.[key] ?? [];
-
-            return (
-              <section
-                key={key}
-                className="min-w-0 overflow-hidden rounded-lg border border-base-300 bg-base-100"
-              >
-                <header className="flex items-center justify-between border-b border-base-300 px-4 py-3">
-                  <h3 className="text-sm font-semibold text-base-content">
-                    {label}
-                  </h3>
-                  <span className="rounded-md bg-base-200 px-2 py-1 text-xs font-semibold tabular-nums text-base-content/60">
-                    {tournaments.length}
-                  </span>
-                </header>
-                {tournaments.length ? (
-                  <ul className="divide-y divide-base-300">
-                    {tournaments.map((tournament) => (
-                      <li
-                        key={tournament._id}
-                        className="flex items-center justify-between gap-3 px-4 py-3"
-                      >
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium capitalize text-base-content">
-                            {tournament.tournamentName}
-                          </p>
-                          <p className="mt-1 flex items-center gap-1 truncate text-xs capitalize text-base-content/50">
-                            <MapPin size={12} className="shrink-0" />
-                            {tournament.city}
-                          </p>
-                        </div>
-                        <span className="shrink-0 rounded-full bg-base-200 px-2 py-1 text-[10px] font-medium text-base-content/60">
-                          {tournament.status}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <EmptyList>No tournaments in this category.</EmptyList>
-                )}
-              </section>
-            );
-          })}
-        </div>
-      </section>
-    </main>
+      </div>
+    </div>
   );
 };
