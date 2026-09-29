@@ -15,7 +15,18 @@ export const superAdminApi = createApi({
       }),
       providesTags: ["Team", "Player", "Tournament"],
     }),
+    getRecentActivities: builder.query({
+      query: () => ({
+        url: "/admin-dashboard",
+        method: "GET",
+      }),
+      providesTags: ["Team", "Player", "Tournament"],
+      transformResponse: (response) => ({
+        recent: response.recent,
+        tournamentsByCategory: response.tournamentsByCategory,
+      }),
+    }),
   }),
 });
 
-export const { useGetAllDataInNumberQuery } = superAdminApi;
+export const { useGetAllDataInNumberQuery, useGetRecentActivitiesQuery } = superAdminApi;

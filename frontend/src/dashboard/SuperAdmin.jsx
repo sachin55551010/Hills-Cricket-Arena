@@ -8,11 +8,11 @@ import {
   ChevronRight,
   Menu,
   X,
-  LayoutDashboard,
   Shield,
 } from "lucide-react";
 import { useGetAllDataInNumberQuery } from "../store/superAdminApi";
 import { Header } from "../components/Header";
+import { RecentActivities } from "./RecentActivities";
 
 /* ─── menu items config ─────────────────────────────────────── */
 const NAV_ITEMS = [
@@ -243,23 +243,7 @@ function ComingSoon({ label, icon: Icon, gradient }) {
 /* ─── Per-tab content (rendered below StatsBar) ─────────────── */
 function TabContent({ selected }) {
   if (selected === "recent-activities") {
-    return (
-      <div className="px-4 md:px-6 py-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md">
-            <Activity className="text-white" size={18} />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-base-content">
-              Recent Activities
-            </h1>
-            <p className="text-xs text-base-content/50">
-              Platform-wide overview
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+    return <RecentActivities />;
   }
   if (selected === "tournaments")
     return (
@@ -310,68 +294,68 @@ export const SuperAdmin = () => {
           paddingTop: "var(--nav-h, 3rem)",
         }}
       >
-      {/* Desktop sidebar */}
-      <Sidebar
-        expanded={expanded}
-        selected={selected}
-        onSelect={setSelected}
-        onToggle={() => setExpanded((p) => !p)}
-        isMobile={false}
-        mobileOpen={false}
-        onMobileClose={() => {}}
-      />
+        {/* Desktop sidebar */}
+        <Sidebar
+          expanded={expanded}
+          selected={selected}
+          onSelect={setSelected}
+          onToggle={() => setExpanded((p) => !p)}
+          isMobile={false}
+          mobileOpen={false}
+          onMobileClose={() => {}}
+        />
 
-      {/* Mobile drawer */}
-      <Sidebar
-        expanded={true}
-        selected={selected}
-        onSelect={setSelected}
-        onToggle={() => {}}
-        isMobile={true}
-        mobileOpen={mobileOpen}
-        onMobileClose={() => setMobileOpen(false)}
-      />
+        {/* Mobile drawer */}
+        <Sidebar
+          expanded={true}
+          selected={selected}
+          onSelect={setSelected}
+          onToggle={() => {}}
+          isMobile={true}
+          mobileOpen={mobileOpen}
+          onMobileClose={() => setMobileOpen(false)}
+        />
 
-      {/* Main area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile top bar */}
-        <div className="flex md:hidden items-center gap-3 px-4 py-3 border-b border-base-300 bg-base-200 sticky top-[var(--nav-h,3rem)] z-30">
-          <button
-            id="mobile-menu-toggle"
-            onClick={() => setMobileOpen(true)}
-            className="btn btn-ghost btn-sm btn-square text-base-content/70 hover:text-primary"
-            aria-label="Open menu"
-          >
-            <Menu size={20} />
-          </button>
-          <div className="flex items-center gap-2">
-            <Shield size={16} className="text-primary" />
-            <span className="font-bold text-sm text-base-content">
-              Super Admin
-            </span>
+        {/* Main area */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Mobile top bar */}
+          <div className="flex md:hidden items-center gap-3 px-4 py-3 border-b border-base-300 bg-base-200 sticky top-[var(--nav-h,3rem)] z-30">
+            <button
+              id="mobile-menu-toggle"
+              onClick={() => setMobileOpen(true)}
+              className="btn btn-ghost btn-sm btn-square text-base-content/70 hover:text-primary"
+              aria-label="Open menu"
+            >
+              <Menu size={20} />
+            </button>
+            <div className="flex items-center gap-2">
+              <Shield size={16} className="text-primary" />
+              <span className="font-bold text-sm text-base-content">
+                Super Admin
+              </span>
+            </div>
+            <div className="ml-auto">
+              {(() => {
+                const item = NAV_ITEMS.find((n) => n.id === selected);
+                const Icon = item?.icon;
+                return Icon ? (
+                  <div className="badge badge-primary badge-outline gap-1 text-xs">
+                    <Icon size={12} />
+                    {item.label}
+                  </div>
+                ) : null;
+              })()}
+            </div>
           </div>
-          <div className="ml-auto">
-            {(() => {
-              const item = NAV_ITEMS.find((n) => n.id === selected);
-              const Icon = item?.icon;
-              return Icon ? (
-                <div className="badge badge-primary badge-outline gap-1 text-xs">
-                  <Icon size={12} />
-                  {item.label}
-                </div>
-              ) : null;
-            })()}
+
+          {/* Page content */}
+          <div className="flex-1 overflow-y-auto">
+            {/* Stat cards — always visible on every tab */}
+            <StatsBar />
+            {/* Tab-specific content */}
+            <TabContent selected={selected} />
           </div>
         </div>
-
-        {/* Page content */}
-        <div className="flex-1 overflow-y-auto">
-          {/* Stat cards — always visible on every tab */}
-          <StatsBar />
-          {/* Tab-specific content */}
-          <TabContent selected={selected} />
-        </div>
-      </div>
       </div>
     </>
   );
