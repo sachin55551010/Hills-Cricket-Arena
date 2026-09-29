@@ -116,6 +116,47 @@ export const tournamentApi = createApi({
         }
       },
     }),
+
+    // ── Super Admin unrestricted update ───────────────────────────────────
+    superAdminUpdateTournament: builder.mutation({
+      query: ({ tournamentId, updatedFields }) => ({
+        url: `/superadmin-update/${tournamentId}`,
+        method: "PATCH",
+        body: updatedFields,
+      }),
+      invalidatesTags: ["Tournament"],
+      async onQueryStarted(arg, { queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          toast.success(data.message, { autoClose: 1500, theme: "colored" });
+        } catch (error) {
+          toast.error(error?.error?.data?.message || "Update failed", {
+            autoClose: 1500,
+            theme: "colored",
+          });
+        }
+      },
+    }),
+
+    // ── Super Admin unrestricted delete ───────────────────────────────────
+    superAdminDeleteTournament: builder.mutation({
+      query: (tournamentId) => ({
+        url: `/superadmin-delete/${tournamentId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Tournament"],
+      async onQueryStarted(arg, { queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          toast.success(data.message, { autoClose: 1500, theme: "colored" });
+        } catch (error) {
+          toast.error(error?.error?.data?.message || "Delete failed", {
+            autoClose: 1500,
+            theme: "colored",
+          });
+        }
+      },
+    }),
   }),
 });
 
@@ -127,4 +168,6 @@ export const {
   useDeleteTournamentMutation,
   useGetAllTournamentsQuery,
   useUploadTournamentImagesMutation,
+  useSuperAdminUpdateTournamentMutation,
+  useSuperAdminDeleteTournamentMutation,
 } = tournamentApi;

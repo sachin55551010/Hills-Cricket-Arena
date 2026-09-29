@@ -337,7 +337,7 @@ export const uploadTournamentImages = async (req, res, next) => {
   }
 };
 
-// get all tournaments using tournament category
+// function to get all tournaments using tournament category
 export const getAllTournaments = async (req, res, next) => {
   try {
     updateTournamentService();
@@ -384,6 +384,77 @@ export const getAllTournaments = async (req, res, next) => {
     res.status(200).json({ allTournaments, success: true });
   } catch (error) {
     console.log("get all tournaments error : ", error);
+    next(error);
+  }
+};
+
+// ── SuperAdmin: update any tournament (no ownership / status check) ──────────
+export const superAdminUpdateTournament = async (req, res, next) => {
+  try {
+    const { tournamentId } = req.params;
+    if (!tournamentId)
+      return next(new CustomErrHandler(404, "No tournament id provided!"));
+
+    // strip raw base64 banner out before writing to Mongo
+    const { tournamentBanner, ...restFields } = req.body;
+    const updatedFields = { ...restFields };
+
+    const tournament = await Tournament.findById(tournamentId);
+    if (!tournament)
+      return next(new CustomErrHandler(404, "Tournament not found"));
+
+    // ── upload banner if a new base64 string is supplied ──────────────────
+    if (tournamentBanner && tournamentBanner.startsWith("data:image")) {
+      const bannerUpload = await cloudinary.uploader.upload(tournamentBanner, {
+        folder: "tournament_images",
+      });
+      updatedFields.tournamentBanner = bannerUpload.secure_url;
+    } else if (
+      typeof tournamentBanner === "string" &&
+      !tournamentBanner.startsWith("data:image")
+    ) {
+      updatedFields.tournamentBanner = tournamentBanner;
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
+    const updatedTournament = await Tournament.findByIdAndUpdate(
+      tournamentId,
+      updatedFields,
+      { new: true },
+    );
+
+    io.emit("updatedTournament", updatedTournament);
+    return res.status(200).json({
+      updatedTournament,
+      success: true,
+      message: "Tournament updated successfully by Super Admin",
+    });
+  } catch (error) {
+    console.log("superAdminUpdateTournament error : ", error);
+    next(error);
+  }
+};
+
+// ── SuperAdmin: delete any tournament (no ownership / status check) ───────────
+export const superAdminDeleteTournament = async (req, res, next) => {
+  try {
+    const { tournamentId } = req.params;
+
+    const tournament = await Tournament.findById(tournamentId);
+    if (!tournament)
+      return next(new CustomErrHandler(404, "Tournament not found"));
+
+    const deletedTournament = await Tournament.findByIdAndDelete(tournamentId);
+
+    io.emit("deletedTournament", tournamentId);
+
+    return res.status(200).json({
+      deletedTournament,
+      success: true,
+      message: "Tournament deleted successfully by Super Admin",
+    });
+  } catch (error) {
+    console.log("superAdminDeleteTournament error : ", error);
     next(error);
   }
 };

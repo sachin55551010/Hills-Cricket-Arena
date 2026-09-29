@@ -13,6 +13,7 @@ import {
 import { useGetAllDataInNumberQuery } from "../store/superAdminApi";
 import { Header } from "../components/Header";
 import { RecentActivities } from "./RecentActivities";
+import { AllTournamentListAdmin } from "./AllTournamentListAdmin";
 
 /* ─── menu items config ─────────────────────────────────────── */
 const NAV_ITEMS = [
@@ -245,14 +246,7 @@ function TabContent({ selected }) {
   if (selected === "recent-activities") {
     return <RecentActivities />;
   }
-  if (selected === "tournaments")
-    return (
-      <ComingSoon
-        label="Tournaments"
-        icon={Trophy}
-        gradient="from-amber-500 to-orange-500"
-      />
-    );
+  if (selected === "tournaments") return <AllTournamentListAdmin />;
   if (selected === "matches")
     return (
       <ComingSoon

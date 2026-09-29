@@ -8,7 +8,10 @@ import {
   getTournamentInfo,
   updateTournamentInfo,
   uploadTournamentImages,
+  superAdminUpdateTournament,
+  superAdminDeleteTournament,
 } from "../controllers/tournament.controller.js";
+import { isSuperAdminAuthenticated } from "../middlewares/isSuperAdminAuthenticated.js";
 
 export const tournament_route = express.Router();
 
@@ -36,4 +39,19 @@ tournament_route.patch(
   "/upload-images/:tournamentId",
   isAuthenticated,
   uploadTournamentImages,
+);
+
+// ── Super Admin routes (bypass ownership + status checks) ───────────────
+tournament_route.patch(
+  "/superadmin-update/:tournamentId",
+  isAuthenticated,
+  isSuperAdminAuthenticated,
+  superAdminUpdateTournament,
+);
+
+tournament_route.delete(
+  "/superadmin-delete/:tournamentId",
+  isAuthenticated,
+  isSuperAdminAuthenticated,
+  superAdminDeleteTournament,
 );
