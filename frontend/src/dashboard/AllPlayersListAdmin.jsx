@@ -255,21 +255,20 @@ function EditPlayerModal({ player, onClose }) {
           )}
 
           {/* ── Player Profile fields ─────────────────────────── */}
-          <div className="rounded-xl border border-base-content/10 bg-base-200/40 p-4">
-            <p className="text-[.65rem] font-bold uppercase tracking-widest text-base-content/40 mb-3 flex items-center gap-1.5">
+          <div className="rounded-xl border border-base-content/10 bg-base-200/40 p-4 space-y-3">
+            <p className="text-[.65rem] font-bold uppercase tracking-widest text-base-content/40 flex items-center gap-1.5">
               <User size={10} /> Player Profile
             </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Name */}
             <label className="form-control col-span-full">
               <span className="label-text text-xs font-medium mb-1">Player Name</span>
               <input value={form.playerName} onChange={set("playerName")} className="input input-sm input-bordered w-full" required />
             </label>
 
-            {/* Phone */}
             <label className="form-control">
               <span className="label-text text-xs font-medium mb-1">Phone Number</span>
-              <input value={form.number} onChange={set("number")} maxLength={10} pattern="[0-9]{10}" className="input input-sm input-bordered w-full" placeholder="10 digits" />
+              <input value={form.number} onChange={set("number")} maxLength={10} placeholder="10 digits (optional)" className="input input-sm input-bordered w-full" />
             </label>
 
             {/* Gender */}
@@ -343,7 +342,7 @@ function EditPlayerModal({ player, onClose }) {
               />
               <span className="label-text text-xs font-medium">Mark as Verified</span>
             </label>
-          </div>
+            </div>{/* close grid */}
           </div>{/* close Player Profile card */}
 
           <div className="flex justify-end gap-2 pt-2 border-t border-base-300">
