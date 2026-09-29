@@ -244,6 +244,15 @@ export const myTournamentMatches = async (req, res, next) => {
 export const getAllMatches = async (req, res, next) => {
   try {
     const { tournamentCategory } = req.params;
+    const { status, search, value } = req.query;
+
+    // ── base category match stage ──────────────────────────────────────────
+    const categoryMatch = {
+      "tournamentId.tournamentCategory": tournamentCategory,
+    };
+    if (status && status !== "") {
+      categoryMatch.status = status;
+    }
 
     const allMatches = await Match.aggregate([
       {
@@ -256,11 +265,7 @@ export const getAllMatches = async (req, res, next) => {
       },
       { $unwind: "$tournamentId" },
 
-      {
-        $match: {
-          "tournamentId.tournamentCategory": tournamentCategory,
-        },
-      },
+      { $match: categoryMatch },
 
       {
         $lookup: {
@@ -281,6 +286,33 @@ export const getAllMatches = async (req, res, next) => {
         },
       },
       { $unwind: "$secondTeamId" },
+
+      // ── optional search filter (applied after lookups) ─────────────────
+      ...(search && value === "tournamentName"
+        ? [
+            {
+              $match: {
+                "tournamentId.tournamentName": {
+                  $regex: search,
+                  $options: "i",
+                },
+              },
+            },
+          ]
+        : search && value === "teamName"
+        ? [
+            {
+              $match: {
+                $or: [
+                  { "firstTeamId.teamName": { $regex: search, $options: "i" } },
+                  {
+                    "secondTeamId.teamName": { $regex: search, $options: "i" },
+                  },
+                ],
+              },
+            },
+          ]
+        : []),
 
       { $sort: { createdAt: -1 } },
 
@@ -315,6 +347,7 @@ export const getAllMatches = async (req, res, next) => {
     next(error);
   }
 };
+
 
 export const getMatchById = async (req, res, next) => {
   try {

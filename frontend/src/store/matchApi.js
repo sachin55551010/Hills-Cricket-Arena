@@ -38,8 +38,15 @@ export const matchApi = createApi({
 
     // get all matches
     getAllMatches: builder.query({
-      query: (tournamentCategory) => ({
+      query: ({ tournamentCategory, searchData } = {}) => ({
         url: `/all-matches/${tournamentCategory}`,
+        params: {
+          ...(searchData && {
+            search: searchData.search,
+            value: searchData.value,
+            status: searchData.status,
+          }),
+        },
       }),
       providesTags: ["Match"],
     }),

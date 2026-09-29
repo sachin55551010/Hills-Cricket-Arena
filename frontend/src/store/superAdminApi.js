@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { toast } from "react-toastify";
 
 export const superAdminApi = createApi({
   reducerPath: "superAdmin_Api",
@@ -26,7 +27,82 @@ export const superAdminApi = createApi({
         tournamentsByCategory: response.tournamentsByCategory,
       }),
     }),
+
+    // ── Player management ─────────────────────────────────────────────────
+    getAllPlayers: builder.query({
+      query: ({ search, value, role } = {}) => ({
+        url: "/players",
+        params: { search, value, role },
+      }),
+      providesTags: ["Player"],
+    }),
+
+    updatePlayer: builder.mutation({
+      query: ({ playerId, updatedFields }) => ({
+        url: `/players/${playerId}`,
+        method: "PATCH",
+        body: updatedFields,
+      }),
+      invalidatesTags: ["Player"],
+      async onQueryStarted(arg, { queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          toast.success(data.message, { autoClose: 1500, theme: "colored" });
+        } catch (error) {
+          toast.error(error?.error?.data?.message || "Update failed", {
+            autoClose: 1500,
+            theme: "colored",
+          });
+        }
+      },
+    }),
+
+    deletePlayer: builder.mutation({
+      query: (playerId) => ({
+        url: `/players/${playerId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Player"],
+      async onQueryStarted(arg, { queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          toast.success(data.message, { autoClose: 1500, theme: "colored" });
+        } catch (error) {
+          toast.error(error?.error?.data?.message || "Delete failed", {
+            autoClose: 1500,
+            theme: "colored",
+          });
+        }
+      },
+    }),
+
+    updatePlayerStats: builder.mutation({
+      query: ({ playerId, careerStats }) => ({
+        url: `/players/${playerId}/stats`,
+        method: "PATCH",
+        body: { careerStats },
+      }),
+      invalidatesTags: ["Player"],
+      async onQueryStarted(arg, { queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          toast.success(data.message, { autoClose: 1500, theme: "colored" });
+        } catch (error) {
+          toast.error(error?.error?.data?.message || "Stats update failed", {
+            autoClose: 1500,
+            theme: "colored",
+          });
+        }
+      },
+    }),
   }),
 });
 
-export const { useGetAllDataInNumberQuery, useGetRecentActivitiesQuery } = superAdminApi;
+export const {
+  useGetAllDataInNumberQuery,
+  useGetRecentActivitiesQuery,
+  useGetAllPlayersQuery,
+  useUpdatePlayerMutation,
+  useDeletePlayerMutation,
+  useUpdatePlayerStatsMutation,
+} = superAdminApi;

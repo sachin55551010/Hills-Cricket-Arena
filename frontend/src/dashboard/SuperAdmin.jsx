@@ -14,6 +14,8 @@ import { useGetAllDataInNumberQuery } from "../store/superAdminApi";
 import { Header } from "../components/Header";
 import { RecentActivities } from "./RecentActivities";
 import { AllTournamentListAdmin } from "./AllTournamentListAdmin";
+import { AllPlayersListAdmin } from "./AllPlayersListAdmin";
+import { AllMatchListAdmin } from "./AllMatchListAdmin";
 
 /* ─── menu items config ─────────────────────────────────────── */
 const NAV_ITEMS = [
@@ -247,22 +249,8 @@ function TabContent({ selected }) {
     return <RecentActivities />;
   }
   if (selected === "tournaments") return <AllTournamentListAdmin />;
-  if (selected === "matches")
-    return (
-      <ComingSoon
-        label="Matches"
-        icon={Swords}
-        gradient="from-emerald-500 to-teal-500"
-      />
-    );
-  if (selected === "players")
-    return (
-      <ComingSoon
-        label="Players"
-        icon={Users}
-        gradient="from-sky-500 to-blue-600"
-      />
-    );
+  if (selected === "matches") return <AllMatchListAdmin />;
+  if (selected === "players") return <AllPlayersListAdmin />;
   return null;
 }
 
