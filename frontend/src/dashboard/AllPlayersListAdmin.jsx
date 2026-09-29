@@ -15,6 +15,8 @@ import {
   ShieldCheck,
   Users,
   RefreshCw,
+  Mail,
+  Lock,
 } from "lucide-react";
 import {
   useGetAllPlayersQuery,
@@ -160,6 +162,7 @@ function SearchBar({ filter, onChange }) {
 /* ─── Edit Profile Modal ─────────────────────────────────────────── */
 function EditPlayerModal({ player, onClose }) {
   const [form, setForm] = useState({
+    // Player profile fields
     playerName:   player.playerName ?? "",
     number:       player.number ?? "",
     gender:       player.gender ?? "",
@@ -169,6 +172,9 @@ function EditPlayerModal({ player, onClose }) {
     bowlingStyle: player.bowlingStyle ?? "",
     role:         player.role ?? ["user"],
     isVarified:   player.isVarified ?? false,
+    // Linked User account fields
+    userName:     player.playerId?.name ?? "",
+    userEmail:    player.playerId?.email ?? "",
   });
 
   const [updatePlayer, { isLoading }] = useUpdatePlayerMutation();
@@ -206,7 +212,53 @@ function EditPlayerModal({ player, onClose }) {
           <button onClick={onClose} className="btn btn-ghost btn-xs btn-circle"><X size={15} /></button>
         </div>
 
-        <form onSubmit={handleSubmit} className="overflow-y-auto px-5 py-4 space-y-4 flex-1">
+        <form onSubmit={handleSubmit} className="overflow-y-auto px-5 py-4 space-y-5 flex-1">
+
+          {/* ── Account Info section (linked User doc) ───────── */}
+          {(form.userName || form.userEmail || player.playerId) && (
+            <div className="rounded-xl border border-base-content/10 bg-base-200/40 p-4 space-y-3">
+              <p className="text-[.65rem] font-bold uppercase tracking-widest text-base-content/40 flex items-center gap-1.5">
+                <Lock size={10} /> Account Info
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* User display name */}
+                <label className="form-control">
+                  <span className="label-text text-xs font-medium mb-1 flex items-center gap-1">
+                    <User size={11} /> Account Name
+                  </span>
+                  <input
+                    value={form.userName}
+                    onChange={set("userName")}
+                    placeholder="User's display name"
+                    className="input input-sm input-bordered w-full"
+                  />
+                </label>
+
+                {/* User email */}
+                <label className="form-control">
+                  <span className="label-text text-xs font-medium mb-1 flex items-center gap-1">
+                    <Mail size={11} /> Account Email
+                  </span>
+                  <input
+                    type="email"
+                    value={form.userEmail}
+                    onChange={set("userEmail")}
+                    placeholder="user@email.com"
+                    className="input input-sm input-bordered w-full"
+                  />
+                </label>
+              </div>
+              <p className="text-[.65rem] text-base-content/35">
+                ⚠️ Changing email may affect login if the user uses email/password auth.
+              </p>
+            </div>
+          )}
+
+          {/* ── Player Profile fields ─────────────────────────── */}
+          <div className="rounded-xl border border-base-content/10 bg-base-200/40 p-4">
+            <p className="text-[.65rem] font-bold uppercase tracking-widest text-base-content/40 mb-3 flex items-center gap-1.5">
+              <User size={10} /> Player Profile
+            </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Name */}
             <label className="form-control col-span-full">
@@ -292,6 +344,7 @@ function EditPlayerModal({ player, onClose }) {
               <span className="label-text text-xs font-medium">Mark as Verified</span>
             </label>
           </div>
+          </div>{/* close Player Profile card */}
 
           <div className="flex justify-end gap-2 pt-2 border-t border-base-300">
             <button type="button" onClick={onClose} className="btn btn-sm btn-ghost">Cancel</button>
@@ -540,7 +593,12 @@ function PlayerRow({ player, onEdit, onDelete, onStats }) {
               <Phone size={10} />{player.number}
             </span>
           )}
-          {player.gender && (
+          {player.playerId?.email && (
+            <span className="flex items-center gap-1 text-xs text-base-content/50 truncate max-w-[160px]">
+              <Mail size={10} />{player.playerId.email}
+            </span>
+          )}
+          {!player.playerId?.email && player.gender && (
             <span className="flex items-center gap-1 text-xs text-base-content/50">
               <User size={10} className="capitalize" />{player.gender}
             </span>

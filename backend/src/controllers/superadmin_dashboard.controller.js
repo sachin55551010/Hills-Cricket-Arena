@@ -1,6 +1,7 @@
 import { Team } from "../models/teamSchema.js";
 import { Player } from "../models/playerSchema.js";
 import { Tournament } from "../models/tournamentSchema.js";
+import { User } from "../models/userSchema.js";
 import { CustomErrHandler } from "../utils/CustomErrHandler.js";
 
 export const getAllDataInNumber = async (req, res, next) => {
@@ -74,8 +75,9 @@ export const getAllPlayers = async (req, res, next) => {
 
     const players = await Player.find(filter)
       .select(
-        "playerName number gender dateOfBirth profilePicture playingRole battingStyle bowlingStyle role isVarified careerStats createdAt",
+        "playerName number gender dateOfBirth profilePicture playingRole battingStyle bowlingStyle role isVarified careerStats createdAt playerId",
       )
+      .populate("playerId", "name email profileImg")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({ players, success: true });
@@ -99,6 +101,9 @@ export const updatePlayer = async (req, res, next) => {
       bowlingStyle,
       role,
       isVarified,
+      // linked User account fields
+      userName,
+      userEmail,
     } = req.body;
 
     const player = await Player.findById(playerId);
@@ -118,7 +123,17 @@ export const updatePlayer = async (req, res, next) => {
         isVarified,
       },
       { new: true, runValidators: true },
-    );
+    ).populate("playerId", "name email profileImg");
+
+    // ── Also update the linked User doc if fields provided ──────────────
+    if (player.playerId) {
+      const userUpdate = {};
+      if (userName !== undefined && userName !== "") userUpdate.name = userName;
+      if (userEmail !== undefined && userEmail !== "") userUpdate.email = userEmail.toLowerCase().trim();
+      if (Object.keys(userUpdate).length > 0) {
+        await User.findByIdAndUpdate(player.playerId, userUpdate);
+      }
+    }
 
     return res.status(200).json({
       updatedPlayer,
