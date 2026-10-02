@@ -55,7 +55,6 @@ import { LocalMatchOvers } from "./pages/Local Match Page/LocalMatchOvers";
 import { LocalMatchHistoryScoreboard } from "./pages/Local Match Page/LocalMatchHistoryScoreboard";
 import { LocalMatchSummary } from "./pages/Local Match Page/LocalMatchSummary";
 import { SuperAdmin } from "./dashboard/SuperAdmin";
-
 function App() {
   const { authUser } = useSelector((state) => state.auth);
   const { isLoading } = useCheckAuthUserQuery();
@@ -280,6 +279,7 @@ function App() {
           <Route path="/local-match/setup" element={<MatchSetupPage />} />
           <Route
             path="/local-match/players"
+            I
             element={
               <ProtectedRoute allowedStatus="players">
                 <PlayerSetupPage />
