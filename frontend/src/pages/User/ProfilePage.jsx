@@ -192,10 +192,10 @@ export const ProfilePage = () => {
           </section>
 
           {/* Actions */}
-          <section className="flex flex-col sm:flex-row gap-3 pb-6">
+          <section className="flex gap-3 pb-6">
             <Link
               to={`/profile/career-stats/${playerId}`}
-              className="btn btn-outline flex-1"
+              className="btn btn-outline py-3 flex-1"
             >
               <Trophy size={18} />
               Career Stats
@@ -204,7 +204,7 @@ export const ProfilePage = () => {
             {isOwnProfile && (
               <button
                 onClick={handleLogoutBtn}
-                className="btn btn-error btn-outline flex-1"
+                className="btn py-3 btn-error btn-outline flex-1"
               >
                 <LogOut size={18} />
                 Log Out
