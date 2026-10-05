@@ -1,4 +1,3 @@
-
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useGetAllDataInNumberQuery } from "../store/superAdminApi";
@@ -141,10 +140,7 @@ function TournamentCard({ tournament }) {
 
         <span className="shrink-0">
           {tournament.startDate
-            ? new Date(tournament.startDate).toLocaleDateString(
-                "en",
-                DATE_OPTS
-              )
+            ? new Date(tournament.startDate).toLocaleDateString("en", DATE_OPTS)
             : "TBD"}
         </span>
       </div>
@@ -253,7 +249,7 @@ function MatchCard({ match }) {
           <span>
             {new Date(match.matchScheduleDate).toLocaleDateString(
               "en",
-              DATE_OPTS
+              DATE_OPTS,
             )}
           </span>
         </div>
@@ -294,20 +290,14 @@ export const HomePage = () => {
 
   const { authUser } = useSelector((state) => state.auth);
 
-  const {
-    data: statsData,
-    isLoading: statsLoading,
-  } = useGetAllDataInNumberQuery();
+  const { data: statsData, isLoading: statsLoading } =
+    useGetAllDataInNumberQuery();
 
-  const {
-    data: myTourneyData,
-    isLoading: myTourneyLoading,
-  } = useGetMyTournamentQuery();
+  const { data: myTourneyData, isLoading: myTourneyLoading } =
+    useGetMyTournamentQuery();
 
-  const {
-    data: matchData,
-    isLoading: matchLoading,
-  } = useGetAllMatchesQuery("open");
+  const { data: matchData, isLoading: matchLoading } =
+    useGetAllMatchesQuery("open");
 
   const myTournaments = myTourneyData?.myTournaments ?? [];
   const recentTournaments = myTournaments.slice(0, 6);
@@ -331,7 +321,6 @@ export const HomePage = () => {
   return (
     <main className="min-h-dvh bg-base-200/30 px-4 pb-20 pt-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-8">
-
         {/* ───────────────── Header ───────────────── */}
         <header className="flex items-center justify-between">
           <div>
@@ -345,10 +334,8 @@ export const HomePage = () => {
           </div>
 
           <button
-            onClick={() =>
-              navigate(`/profile/${authUser?.player?._id}`)
-            }
-            className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-base-content/10 bg-base-100 transition hover:border-base-content/20 hover:shadow-sm"
+            onClick={() => navigate(`/profile/${authUser?.player?._id}`)}
+            className="flex mt-14 h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-base-content/10 bg-base-100 transition hover:border-base-content/20 hover:shadow-sm"
           >
             {authUser?.player?.profilePic ? (
               <img
@@ -357,17 +344,14 @@ export const HomePage = () => {
                 className="h-full w-full object-cover"
               />
             ) : (
-              <Users size={16} className="text-base-content/50" />
+              <Users size={16} className="text-base-content/50 " />
             )}
           </button>
         </header>
 
         {/* ───────────────── Platform Stats ───────────────── */}
         <section>
-          <SectionHeader
-            icon={TrendingUp}
-            title="Platform Stats"
-          />
+          <SectionHeader icon={TrendingUp} title="Platform Stats" />
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <StatCard
@@ -398,10 +382,7 @@ export const HomePage = () => {
 
         {/* ───────────────── Quick Actions ───────────────── */}
         <section>
-          <SectionHeader
-            icon={Zap}
-            title="Quick Actions"
-          />
+          <SectionHeader icon={Zap} title="Quick Actions" />
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <QuickAction
@@ -429,9 +410,7 @@ export const HomePage = () => {
               icon={Users}
               label="Profile"
               gradient="from-sky-500 to-blue-600"
-              onClick={() =>
-                navigate(`/profile/${authUser?.player?._id}`)
-              }
+              onClick={() => navigate(`/profile/${authUser?.player?._id}`)}
             />
           </div>
         </section>
@@ -457,10 +436,7 @@ export const HomePage = () => {
           ) : recentTournaments.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-base-content/15 bg-base-100/60 py-10 text-center">
               <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-base-200">
-                <Trophy
-                  size={18}
-                  className="text-base-content/30"
-                />
+                <Trophy size={18} className="text-base-content/30" />
               </div>
 
               <p className="text-sm font-semibold text-base-content/50">
@@ -477,10 +453,7 @@ export const HomePage = () => {
           ) : (
             <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
               {recentTournaments.map((tournament) => (
-                <TournamentCard
-                  key={tournament._id}
-                  tournament={tournament}
-                />
+                <TournamentCard key={tournament._id} tournament={tournament} />
               ))}
             </div>
           )}
@@ -507,10 +480,7 @@ export const HomePage = () => {
           ) : recentMatches.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-base-content/15 bg-base-100/60 py-10 text-center">
               <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-base-200">
-                <Swords
-                  size={18}
-                  className="text-base-content/30"
-                />
+                <Swords size={18} className="text-base-content/30" />
               </div>
 
               <p className="text-sm font-semibold text-base-content/50">
@@ -520,10 +490,7 @@ export const HomePage = () => {
           ) : (
             <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
               {recentMatches.map((match) => (
-                <MatchCard
-                  key={match._id}
-                  match={match}
-                />
+                <MatchCard key={match._id} match={match} />
               ))}
             </div>
           )}
@@ -532,4 +499,3 @@ export const HomePage = () => {
     </main>
   );
 };
-
