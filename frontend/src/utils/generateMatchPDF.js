@@ -1,7 +1,6 @@
 ﻿import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-
 const fmt = (v, decimals = 1) =>
   v != null && !isNaN(v) ? Number(v).toFixed(decimals) : "-";
 
@@ -100,18 +99,15 @@ const getBowlingCard = (inning, currentPlayers, isCurrent) => {
   }));
 };
 
-
-const BRAND        = [42, 120, 214];
-const ACCENT       = [239, 68, 68];
-const DARK         = [18, 24, 38];
-const LIGHT_BG     = [245, 246, 248];
-const MID_GRAY     = [160, 170, 185];
-const WHITE        = [255, 255, 255];
-const SUCCESS_CLR  = [34, 197, 94];
-const WARNING_CLR  = [234, 179, 8];
-const SECTION_BG   = [230, 238, 250];
-
-
+const BRAND = [42, 120, 214];
+const ACCENT = [239, 68, 68];
+const DARK = [18, 24, 38];
+const LIGHT_BG = [245, 246, 248];
+const MID_GRAY = [160, 170, 185];
+const WHITE = [255, 255, 255];
+const SUCCESS_CLR = [34, 197, 94];
+const WARNING_CLR = [234, 179, 8];
+const SECTION_BG = [230, 238, 250];
 
 /**
  * generateMatchPDF(matchData)
@@ -123,14 +119,13 @@ export const generateMatchPDF = (matchData) => {
   if (!matchData) return;
 
   const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-  const W = doc.internal.pageSize.getWidth();   // 210
-  const H = doc.internal.pageSize.getHeight();  // 297
+  const W = doc.internal.pageSize.getWidth(); // 210
+  const H = doc.internal.pageSize.getHeight(); // 297
 
-  const MARGIN    = 12;
+  const MARGIN = 12;
   const CONTENT_W = W - MARGIN * 2;
   let y = 0;
 
-  
   const drawBg = () => {
     doc.setFillColor(...DARK);
     doc.rect(0, 0, W, 18, "F");
@@ -138,7 +133,6 @@ export const generateMatchPDF = (matchData) => {
     doc.rect(0, 18, W, H - 18, "F");
   };
 
- 
   const drawTopBar = () => {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
@@ -151,7 +145,6 @@ export const generateMatchPDF = (matchData) => {
     doc.text("Match Scorecard", W - MARGIN, 12, { align: "right" });
   };
 
-  
   const newPage = () => {
     doc.addPage();
     drawBg();
@@ -159,11 +152,9 @@ export const generateMatchPDF = (matchData) => {
     y = 26;
   };
 
-  
   const ensureSpace = (needed) => {
     if (y + needed > H - 14) newPage();
   };
-
 
   // const sectionBar = (text, color = BRAND) => {
   //   ensureSpace(9);
@@ -176,7 +167,6 @@ export const generateMatchPDF = (matchData) => {
   //   y += 9;
   // };
 
- 
   const subHeading = (text) => {
     ensureSpace(7);
     doc.setFont("helvetica", "bold");
@@ -185,7 +175,6 @@ export const generateMatchPDF = (matchData) => {
     doc.text(text.toUpperCase(), MARGIN, y);
     y += 4.5;
   };
-
 
   // const inlineStat = (label, value, xOffset = 0, yOffset = 0) => {
   //   doc.setFont("helvetica", "normal");
@@ -234,22 +223,19 @@ export const generateMatchPDF = (matchData) => {
     y = doc.lastAutoTable.finalY + 4;
   };
 
- 
-
   drawBg();
   drawTopBar();
   y = 24;
 
-  const t1      = matchData.firstTeam?.name  || "Team A";
-  const t2      = matchData.secondTeam?.name || "Team B";
+  const t1 = matchData.firstTeam?.name || "Team A";
+  const t2 = matchData.secondTeam?.name || "Team B";
   const innings = matchData.innings || [];
-  const inn1    = innings[0];
-  const inn2    = innings[1];
+  const inn1 = innings[0];
+  const inn2 = innings[1];
 
-  const currentInning   = Number(matchData.currentInning) || 1;
-  const currentPlayers  = matchData.currentPlayers;
+  const currentInning = Number(matchData.currentInning) || 1;
+  const currentPlayers = matchData.currentPlayers;
 
-  
   const CARD_H = 62;
   doc.setFillColor(...WHITE);
   doc.roundedRect(MARGIN, y, CONTENT_W, CARD_H, 3, 3, "F");
@@ -272,7 +258,9 @@ export const generateMatchPDF = (matchData) => {
 
   // Scores
   const score = (inn) =>
-    inn ? `${inn.runs ?? 0}/${inn.wickets ?? 0} (${formatOvers(inn.legalBalls || 0)})` : "-";
+    inn
+      ? `${inn.runs ?? 0}/${inn.wickets ?? 0} (${formatOvers(inn.legalBalls || 0)})`
+      : "-";
 
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
@@ -289,22 +277,36 @@ export const generateMatchPDF = (matchData) => {
 
   // Details grid (3 Ã— 2)
   const details = [
-    ["Overs",   matchData.totalOvers ?? matchData.overs ?? "-"],
-    ["Format",  matchData.matchType  || "-"],
-    ["Toss",    matchData.tossWinner || "-"],
-    ["Date",    matchData.date
-        ? new Date(matchData.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
-        : new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })],
-    ["Status",  matchData.matchStatus || "-"],
-    ["Match ID", matchData.matchId ? String(matchData.matchId).slice(0, 14) : "-"],
+    ["Overs", matchData.totalOvers ?? matchData.overs ?? "-"],
+    ["Format", matchData.matchType || "-"],
+    ["Toss", matchData.tossWinner || "-"],
+    [
+      "Date",
+      matchData.date
+        ? new Date(matchData.date).toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+        : new Date().toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          }),
+    ],
+    ["Status", matchData.matchStatus || "-"],
+    [
+      "Match ID",
+      matchData.matchId ? String(matchData.matchId).slice(0, 14) : "-",
+    ],
   ];
 
   const COL2 = MARGIN + CONTENT_W / 2;
   details.forEach(([label, value], i) => {
-    const col  = i % 2;
-    const row  = Math.floor(i / 2);
-    const xB   = col === 0 ? MARGIN + 5 : COL2;
-    const yB   = y + 30 + row * 9;
+    const col = i % 2;
+    const row = Math.floor(i / 2);
+    const xB = col === 0 ? MARGIN + 5 : COL2;
+    const yB = y + 30 + row * 9;
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(6.5);
@@ -326,33 +328,33 @@ export const generateMatchPDF = (matchData) => {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
     doc.setTextColor(...WHITE);
-    doc.text(`Result: ${matchData.matchResult}`, W / 2, y + 5.5, { align: "center" });
+    doc.text(`Result: ${matchData.matchResult}`, W / 2, y + 5.5, {
+      align: "center",
+    });
     y += 13;
   }
 
- 
-
   innings.forEach((inning, idx) => {
-    const isCurrent    = idx + 1 === currentInning;
-    const inningLabel  = idx === 0 ? "1st Innings" : "2nd Innings";
-    const statusLabel  = inning.battingCard ? "Completed" : "In Progress";
-    const statusColor  = inning.battingCard ? SUCCESS_CLR : WARNING_CLR;
-    const battingTeam  = inning.battingTeam  || (idx === 0 ? t1 : t2);
-    const bowlingTeam  = inning.bowlingTeam  || (idx === 0 ? t2 : t1);
-    const color        = idx === 0 ? BRAND : ACCENT;
+    const isCurrent = idx + 1 === currentInning;
+    const inningLabel = idx === 0 ? "1st Innings" : "2nd Innings";
+    const statusLabel = inning.battingCard ? "Completed" : "In Progress";
+    const statusColor = inning.battingCard ? SUCCESS_CLR : WARNING_CLR;
+    const battingTeam = inning.battingTeam || (idx === 0 ? t1 : t2);
+    const bowlingTeam = inning.bowlingTeam || (idx === 0 ? t2 : t1);
+    // const color        = idx === 0 ? BRAND : ACCENT;
 
-    const totalBalls   = inning.legalBalls || 0;
-    const runRate      = totalBalls > 0 ? ((inning.runs * 6) / totalBalls).toFixed(2) : "0.00";
+    const totalBalls = inning.legalBalls || 0;
+    const runRate =
+      totalBalls > 0 ? ((inning.runs * 6) / totalBalls).toFixed(2) : "0.00";
 
-    const extras       = inning.extras || {};
-    const extrasTotal  =
+    const extras = inning.extras || {};
+    const extrasTotal =
       (extras.wideBallRun || 0) +
-      (extras.noBallRun   || 0) +
-      (extras.byes        || 0) +
-      (extras.legByes     || 0) +
-      (extras.overthrow   || 0);
+      (extras.noBallRun || 0) +
+      (extras.byes || 0) +
+      (extras.legByes || 0) +
+      (extras.overthrow || 0);
 
-   
     y += 5;
     ensureSpace(30);
 
@@ -399,21 +401,20 @@ export const generateMatchPDF = (matchData) => {
       `(${formatOvers(totalBalls)} ov)  Â·  CRR ${runRate}`,
       W - MARGIN - 4,
       y + 19,
-      { align: "right" }
+      { align: "right" },
     );
 
     y += 26;
 
-    
     const summaryStats = [
-      ["Overs",    formatOvers(totalBalls)],
+      ["Overs", formatOvers(totalBalls)],
       ["Run Rate", runRate],
-      ["Extras",   extrasTotal],
+      ["Extras", extrasTotal],
       ...(idx === 1 ? [["Target", matchData.target ?? "-"]] : []),
     ];
 
     const colCount = summaryStats.length;
-    const colW     = CONTENT_W / colCount;
+    const colW = CONTENT_W / colCount;
 
     ensureSpace(14);
     doc.setFillColor(...WHITE);
@@ -431,22 +432,23 @@ export const generateMatchPDF = (matchData) => {
     });
     y += 16;
 
-  
     const battingCard = getBattingCard(inning, currentPlayers, isCurrent);
 
     if (battingCard.length > 0) {
-      subHeading(`Batting  Â·  ${battingTeam}  Â·  ${battingCard.length} batsman${battingCard.length !== 1 ? "s" : ""}`);
+      subHeading(
+        `Batting  Â·  ${battingTeam}  Â·  ${battingCard.length} batsman${battingCard.length !== 1 ? "s" : ""}`,
+      );
 
       addTable(
         [["Batsman", "Dismissal", "R", "B", "4s", "6s", "SR"]],
         battingCard.map((p) => {
-          const s  = p.battingStats || {};
+          const s = p.battingStats || {};
           const isStriker =
             isCurrent && getPlayerId(currentPlayers?.striker) === p.playerId;
           return [
             (p.name || "-") + (isStriker ? " *" : ""),
             p.dismissal || (p.isNotOut ? "not out" : "out"),
-            s.runs  ?? 0,
+            s.runs ?? 0,
             s.balls ?? 0,
             s.fours ?? 0,
             s.sixes ?? 0,
@@ -454,18 +456,22 @@ export const generateMatchPDF = (matchData) => {
           ];
         }),
         {
-          0: { cellWidth: 36, halign: "left",   fontStyle: "bold" },
-          1: { cellWidth: "auto", halign: "left", fontStyle: "italic", textColor: MID_GRAY },
+          0: { cellWidth: 36, halign: "left", fontStyle: "bold" },
+          1: {
+            cellWidth: "auto",
+            halign: "left",
+            fontStyle: "italic",
+            textColor: MID_GRAY,
+          },
           2: { cellWidth: 10, halign: "center", fontStyle: "bold" },
           3: { cellWidth: 10, halign: "center" },
           4: { cellWidth: 10, halign: "center" },
           5: { cellWidth: 10, halign: "center" },
           6: { cellWidth: 14, halign: "center" },
-        }
+        },
       );
     }
 
-    
     ensureSpace(8);
     doc.setFillColor(...WHITE);
     doc.roundedRect(MARGIN, y, CONTENT_W, 8, 1.5, 1.5, "F");
@@ -479,77 +485,80 @@ export const generateMatchPDF = (matchData) => {
     doc.text(
       `(WD ${extras.wideBallRun || 0}  NB ${extras.noBallRun || 0}  LB ${extras.legByes || 0}  B ${extras.byes || 0}  OV ${extras.overthrow || 0})`,
       MARGIN + 28,
-      y + 5
+      y + 5,
     );
     y += 12;
 
- 
     const bowlingCard = getBowlingCard(inning, currentPlayers, isCurrent);
 
     if (bowlingCard.length > 0) {
-      subHeading(`Bowling  Â·  ${bowlingTeam}  Â·  ${bowlingCard.length} bowler${bowlingCard.length !== 1 ? "s" : ""}`);
+      subHeading(
+        `Bowling  Â·  ${bowlingTeam}  Â·  ${bowlingCard.length} bowler${bowlingCard.length !== 1 ? "s" : ""}`,
+      );
 
       addTable(
         [["Bowler", "O", "R", "W", "M", "Economy"]],
         bowlingCard.map((b) => [
           (b.name || "-") + (b.isCurrent ? " *" : ""),
           formatOvers(b.balls || 0),
-          b.runs    ?? 0,
+          b.runs ?? 0,
           b.wickets ?? 0,
           b.maidens ?? 0,
           b.balls > 0 ? fmt((b.runs / b.balls) * 6) : "-",
         ]),
         {
-          0: { cellWidth: "auto", halign: "left",   fontStyle: "bold" },
-          1: { cellWidth: 16,     halign: "center" },
-          2: { cellWidth: 16,     halign: "center" },
-          3: { cellWidth: 16,     halign: "center", fontStyle: "bold" },
-          4: { cellWidth: 16,     halign: "center" },
-          5: { cellWidth: 20,     halign: "center" },
-        }
+          0: { cellWidth: "auto", halign: "left", fontStyle: "bold" },
+          1: { cellWidth: 16, halign: "center" },
+          2: { cellWidth: 16, halign: "center" },
+          3: { cellWidth: 16, halign: "center", fontStyle: "bold" },
+          4: { cellWidth: 16, halign: "center" },
+          5: { cellWidth: 20, halign: "center" },
+        },
       );
     }
 
-    
     const fow = (inning.outPlayers || []).map((p, i) => ({
-      wicket: p.teamWickets  ?? i + 1,
-      name:   p.name         || "-",
-      runs:   p.teamRuns     ?? 0,
-      balls:  p.battingStats?.balls ?? 0,
-      over:   p.teamLegalBalls != null ? formatOvers(p.teamLegalBalls) : "-",
+      wicket: p.teamWickets ?? i + 1,
+      name: p.name || "-",
+      runs: p.teamRuns ?? 0,
+      balls: p.battingStats?.balls ?? 0,
+      over: p.teamLegalBalls != null ? formatOvers(p.teamLegalBalls) : "-",
     }));
 
     if (fow.length > 0) {
-      subHeading(`Fall of Wickets  Â·  ${fow.length} wicket${fow.length !== 1 ? "s" : ""}`);
+      subHeading(
+        `Fall of Wickets  Â·  ${fow.length} wicket${fow.length !== 1 ? "s" : ""}`,
+      );
 
       addTable(
         [["Wkt", "Batsman", "Score", "Balls", "Over"]],
         fow.map((f) => [f.wicket, f.name, f.runs, f.balls, f.over]),
         {
-          0: { cellWidth: 12,     halign: "center" },
+          0: { cellWidth: 12, halign: "center" },
           1: { cellWidth: "auto", halign: "left" },
-          2: { cellWidth: 18,     halign: "center" },
-          3: { cellWidth: 18,     halign: "center" },
-          4: { cellWidth: 18,     halign: "center" },
-        }
+          2: { cellWidth: 18, halign: "center" },
+          3: { cellWidth: 18, halign: "center" },
+          4: { cellWidth: 18, halign: "center" },
+        },
       );
     }
 
- 
     if (isCurrent && !inning.battingCard) {
       ensureSpace(6);
       doc.setFont("helvetica", "italic");
       doc.setFontSize(6);
       doc.setTextColor(...MID_GRAY);
-      doc.text("* denotes batsman currently on strike  |  * denotes bowler currently bowling", MARGIN, y);
+      doc.text(
+        "* denotes batsman currently on strike  |  * denotes bowler currently bowling",
+        MARGIN,
+        y,
+      );
       y += 6;
     }
   });
 
-
-
   const pageCount = doc.internal.getNumberOfPages();
-  const genTime   = new Date().toLocaleString("en-IN");
+  const genTime = new Date().toLocaleString("en-IN");
 
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
@@ -563,13 +572,14 @@ export const generateMatchPDF = (matchData) => {
       `Generated ${genTime}  |  Page ${i} of ${pageCount}`,
       W - MARGIN,
       H - 3.5,
-      { align: "right" }
+      { align: "right" },
     );
   }
 
-  
-  const safe = (s) => String(s || "").replace(/\s+/g, "_").replace(/[^\w_-]/g, "");
+  const safe = (s) =>
+    String(s || "")
+      .replace(/\s+/g, "_")
+      .replace(/[^\w_-]/g, "");
   const fileName = `HCA_${safe(matchData.firstTeam?.name) || "Team1"}_vs_${safe(matchData.secondTeam?.name) || "Team2"}_${new Date().toISOString().slice(0, 10)}.pdf`;
   doc.save(fileName);
 };
-
