@@ -23,7 +23,7 @@ export const CricketLoader = ({ progress } = {}) => {
     }, 2200);
 
     return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const balls = [0, 1, 2];
@@ -118,13 +118,13 @@ export const CricketLoader = ({ progress } = {}) => {
         <div className="relative h-1 w-48 overflow-hidden rounded-full bg-white/10">
           {isDeterminate ? (
             <motion.div
-              className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-red-600 to-red-400"
+              className="absolute inset-y-0 left-0 rounded-full bg-red-600"
               animate={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
               transition={{ duration: 0.4, ease: "easeOut" }}
             />
           ) : (
             <motion.div
-              className="absolute inset-y-0 left-0 w-1/3 rounded-full bg-gradient-to-r from-red-600 to-red-400"
+              className="absolute inset-y-0 left-0 w-1/3 rounded-full bg-red-600"
               animate={
                 shouldReduceMotion
                   ? { opacity: [0.4, 1, 0.4] }
