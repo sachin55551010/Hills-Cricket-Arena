@@ -33,9 +33,8 @@ export const ScoringPage = () => {
   // Initialized to the current legalBalls so that on mount (e.g. navigating
   // back from the scoreboard) we never re-open for an already-handled over.
   const bowlerModalTriggeredAtRef = useRef(
-    currentMatchData?.innings?.[
-      Number(currentMatchData?.currentInning) - 1
-    ]?.legalBalls ?? 0
+    currentMatchData?.innings?.[Number(currentMatchData?.currentInning) - 1]
+      ?.legalBalls ?? 0,
   );
 
   // scoring buttons
