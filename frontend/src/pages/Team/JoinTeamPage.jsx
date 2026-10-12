@@ -6,10 +6,11 @@ import {
 
 import { useSelector } from "react-redux";
 import { useEffect } from "react";
-import { Calendar, MapPin, Trophy } from "lucide-react";
+import { CalendarDays, MapPin, Trophy, Users } from "lucide-react";
 import { defaultAvatar } from "../../utils/noprofilePicHelper";
 import { useGetTeamsByTournamentQuery } from "../../store/teamApi";
 import accessDenied from "../../../assets/access_denied.svg";
+
 export const JoinTeamPage = () => {
   const location = useLocation();
   const { token } = useParams();
@@ -27,8 +28,6 @@ export const JoinTeamPage = () => {
 
   const { data: team } = useGetTeamsByTournamentQuery(data?.tournamentId?._id);
 
-  // handle join team function
-
   const handleJoinTeamBtn = async () => {
     try {
       await joinTeamLink(token).unwrap();
@@ -38,159 +37,195 @@ export const JoinTeamPage = () => {
     }
   };
 
-  // format date into text
-  const options = { day: "2-digit", month: "short", year: "numeric" };
+  const formatDate = (date) =>
+    new Date(date).toLocaleDateString("en", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
 
-  if (!inviteDataLoading && !data) {
+  if (inviteDataLoading) {
     return (
-      <div className="fixed inset-0 z-[999] h-dvh bg-base-100 flex items-center justify-center flex-col gap-2 p-6">
-        <img src={accessDenied} alt="Error" className="h-70 w-auto" />
-        <h1 className="font-bold text-xl">Invalid or expired Link !</h1>
-        <p className="">
-          Ask your team admin or organiser to generate a new request add link
-        </p>
-        <Link className="btn btn-success w-full md:w-[40%]" to="/">
-          <button>Go Back Home</button>
-        </Link>
-      </div>
+      <main className="fixed inset-0 z-[999] flex min-h-dvh items-center justify-center bg-base-200/60 p-6">
+        <span className="loading loading-spinner loading-lg text-primary" />
+        <span className="sr-only">Loading invitation</span>
+      </main>
     );
   }
+
+  if (!data) {
+    return (
+      <main className="fixed inset-0 z-[999] flex min-h-dvh items-center justify-center overflow-y-auto bg-base-200/60 p-5">
+        <section className="w-full max-w-md rounded-2xl border border-base-content/10 bg-base-100 p-8 text-center shadow-sm">
+          <img
+            src={accessDenied}
+            alt=""
+            className="mx-auto mb-6 h-36 w-auto"
+          />
+          <p className="mb-2 text-sm font-semibold uppercase tracking-[0.16em] text-base-content/50">
+            Invitation unavailable
+          </p>
+          <h1 className="text-2xl font-bold">This link can’t be used</h1>
+          <p className="mt-3 text-sm leading-6 text-base-content/60">
+            Ask your team admin or organiser to send you a new invitation link.
+          </p>
+          <Link className="btn btn-primary mt-7 w-full" to="/">
+            Go back home
+          </Link>
+        </section>
+      </main>
+    );
+  }
+
+  const profilePicture = data.createdBy?.profilePicture;
+
   return (
-    <div className="fixed inset-0 z-[999] h-dvh flex bg-base-100 justify-center overflow-y-scroll">
-      <div className="border border-base-content/10 my-3 w-[95%] md:w-[70%] rounded-md flex flex-col items-center h-fit">
-        {/* header */}
-        <header className="bg-gradient-to-br from-primary to-secondary w-full min-h-40 rounded-t-md flex flex-col items-center justify-center p-2 gap-2">
-          <Trophy size={60} />
-          <h1 className="font-bold text-xl">Team Invitation</h1>
+    <main className="fixed inset-0 z-[999] flex min-h-dvh justify-center overflow-y-auto bg-base-200/60 px-4 py-8 sm:items-center sm:py-10">
+      <div className="my-auto w-full max-w-2xl overflow-hidden rounded-2xl border border-base-content/10 bg-base-100 shadow-xl shadow-base-content/5">
+        <header className="border-b border-base-content/10 px-6 py-7 sm:px-9 sm:py-9">
+          <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-base-200 text-primary">
+            <Trophy size={23} strokeWidth={1.8} aria-hidden="true" />
+          </div>
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-base-content/50">
+            Team invitation
+          </p>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
+            You’re invited to join
+          </h1>
+          <p className="mt-2 text-base-content/60">
+            Review the details below and join the team when you’re ready.
+          </p>
         </header>
 
-        {/* invitation information */}
-        <div className="w-full p-3">
-          {/* admin details */}
-          <section className="flex shadow-[0px_0px_5px_rgba(0,0,0,.5)] rounded-lg p-4 gap-4 items-center">
-            {/* profile picture */}
-            <div className="">
-              {data?.createdBy?.profilePicture === "" ? (
-                <div className="h-15 w-15 rounded-full bg-accent flex items-center justify-center font-extrabold text-xl">
-                  {defaultAvatar(data?.createdBy?.playerName)}
-                </div>
-              ) : (
-                <img
-                  src={data?.createdBy?.profilePicture}
-                  alt=""
-                  className="h-15 w-15 object-cover rounded-full"
-                />
-              )}
+        <div className="space-y-6 px-6 py-6 sm:px-9 sm:py-8">
+          <section
+            aria-label="Invitation details"
+            className="flex items-center gap-4 rounded-xl border border-base-content/10 bg-base-200/40 p-4 sm:p-5"
+          >
+            {profilePicture ? (
+              <img
+                src={profilePicture}
+                alt=""
+                className="h-12 w-12 rounded-full object-cover"
+              />
+            ) : (
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-base-300 text-lg font-bold">
+                {defaultAvatar(data.createdBy?.playerName)}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-sm text-base-content/55">Invited by</p>
+              <p className="truncate font-semibold">
+                {data.createdBy?.playerName}
+              </p>
             </div>
+          </section>
 
-            {/* heading, name */}
+          <section className="space-y-5">
             <div>
-              <h1 className="text-base-content/40 font-semibold">
-                You are invited by
-              </h1>
-              <h1 className="font-bold">{data?.createdBy?.playerName}</h1>
+              <p className="text-sm font-medium text-base-content/55">
+                Your team
+              </p>
+              <h2 className="mt-1 text-xl font-bold capitalize sm:text-2xl">
+                {data.teamId?.teamName}
+              </h2>
             </div>
-          </section>
-          {/* team name */}
-          <section className="flex mt-4 flex-col shadow-[0px_0px_5px_rgba(0,0,0,.5)] rounded-lg p-4">
-            <h4 className="text-base-content/40 font-semibold">Team Name</h4>
-            <h1 className="font-bold capitalize text-lg">
-              {data?.teamId?.teamName}
-            </h1>
-          </section>
 
-          {/* tournament info section */}
-          <section>
-            <div className="mt-4 p-4 rounded-lg shadow-[0px_0px_5px_rgba(0,0,0,.5)]">
-              <h1 className="text-base-content/40 font-semibold">
-                Tournament Name
-              </h1>
-              <h1 className="text-xl font-extrabold capitalize">
-                {data?.tournamentId?.tournamentName}
-              </h1>
+            <div className="rounded-xl border border-base-content/10 p-4 sm:p-5">
+              <p className="text-sm font-medium text-base-content/55">
+                Tournament
+              </p>
+              <h3 className="mt-1 text-lg font-semibold capitalize">
+                {data.tournamentId?.tournamentName}
+              </h3>
 
-              {/* start and end date */}
-              <div className="mt-6 flex justify-between">
-                <div className="flex items-center gap-3">
-                  <Calendar size={22} />
+              <div className="mt-5 grid gap-4 border-t border-base-content/10 pt-5 sm:grid-cols-2">
+                <div className="flex items-start gap-3">
+                  <CalendarDays
+                    size={18}
+                    className="mt-0.5 shrink-0 text-base-content/50"
+                    aria-hidden="true"
+                  />
                   <div>
-                    <h4 className="text-base-content/40 font-bold">
-                      Start Date
-                    </h4>
-                    {data?.tournamentId?.startDate ? (
-                      <h4 className="text-sm">
-                        {new Date(
-                          data?.tournamentId?.startDate,
-                        ).toLocaleDateString("en", options)}
-                      </h4>
-                    ) : (
-                      <span>_</span>
-                    )}
+                    <p className="text-xs font-medium text-base-content/50">
+                      Dates
+                    </p>
+                    <p className="mt-1 text-sm font-medium">
+                      {data.tournamentId?.startDate
+                        ? formatDate(data.tournamentId.startDate)
+                        : "TBD"}
+                      <span className="mx-2 text-base-content/35">—</span>
+                      {data.tournamentId?.endDate
+                        ? formatDate(data.tournamentId.endDate)
+                        : "TBD"}
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Calendar size={22} />
+
+                <div className="flex items-start gap-3">
+                  <MapPin
+                    size={18}
+                    className="mt-0.5 shrink-0 text-base-content/50"
+                    aria-hidden="true"
+                  />
                   <div>
-                    <h4 className="text-base-content/40 font-bold">End Date</h4>
-                    {data?.tournamentId?.endDate ? (
-                      <h4 className="text-sm">
-                        {new Date(
-                          data?.tournamentId?.endDate,
-                        ).toLocaleDateString("en", options)}
-                      </h4>
-                    ) : (
-                      <span>_</span>
-                    )}
+                    <p className="text-xs font-medium text-base-content/50">
+                      Location
+                    </p>
+                    <p className="mt-1 text-sm font-medium capitalize">
+                      {[data.tournamentId?.city, data.tournamentId?.ground]
+                        .filter(Boolean)
+                        .join(", ") || "To be announced"}
+                    </p>
                   </div>
                 </div>
               </div>
-
-              {/* location of event */}
-              <div>
-                <div className="mt-6 flex gap-2 items-center">
-                  <MapPin />
-                  <h1 className="text-base-content/40 font-bold">Location</h1>
-                </div>
-                <div className="flex gap-2 mt-2">
-                  <h1 className="capitalize">{data?.tournamentId?.city},</h1>
-                  <h1 className="capitalize">{data?.tournamentId?.ground}</h1>
-                </div>
-              </div>
-
-              {/* team counts */}
-              <div className="flex items-center gap-2 mt-6">
-                <h1 className="font-bold">Total teams : </h1>
-                <span className="font-bold">{team?.countTeams}</span>
-              </div>
             </div>
-            {/* join or decline button */}
-            <div className="flex mt-6 gap-3">
-              {!authUser ? (
-                <Link to="/login" className="btn btn-info w-full font-bold">
-                  <button>Please Login first</button>
+
+            <div className="flex items-center gap-2 text-sm text-base-content/60">
+              <Users size={17} aria-hidden="true" />
+              <span>
+                <strong className="font-semibold text-base-content">
+                  {team?.countTeams ?? "—"}
+                </strong>{" "}
+                teams in this tournament
+              </span>
+            </div>
+          </section>
+
+          <div className="flex flex-col-reverse gap-3 border-t border-base-content/10 pt-5 sm:flex-row">
+            {authUser ? (
+              <>
+                <Link
+                  className={`btn btn-ghost flex-1 ${isLoading ? "pointer-events-none opacity-50" : ""}`}
+                  to="/"
+                  aria-disabled={isLoading}
+                >
+                  Decline
                 </Link>
-              ) : (
-                <div className="flex gap-2 w-full">
-                  <button
-                    onClick={handleJoinTeamBtn}
-                    className="btn btn-info flex-1"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <span className="loading loading-dots loading-xl"></span>
-                    ) : (
-                      "Join Team"
-                    )}
-                  </button>
-                  <Link className="btn btn-error flex-1" to="/">
-                    <button disabled={isLoading}>Decline</button>
-                  </Link>
-                </div>
-              )}
-            </div>
-          </section>
+                <button
+                  onClick={handleJoinTeamBtn}
+                  className="btn btn-primary flex-1"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm" />
+                      Joining...
+                    </>
+                  ) : (
+                    "Join team"
+                  )}
+                </button>
+              </>
+            ) : (
+              <Link className="btn btn-primary w-full" to="/login">
+                Log in to join
+              </Link>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 };

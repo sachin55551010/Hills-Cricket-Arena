@@ -1,5 +1,5 @@
 import "./App.css";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/User/LoginPage";
 import { useSelector } from "react-redux";
@@ -60,6 +60,7 @@ function App() {
   const { isLoading } = useCheckAuthUserQuery();
   const { myTheme } = useSelector((state) => state.theme);
   const { chooseTheme } = useSelector((state) => state.theme);
+  const location = useLocation();
 
   const socket = createSocket();
 
@@ -90,7 +91,7 @@ function App() {
   return (
     <div data-theme={myTheme} className={`min-h-dvh`}>
       <div className={`${chooseTheme && "blur-sm overflow-hidden"}`}>
-        <NavBar />
+        {!location.pathname.startsWith("/join-team/") && <NavBar />}
 
         {/* routes  */}
         <Routes>

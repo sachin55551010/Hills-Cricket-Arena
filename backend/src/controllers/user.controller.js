@@ -181,6 +181,8 @@ export const getAllPlayers = async (req, res, next) => {
     console.log(allPlayers);
     return res.status(200).json({ allPlayers, success: true });
   } catch (error) {
+    next(error);
+
     console.log("get all players", error);
   }
 };
