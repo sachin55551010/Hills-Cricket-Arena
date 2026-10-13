@@ -1,330 +1,191 @@
+
 import cricketBall from "../../assets/cricket_ball.svg";
 import myAppLogo from "../../public/my_app_logo.png";
-// eslint-disable-next-line no-unused-vars
-import { motion, AnimatePresence, useReducedMotion } from "motion/react";
+
+import {
+  motion,
+  AnimatePresence,
+  useReducedMotion,
+} from "motion/react";
+
 import { useEffect, useState } from "react";
 
 export const CricketLoader = ({ progress } = {}) => {
   const loadingMessages = [
-    "Getting things ready…",
-    "Loading your experience…",
-    "Preparing your dashboard…",
-    "Just a moment…",
-    "Setting things up…",
+    "Getting the pitch ready...",
+    "Preparing your match center...",
+    "Bringing the cricket community together...",
+    "Setting up your experience...",
   ];
 
   const [index, setIndex] = useState(0);
   const shouldReduceMotion = useReducedMotion();
   const isDeterminate = typeof progress === "number";
+  const percentage = Math.min(100, Math.max(0, progress ?? 0));
 
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % loadingMessages.length);
-    }, 2200);
+    }, 2400);
 
     return () => clearInterval(interval);
   }, [loadingMessages.length]);
 
-  const balls = [0, 1, 2];
-
   return (
-    <div className="relative flex h-dvh w-screen items-center justify-center overflow-hidden bg-[#050505] px-6">
-      {/* 
-          BACKGROUND
-       */}
+    <div className="relative flex min-h-dvh w-full items-center justify-center overflow-hidden bg-[#080b0a] px-5 text-white">
 
-      {/* Ambient red glow */}
-      <motion.div
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-600/10 blur-[120px]"
-        animate={
-          shouldReduceMotion
-            ? {}
-            : {
-                scale: [1, 1.12, 1],
-                opacity: [0.35, 0.55, 0.35],
-              }
-        }
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: "easeInOut",
+      {/* Subtle cricket-pitch texture */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.035]"
+        style={{
+          backgroundImage:
+            "linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)",
+          backgroundSize: "48px 48px",
         }}
       />
 
-      {/* Small ambient glow */}
-      <div className="pointer-events-none absolute left-[20%] top-[25%] h-40 w-40 rounded-full bg-red-500/5 blur-[80px]" />
+      {/* Center line: a restrained cricket-pitch detail */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-white/[0.035]"
+      />
 
-      <div className="pointer-events-none absolute bottom-[15%] right-[15%] h-52 w-52 rounded-full bg-orange-500/5 blur-[100px]" />
-
-      {/* Subtle vignette */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_20%,rgba(0,0,0,0.65)_100%)]" />
-
-      {/* 
-          MAIN CONTENT
-      */}
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.94, y: 12 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{
-          duration: 0.7,
-          ease: [0.22, 1, 0.36, 1],
-        }}
-        className="relative z-10 flex w-full max-w-md flex-col items-center"
+      <motion.main
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.55, ease: "easeOut" }}
+        className="relative z-10 flex w-full max-w-sm flex-col items-center"
       >
-        {/* 
-            BRAND
-        */}
 
-        <motion.div
-          initial={{ opacity: 0, y: -12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.6,
-            delay: 0.15,
-            ease: "easeOut",
-          }}
-          className="mb-14 flex items-center gap-3"
-        >
-          <motion.div
-            animate={
-              shouldReduceMotion
-                ? {}
-                : {
-                    rotate: [0, -4, 4, 0],
-                  }
-            }
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          >
-            <img
-              src={myAppLogo}
-              alt="Hills Cricket Arena"
-              className="h-11 w-auto drop-shadow-[0_0_15px_rgba(255,40,40,0.25)]"
-            />
-          </motion.div>
+        {/* Brand */}
+        <div className="mb-12 flex flex-col items-center gap-3">
+          <motion.img
+            src={myAppLogo}
+            alt="Hills Cricket Arena"
+            className="h-12 w-auto object-contain"
+            initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+          />
 
-          <div>
-            <h1 className="font-fredoka text-2xl font-semibold tracking-wide text-white">
+          <div className="text-center">
+            <h1 className="font-fredoka text-2xl font-semibold tracking-wide">
               Hills Cricket Arena
             </h1>
 
-            <p className="mt-0.5 text-center text-[10px] font-medium uppercase tracking-[0.3em] text-white/35">
-              Play • Score • Compete
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/40">
+              Play. Score. Compete.
             </p>
           </div>
-        </motion.div>
+        </div>
 
-        {/* 
-            CRICKET BALL ANIMATION
-         */}
+        {/* Cricket ball and pitch illustration */}
+        <div className="relative mb-11 flex h-48 w-64 items-center justify-center">
 
-        <div className="relative mb-14 flex h-48 w-72 items-center justify-center">
-          {/* Outer orbit ring */}
+          {/* Fine circular outline */}
+          <div
+            aria-hidden="true"
+            className="absolute h-40 w-40 rounded-full border border-white/[0.07]"
+          />
+
+          {/* Small red accent ring */}
           <motion.div
-            className="absolute h-44 w-44 rounded-full border border-red-500/10"
+            aria-hidden="true"
+            className="absolute h-40 w-40 rounded-full border border-dashed border-red-500/25"
             animate={
-              shouldReduceMotion
-                ? {}
-                : {
-                    rotate: 360,
-                  }
+              shouldReduceMotion ? {} : { rotate: 360 }
             }
             transition={{
-              duration: 14,
+              duration: 32,
               repeat: Infinity,
               ease: "linear",
             }}
+          />
+
+          {/* Minimal wicket behind the ball */}
+          <div
+            aria-hidden="true"
+            className="absolute bottom-[38px] right-[42px] flex h-12 items-start gap-[5px] opacity-40"
           >
-            {/* Orbit dot */}
-            <div className="absolute -right-1 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-red-500/60 shadow-[0_0_15px_rgba(239,68,68,0.8)]" />
-          </motion.div>
-
-          {/* Second orbit */}
-          <motion.div
-            className="absolute h-56 w-56 rounded-full border border-white/[0.03]"
-            animate={
-              shouldReduceMotion
-                ? {}
-                : {
-                    rotate: -360,
-                  }
-            }
-            transition={{
-              duration: 20,
-              repeat: Infinity,
-              ease: "linear",
-            }}
-          />
-
-          {/* Glow behind ball */}
-          <motion.div
-            className="absolute h-28 w-28 rounded-full bg-red-600/20 blur-3xl"
-            animate={
-              shouldReduceMotion
-                ? {}
-                : {
-                    scale: [0.85, 1.15, 0.85],
-                    opacity: [0.35, 0.65, 0.35],
-                  }
-            }
-            transition={{
-              duration: 2.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          />
+            {[0, 1, 2].map((stump) => (
+              <div
+                key={stump}
+                className="h-11 w-[3px] rounded-full bg-white/60"
+              />
+            ))}
+            <div className="absolute -top-[2px] left-[-3px] h-[3px] w-6 rounded-full bg-white/60" />
+          </div>
 
           {/* Main cricket ball */}
           <motion.div
-            className="relative z-20 h-24 w-24"
+            className="relative z-10 h-[88px] w-[88px]"
             animate={
               shouldReduceMotion
                 ? {}
                 : {
-                    y: [0, -14, 0],
-                    rotate: [0, 180, 360],
+                    y: [0, -7, 0],
+                    rotate: [-5, 5, -5],
                   }
             }
             transition={{
-              y: {
-                duration: 1.8,
-                repeat: Infinity,
-                ease: "easeInOut",
-              },
-              rotate: {
-                duration: 2.8,
-                repeat: Infinity,
-                ease: "linear",
-              },
+              duration: 2.4,
+              repeat: Infinity,
+              ease: "easeInOut",
             }}
           >
             <img
               src={cricketBall}
               alt=""
-              className="h-full w-full drop-shadow-[0_12px_20px_rgba(0,0,0,0.65)]"
-            />
-
-            {/* Ball shine */}
-            <motion.div
-              className="pointer-events-none absolute left-[18%] top-[15%] h-5 w-5 rounded-full bg-white/20 blur-md"
-              animate={
-                shouldReduceMotion
-                  ? {}
-                  : {
-                      opacity: [0.2, 0.55, 0.2],
-                    }
-              }
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
+              aria-hidden="true"
+              className="h-full w-full object-contain drop-shadow-[0_12px_14px_rgba(0,0,0,0.5)]"
             />
           </motion.div>
 
           {/* Ground shadow */}
           <motion.div
-            className="absolute bottom-4 h-3 w-24 rounded-full bg-black/70 blur-md"
+            aria-hidden="true"
+            className="absolute bottom-[34px] h-2 w-20 rounded-full bg-black/70"
             animate={
               shouldReduceMotion
                 ? {}
                 : {
-                    scaleX: [1, 0.65, 1],
-                    opacity: [0.6, 0.25, 0.6],
+                    scaleX: [1, 0.8, 1],
+                    opacity: [0.8, 0.4, 0.8],
                   }
             }
             transition={{
-              duration: 1.8,
+              duration: 2.4,
               repeat: Infinity,
               ease: "easeInOut",
             }}
           />
 
-          {/* 
-              SMALL ORBITING BALLS
-           */}
-
-          {balls.map((ball, i) => {
-            const angles = [0, 120, 240];
-
-            return (
-              <motion.div
-                key={ball}
-                className="absolute h-6 w-6"
-                style={{
-                  transformOrigin: "0 0",
-                }}
-                animate={
-                  shouldReduceMotion
-                    ? {}
-                    : {
-                        rotate: [angles[i], angles[i] + 360],
-                      }
-                }
-                transition={{
-                  duration: 5 + i * 0.8,
-                  repeat: Infinity,
-                  ease: "linear",
-                  delay: i * 0.4,
-                }}
-              >
-                <motion.img
-                  src={cricketBall}
-                  alt=""
-                  className="h-full w-full"
-                  style={{
-                    transform: `translateX(${78 + i * 8}px)`,
-                  }}
-                  animate={
-                    shouldReduceMotion
-                      ? {}
-                      : {
-                          rotate: [0, -360],
-                        }
-                  }
-                  transition={{
-                    duration: 2.5,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                />
-              </motion.div>
-            );
-          })}
+          {/* Small pitch marker */}
+          <div
+            aria-hidden="true"
+            className="absolute bottom-[17px] h-px w-44 bg-white/15"
+          />
         </div>
 
-        {/* 
-            MESSAGE
-        */}
-
-        <div className="mb-7 flex h-8 items-center justify-center">
+        {/* Loading message */}
+        <div className="mb-7 flex h-7 items-center justify-center">
           <AnimatePresence mode="wait">
             <motion.p
               key={loadingMessages[index]}
-              initial={{
-                opacity: 0,
-                y: 10,
-                filter: "blur(4px)",
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-                filter: "blur(0px)",
-              }}
-              exit={{
-                opacity: 0,
-                y: -10,
-                filter: "blur(4px)",
-              }}
-              transition={{
-                duration: 0.45,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              className="font-fredoka text-lg font-medium text-white/75"
+              initial={
+                shouldReduceMotion
+                  ? { opacity: 0 }
+                  : { opacity: 0, y: 6 }
+              }
+              animate={{ opacity: 1, y: 0 }}
+              exit={
+                shouldReduceMotion
+                  ? { opacity: 0 }
+                  : { opacity: 0, y: -6 }
+              }
+              transition={{ duration: 0.25 }}
+              className="text-center text-sm font-medium text-white/65"
               role="status"
               aria-live="polite"
             >
@@ -333,83 +194,54 @@ export const CricketLoader = ({ progress } = {}) => {
           </AnimatePresence>
         </div>
 
-        {/* 
-            PROGRESS BAR
-        */}
-
-        <div className="w-56">
-          <div className="relative h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
+        {/* Minimal solid-color progress indicator */}
+        <div className="w-52">
+          <div
+            className="relative h-1 overflow-hidden rounded-full bg-white/10"
+            role="progressbar"
+            aria-label="Loading application"
+            aria-valuemin={isDeterminate ? 0 : undefined}
+            aria-valuemax={isDeterminate ? 100 : undefined}
+            aria-valuenow={isDeterminate ? percentage : undefined}
+          >
             {isDeterminate ? (
               <motion.div
-                className="relative h-full rounded-full bg-gradient-to-r from-red-700 via-red-500 to-orange-400"
-                animate={{
-                  width: `${Math.min(100, Math.max(0, progress))}%`,
-                }}
+                className="h-full rounded-full bg-red-500"
+                animate={{ width: `${percentage}%` }}
                 transition={{
-                  duration: 0.5,
-                  ease: [0.22, 1, 0.36, 1],
+                  duration: 0.35,
+                  ease: "easeOut",
                 }}
-              >
-                {/* Progress shine */}
-                <motion.div
-                  className="absolute right-0 top-0 h-full w-8 bg-white/30 blur-sm"
-                  animate={
-                    shouldReduceMotion
-                      ? {}
-                      : {
-                          opacity: [0.2, 0.7, 0.2],
-                        }
-                  }
-                  transition={{
-                    duration: 1.2,
-                    repeat: Infinity,
-                  }}
-                />
-              </motion.div>
+              />
             ) : (
               <motion.div
-                className="absolute left-0 h-full w-1/3 rounded-full bg-gradient-to-r from-red-700 via-red-500 to-orange-400"
+                className="absolute left-0 top-0 h-full w-1/3 rounded-full bg-red-500"
                 animate={
                   shouldReduceMotion
-                    ? {
-                        opacity: 0.7,
-                      }
-                    : {
-                        x: ["-120%", "320%"],
-                      }
+                    ? { opacity: 0.75 }
+                    : { x: ["-100%", "300%"] }
                 }
                 transition={{
                   duration: 1.5,
-                  repeat: Infinity,
+                  repeat: shouldReduceMotion ? 0 : Infinity,
                   ease: "easeInOut",
                 }}
               />
             )}
           </div>
 
-          {/* Percentage */}
           {isDeterminate && (
-            <motion.div
-              key={progress}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="mt-2 text-center text-[10px] font-medium tracking-widest text-white/30"
-            >
-              {Math.round(Math.min(100, Math.max(0, progress)))}%
-            </motion.div>
+            <p className="mt-2 text-center text-[10px] font-medium tabular-nums text-white/40">
+              {Math.round(percentage)}%
+            </p>
           )}
         </div>
 
-        {/* Bottom subtle text */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="mt-10 text-[9px] uppercase tracking-[0.35em] text-white/20"
-        >
-          Hills • Cricket • Community
-        </motion.p>
-      </motion.div>
+        {/* Brand signature */}
+        <p className="mt-10 text-[9px] font-medium uppercase tracking-[0.3em] text-white/25">
+          Built for the love of cricket
+        </p>
+      </motion.main>
     </div>
   );
 };
